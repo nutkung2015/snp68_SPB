@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "MyApp",
+    "slug": "my-app",
+    "version": "1.0.0",
+    "sdkVersion": "50.0.0",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "7c6d8598-fa21-4f26-ab88-eb019a0d52b7"
+      }
+    }
+  }
+}
