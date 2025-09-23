@@ -3,14 +3,21 @@
     "name": "MyApp",
     "slug": "my-app",
     "version": "1.0.0",
-    "sdkVersion": "50.0.0",
+    "sdkVersion": "53.0.0",
     "platforms": [
       "ios",
-      "android"
+      "android",
+      "web"
     ],
     "extra": {
       "eas": {
         "projectId": "7c6d8598-fa21-4f26-ab88-eb019a0d52b7"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.nutkung2015.myapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
       }
     }
   }
