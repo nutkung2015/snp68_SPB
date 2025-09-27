@@ -1,0 +1,425 @@
+// screens/news/NewsDetailScreen.js
+import React, { useState, useEffect } from 'react';
+import {
+    View,
+    Text,
+    StyleSheet,
+    SafeAreaView,
+    TouchableOpacity,
+    ScrollView,
+    Image,
+    ActivityIndicator,
+    StatusBar,
+    Dimensions,
+    Modal,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { 
+    useFonts,
+    Kanit_400Regular,
+    Kanit_700Bold,
+} from '@expo-google-fonts/kanit';
+
+const { width, height } = Dimensions.get('window');
+
+const NewsDetailScreen = ({ navigation, route }) => {
+    const [fontsLoaded] = useFonts({
+        Kanit_400Regular,
+        Kanit_700Bold,
+    });
+
+    const { announcementId } = route.params;
+    const [announcement, setAnnouncement] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [showModal, setShowModal] = useState(true);
+
+    // Fetch announcement detail from API
+    useEffect(() => {
+        fetchAnnouncementDetail();
+    }, [announcementId]);
+
+    const fetchAnnouncementDetail = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`http://localhost:5000/api/announcements/${announcementId}`);
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                setAnnouncement(data.data);
+            } else {
+                setError('Failed to fetch announcement details');
+            }
+        } catch (err) {
+            console.error('Error fetching announcement detail:', err);
+            setError('Network error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Helper function to get image URL from attachment_urls
+    const getImageUrl = (attachmentUrls) => {
+        if (attachmentUrls && Array.isArray(attachmentUrls) && attachmentUrls.length > 0) {
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+            const imageUrl = attachmentUrls.find(url => 
+                url && typeof url === 'string' && imageExtensions.some(ext => url.toLowerCase().includes(ext))
+            );
+            return imageUrl || 'https://picsum.photos/400/300';
+        }
+        return 'https://picsum.photos/400/300';
+    };
+
+    // Format date to Thai format
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const thaiMonths = [
+            'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+        ];
+        const day = date.getDate();
+        const month = thaiMonths[date.getMonth()];
+        const year = date.getFullYear() + 543; // Convert to Buddhist year
+        return `${day} ${month} ${year}`;
+    };
+
+    const handleAcknowledge = () => {
+        setShowModal(false);
+        navigation.goBack();
+    };
+
+    if (!fontsLoaded) {
+        return null;
+    }
+
+    return (
+        <View style={styles.container}>
+            <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+            
+            {/* Background Content - NewsScreen */}
+            <View style={styles.backgroundContent}>
+                {/* Header */}
+                <View style={styles.backgroundHeader}>
+                    <TouchableOpacity 
+                        style={styles.backgroundBackButton}
+                        onPress={() => navigation.goBack()}
+                    >
+                        <Ionicons name="chevron-back" size={24} color="#000" />
+                        <Text style={styles.backgroundBackText}>ย้อนกลับ</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.backgroundTitle}>ข่าวสารและประกาศ</Text>
+                    <View style={styles.backgroundHeaderRight} />
+                </View>
+
+                {/* Filter Section */}
+                <View style={styles.backgroundFilterContainer}>
+                    <TouchableOpacity style={styles.backgroundFilterButton}>
+                        <Text style={styles.backgroundFilterText}>หมวดหมู่</Text>
+                        <Ionicons name="chevron-down" size={20} color="#666" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.backgroundFilterButton}>
+                        <Text style={styles.backgroundFilterText}>7 วันที่ผ่านมา</Text>
+                        <Ionicons name="chevron-down" size={20} color="#666" />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Content Placeholder */}
+                <View style={styles.backgroundContentPlaceholder}>
+                    <Text style={styles.backgroundPlaceholderText}>กำลังโหลดข่าวสาร...</Text>
+                </View>
+            </View>
+
+            {/* Modal Overlay */}
+            <Modal
+                visible={showModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        {/* Modal Header */}
+                        <View style={styles.modalHeader}>
+                            <TouchableOpacity 
+                                style={styles.backButton}
+                                onPress={() => setShowModal(false)}
+                            >
+                                <Ionicons name="chevron-back" size={24} color="#000" />
+                                <Text style={styles.backText}>ย้อนกลับ</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {loading ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color="#666" />
+                                <Text style={styles.loadingText}>กำลังโหลด...</Text>
+                            </View>
+                        ) : error ? (
+                            <View style={styles.errorContainer}>
+                                <Text style={styles.errorText}>{error}</Text>
+                                <TouchableOpacity onPress={fetchAnnouncementDetail} style={styles.retryButton}>
+                                    <Text style={styles.retryText}>ลองใหม่</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : announcement ? (
+                            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+                                {/* Source Info */}
+                                <View style={styles.sourceContainer}>
+                                    <View style={styles.avatarContainer}>
+                                        <Ionicons name="person" size={24} color="#666" />
+                                    </View>
+                                    <View style={styles.sourceInfo}>
+                                        <Text style={styles.sourceName}>นิติบุคคล</Text>
+                                        <Text style={styles.sourceDate}>{formatDate(announcement.created_at)}</Text>
+                                    </View>
+                                </View>
+
+                                {/* Separator */}
+                                <View style={styles.separator} />
+
+                                {/* Title */}
+                                <Text style={styles.modalTitle}>{announcement.title}</Text>
+
+                                {/* Content */}
+                                <Text style={styles.modalContentText}>{announcement.content}</Text>
+
+                                {/* Image */}
+                                <View style={styles.modalImageContainer}>
+                                    <Image
+                                        source={{ uri: getImageUrl(announcement.attachment_urls) }}
+                                        style={styles.modalImage}
+                                        resizeMode="cover"
+                                    />
+                                </View>
+
+                                {/* Acknowledge Button */}
+                                <TouchableOpacity 
+                                    style={styles.acknowledgeButton}
+                                    onPress={handleAcknowledge}
+                                >
+                                    <Text style={styles.acknowledgeButtonText}>รับทราบ</Text>
+                                </TouchableOpacity>
+                            </ScrollView>
+                        ) : null}
+                    </View>
+                </View>
+            </Modal>
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
+    // Background Content Styles (NewsScreen)
+    backgroundContent: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
+    backgroundHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    backgroundBackButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    backgroundBackText: {
+        fontSize: 16,
+        fontFamily: 'Kanit_400Regular',
+        marginLeft: 4,
+    },
+    backgroundTitle: {
+        fontSize: 20,
+        fontFamily: 'Kanit_700Bold',
+        flex: 1,
+        textAlign: 'center',
+    },
+    backgroundHeaderRight: {
+        width: 60,
+    },
+    backgroundFilterContainer: {
+        flexDirection: 'row',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        gap: 12,
+    },
+    backgroundFilterButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#f8f8f8',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+    },
+    backgroundFilterText: {
+        fontSize: 14,
+        fontFamily: 'Kanit_400Regular',
+        color: '#333',
+    },
+    backgroundContentPlaceholder: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+    },
+    backgroundPlaceholderText: {
+        fontSize: 16,
+        fontFamily: 'Kanit_400Regular',
+        color: '#666',
+    },
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContainer: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        maxHeight: height * 1.8,
+        minHeight: height * 0.9,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    backText: {
+        fontSize: 16,
+        fontFamily: 'Kanit_400Regular',
+        marginLeft: 4,
+        color: '#000',
+    },
+    modalContent: {
+        flex: 1,
+        paddingHorizontal: 16,
+    },
+    sourceContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 16,
+    },
+    avatarContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#f0f0f0',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    sourceInfo: {
+        flex: 1,
+    },
+    sourceName: {
+        fontSize: 16,
+        fontFamily: 'Kanit_700Bold',
+        color: '#333',
+        marginBottom: 2,
+    },
+    sourceDate: {
+        fontSize: 14,
+        fontFamily: 'Kanit_400Regular',
+        color: '#666',
+    },
+    separator: {
+        height: 1,
+        backgroundColor: '#e0e0e0',
+        marginVertical: 8,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontFamily: 'Kanit_700Bold',
+        color: '#333',
+        marginBottom: 16,
+        lineHeight: 28,
+    },
+    modalContentText: {
+        fontSize: 16,
+        fontFamily: 'Kanit_400Regular',
+        color: '#333',
+        lineHeight: 24,
+        marginBottom: 20,
+    },
+    modalImageContainer: {
+        height: 200,
+        backgroundColor: '#f0f0f0',
+        borderRadius: 12,
+        marginBottom: 24,
+        overflow: 'hidden',
+    },
+    modalImage: {
+        width: '100%',
+        height: '100%',
+    },
+    acknowledgeButton: {
+        backgroundColor: '#333',
+        paddingVertical: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    acknowledgeButtonText: {
+        fontSize: 16,
+        fontFamily: 'Kanit_700Bold',
+        color: '#fff',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 40,
+    },
+    loadingText: {
+        marginTop: 12,
+        fontSize: 14,
+        fontFamily: 'Kanit_400Regular',
+        color: '#666',
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 40,
+    },
+    errorText: {
+        fontSize: 14,
+        fontFamily: 'Kanit_400Regular',
+        color: '#ff6b6b',
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    retryButton: {
+        backgroundColor: '#f0f0f0',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 6,
+    },
+    retryText: {
+        fontSize: 14,
+        fontFamily: 'Kanit_400Regular',
+        color: '#333',
+    },
+});
+
+export default NewsDetailScreen;

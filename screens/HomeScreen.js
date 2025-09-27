@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -8,17 +8,88 @@ import {
     ScrollView,
     Image,
     ImageBackground,
+    FlatList,
+    ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BottomNavigation from '../components/BottomNavigation';
+import { 
+    useFonts,
+    Kanit_400Regular,
+    Kanit_700Bold,
+} from '@expo-google-fonts/kanit';
 
 const HomeScreen = ({ navigation }) => {
+    const [fontsLoaded] = useFonts({
+        Kanit_400Regular,
+        Kanit_700Bold,
+    });
+
+    const [announcements, setAnnouncements] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Fetch announcements from API
+    useEffect(() => {
+        fetchAnnouncements();
+    }, []);
+
+    const fetchAnnouncements = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch('http://localhost:5000/api/announcements?limit=5&status=published');
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                setAnnouncements(data.data);
+            } else {
+                setError('Failed to fetch announcements');
+            }
+        } catch (err) {
+            console.error('Error fetching announcements:', err);
+            setError('Network error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (!fontsLoaded) {
+        return null;
+    }
+
     const renderMenuItem = (icon, label, onPress) => (
         <TouchableOpacity style={styles.menuItem} onPress={onPress}>
             <View style={styles.menuIconContainer}>
                 <Ionicons name={icon} size={24} color="#666" />
             </View>
             <Text style={styles.menuLabel}>{label}</Text>
+        </TouchableOpacity>
+    );
+
+    // Helper function to get image URL from attachment_urls
+    const getImageUrl = (attachmentUrls) => {
+        console.log('attachmentUrls:', attachmentUrls, 'type:', typeof attachmentUrls);
+        
+        if (attachmentUrls && Array.isArray(attachmentUrls) && attachmentUrls.length > 0) {
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+            const imageUrl = attachmentUrls.find(url => 
+                url && typeof url === 'string' && imageExtensions.some(ext => url.toLowerCase().includes(ext))
+            );
+            return imageUrl || 'https://picsum.photos/300/200';
+        }
+        return 'https://picsum.photos/300/200';
+    };
+
+    const renderNewsItem = ({ item }) => (
+        <TouchableOpacity style={styles.newsCard}>
+            <Image
+                source={{ uri: getImageUrl(item.attachment_urls) }}
+                style={styles.newsImage}
+            />
+            <View style={styles.newsContent}>
+                <Text style={styles.newsTitle} numberOfLines={1}>{item.title}</Text>
+                <Text style={styles.newsDescription} numberOfLines={2}>{item.content}</Text>
+            </View>
         </TouchableOpacity>
     );
 
@@ -97,18 +168,45 @@ const HomeScreen = ({ navigation }) => {
 
                 {/* ข่าวสารและประกาศ */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>ข่าวสารและประกาศ</Text>
-                    <View style={styles.newsContainer}>
-                        <View style={styles.newsImage}>
-                            <Text style={styles.placeholderText}>News Image</Text>
-                        </View>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>ข่าวสารและประกาศ</Text>
+                        <TouchableOpacity onPress={() => navigation.navigate('News')}>
+                            <Text style={styles.seeAllText}>ดูทั้งหมด {'>'}</Text>
+                        </TouchableOpacity>
                     </View>
+                    
+                    {loading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="small" color="#666" />
+                            <Text style={styles.loadingText}>กำลังโหลด...</Text>
+                        </View>
+                    ) : error ? (
+                        <View style={styles.errorContainer}>
+                            <Text style={styles.errorText}>{error}</Text>
+                            <TouchableOpacity onPress={fetchAnnouncements} style={styles.retryButton}>
+                                <Text style={styles.retryText}>ลองใหม่</Text>
+                            </TouchableOpacity>
+                        </View>
+                    ) : announcements.length === 0 ? (
+                        <View style={styles.emptyContainer}>
+                            <Text style={styles.emptyText}>ไม่มีข่าวสารในขณะนี้</Text>
+                        </View>
+                    ) : (
+                        <FlatList
+                            data={announcements}
+                            renderItem={renderNewsItem}
+                            keyExtractor={item => item.id}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.newsListContainer}
+                        />
+                    )}
                 </View>
             </ScrollView>
-             <BottomNavigation
-                            navigation={navigation}
-                            activeScreen="Home"
-                        />
+            <BottomNavigation
+                navigation={navigation}
+                activeScreen="Home"
+            />
         </SafeAreaView>
     );
 };
@@ -119,16 +217,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
     },
     headerBackground: {
-        backgroundColor: '#666', // ใส่สีไว้ก่อนเป็น placeholder
-        // เมื่อมีรูปให้ใช้:
-        // backgroundImage: require('../assets/header-bg.png'),
-        // backgroundSize: 'cover',
+        backgroundColor: '#666',
         paddingBottom: 16,
     },
     header: {
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: 'transparent', // ทำให้พื้นหลังโปร่งใส
+        backgroundColor: 'transparent',
     },
     headerContent: {
         flexDirection: 'row',
@@ -153,6 +248,7 @@ const styles = StyleSheet.create({
     badgeText: {
         color: '#fff',
         fontSize: 12,
+        fontFamily: 'Kanit_400Regular',
     },
     logoContainer: {
         backgroundColor: '#666',
@@ -161,12 +257,13 @@ const styles = StyleSheet.create({
     },
     logoText: {
         color: '#fff',
+        fontFamily: 'Kanit_400Regular',
     },
     content: {
         flex: 1,
     },
     homeAddressCard: {
-        backgroundColor: 'rgba(255, 255, 255, 0.5)', // เปลี่ยนเป็นโปร่งใสเล็กน้อย
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
         margin: 16,
         marginTop: 8,
         padding: 16,
@@ -191,10 +288,11 @@ const styles = StyleSheet.create({
     addressLabel: {
         fontSize: 14,
         color: '#666',
+        fontFamily: 'Kanit_400Regular',
     },
     addressText: {
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: 'Kanit_700Bold',
     },
     section: {
         padding: 16,
@@ -209,11 +307,12 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 18,
-        fontWeight: '600',
+        fontFamily: 'Kanit_700Bold',
         marginBottom: 16,
     },
     seeAllText: {
         color: '#666',
+        fontFamily: 'Kanit_400Regular',
     },
     menuGrid: {
         flexDirection: 'row',
@@ -229,6 +328,7 @@ const styles = StyleSheet.create({
     menuText: {
         marginTop: 8,
         color: '#666',
+        fontFamily: 'Kanit_400Regular',
     },
     favoriteGrid: {
         flexDirection: 'row',
@@ -250,15 +350,45 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#666',
         textAlign: 'center',
+        fontFamily: 'Kanit_400Regular',
+    },
+    newsListContainer: {
+        paddingHorizontal: 4,
     },
     newsContainer: {
         borderRadius: 12,
         overflow: 'hidden',
     },
+    newsCard: {
+        width: 280,
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        marginHorizontal: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
     newsImage: {
         width: '100%',
-        height: 200,
-        backgroundColor: '#f5f5f5',
+        height: 150,
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
+    },
+    newsContent: {
+        padding: 12,
+    },
+    newsTitle: {
+        fontSize: 16,
+        fontFamily: 'Kanit_700Bold',
+        marginBottom: 4,
+    },
+    newsDescription: {
+        fontSize: 14,
+        color: '#666',
+        lineHeight: 20,
+        fontFamily: 'Kanit_400Regular',
     },
     bottomNav: {
         flexDirection: 'row',
@@ -275,6 +405,45 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#666',
         marginTop: 4,
+        fontFamily: 'Kanit_400Regular',
+    },
+    loadingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 20,
+    },
+    loadingText: {
+        marginLeft: 8,
+        color: '#666',
+        fontFamily: 'Kanit_400Regular',
+    },
+    errorContainer: {
+        alignItems: 'center',
+        paddingVertical: 20,
+    },
+    errorText: {
+        color: '#ff6b6b',
+        fontFamily: 'Kanit_400Regular',
+        marginBottom: 8,
+    },
+    retryButton: {
+        backgroundColor: '#f5f5f5',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 8,
+    },
+    retryText: {
+        color: '#666',
+        fontFamily: 'Kanit_400Regular',
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        paddingVertical: 20,
+    },
+    emptyText: {
+        color: '#666',
+        fontFamily: 'Kanit_400Regular',
     },
 });
 

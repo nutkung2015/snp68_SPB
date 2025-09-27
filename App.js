@@ -1,12 +1,35 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, Text, Button, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Font from 'expo-font';
+import {
+  useFonts,
+  Kanit_400Regular,
+  Kanit_500Medium,
+  Kanit_600SemiBold,
+  Kanit_700Bold,
+} from '@expo-google-fonts/kanit';
+import * as SplashScreen from 'expo-splash-screen';
+
 // import หน้าจอทั้งหมด
 import NeighborhoodEmotionsScreen from './screens/NeighborhoodEmotionsScreen';
 import HomeScreen from './screens/HomeScreen';
 import ServiceScreen from './screens/ServiceScreen';
+import NewsScreen from './screens/news/NewsScreen';
+import NewsDetailScreen from './screens/news/NewsDetailScreen';
+
+// เพิ่ม defaultProps สำหรับ Text component
+Text.defaultProps = {
+  ...Text.defaultProps,
+  style: { fontFamily: 'Kanit_400Regular' }
+};
+
+TextInput.defaultProps = {
+  ...TextInput.defaultProps,
+  style: { fontFamily: 'Kanit_400Regular' }
+};
 
 const Stack = createNativeStackNavigator();
 
@@ -20,7 +43,7 @@ const Stack = createNativeStackNavigator();
 //     </View>
 //   );
 // }
- 
+
 function LoginScreen() {
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -66,7 +89,7 @@ function LoginScreen() {
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>Login</Text>
       </TouchableOpacity>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.registerButton}
         onPress={() => {
           setUsername('test');
@@ -87,6 +110,29 @@ function LoginScreen() {
 }
 
 export default function App() {
+
+  // โหลด fonts
+  let [fontsLoaded] = useFonts({
+    Kanit_400Regular,
+    Kanit_500Medium,
+    Kanit_600SemiBold,
+    Kanit_700Bold,
+  });
+
+  // ป้องกัน app render ก่อน fonts โหลดเสร็จ
+  React.useEffect(() => {
+    async function prepare() {
+      await SplashScreen.preventAutoHideAsync();
+    }
+    prepare();
+  }, []);
+
+  if (!fontsLoaded) {
+    return null;
+  } else {
+    SplashScreen.hideAsync();
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
@@ -94,6 +140,8 @@ export default function App() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Services" component={ServiceScreen} />
         <Stack.Screen name="NeighborhoodEmotions" component={NeighborhoodEmotionsScreen} />
+        <Stack.Screen name="News" component={NewsScreen} />
+        <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
