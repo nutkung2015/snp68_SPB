@@ -1,26 +1,18 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 const announcementController = require('../controllers/announcementController');
 
-// GET /api/announcements - Get all announcements with filters and pagination
+// Routes with file upload middleware
+router.post('/', upload.array('files', 5), announcementController.createAnnouncement);
+router.put('/:id', upload.array('files', 5), announcementController.updateAnnouncement);
+
+// Other routes
 router.get('/', announcementController.getAllAnnouncements);
-
-// GET /api/announcements/:id - Get single announcement by ID
 router.get('/:id', announcementController.getAnnouncement);
-
-// POST /api/announcements - Create new announcement
-router.post('/', announcementController.createAnnouncement);
-
-// PUT /api/announcements/:id - Update announcement
-router.put('/:id', announcementController.updateAnnouncement);
-
-// DELETE /api/announcements/:id - Delete announcement
 router.delete('/:id', announcementController.deleteAnnouncement);
-
-// GET /api/announcements/type/:type - Get announcements by type
 router.get('/type/:type', announcementController.getAnnouncementsByType);
-
-// GET /api/announcements/audience/:audience - Get announcements by audience
 router.get('/audience/:audience', announcementController.getAnnouncementsByAudience);
 
 module.exports = router;

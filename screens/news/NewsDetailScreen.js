@@ -59,16 +59,41 @@ const NewsDetailScreen = ({ navigation, route }) => {
     };
 
     // Helper function to get image URL from attachment_urls
-    const getImageUrl = (attachmentUrls) => {
-        if (attachmentUrls && Array.isArray(attachmentUrls) && attachmentUrls.length > 0) {
-            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-            const imageUrl = attachmentUrls.find(url => 
-                url && typeof url === 'string' && imageExtensions.some(ext => url.toLowerCase().includes(ext))
-            );
-            return imageUrl || 'https://picsum.photos/400/300';
+const getImageUrl = (attachmentUrls) => {
+    try {
+        // ถ้ามี attachment_urls และเป็น string (JSON) ให้แปลงเป็น object
+        if (attachmentUrls && typeof attachmentUrls === 'string') {
+            attachmentUrls = JSON.parse(attachmentUrls);
         }
+
+        // ตรวจสอบว่ามี attachmentUrls และเป็น array
+        if (attachmentUrls && Array.isArray(attachmentUrls) && attachmentUrls.length > 0) {
+            // หารูปภาพจาก attachment_urls
+            const imageFile = attachmentUrls.find(file => {
+                // ตรวจสอบ resource_type ว่าเป็น image หรือไม่
+                if (file.resource_type === 'image') {
+                    return true;
+                }
+                
+                // ถ้าไม่มี resource_type ให้เช็คจากนามสกุลไฟล์
+                const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+                return file.url && typeof file.url === 'string' && 
+                       imageExtensions.some(ext => file.url.toLowerCase().includes(ext));
+            });
+
+            // ถ้าเจอไฟล์รูปภาพ ให้ใช้ URL จากไฟล์นั้น
+            if (imageFile && imageFile.url) {
+                return imageFile.url;
+            }
+        }
+
+        // ถ้าไม่มีรูปภาพ ใช้รูป default
         return 'https://picsum.photos/400/300';
-    };
+    } catch (error) {
+        console.error('Error parsing attachment_urls:', error);
+        return 'https://picsum.photos/400/300';
+    }
+};
 
     // Format date to Thai format
     const formatDate = (dateString) => {

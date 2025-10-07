@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BottomNavigation from '../../components/BottomNavigation';
-import { 
+import {
     useFonts,
     Kanit_400Regular,
     Kanit_700Bold,
@@ -43,7 +43,7 @@ const NewsScreen = ({ navigation }) => {
             setLoading(true);
             const response = await fetch('http://localhost:5000/api/announcements?status=published');
             const data = await response.json();
-            
+
             if (data.status === 'success') {
                 setAnnouncements(data.data);
                 // เป็น simulator logic เช็คจากอ่านเนื่องจากยังไม่เชื่อมกับฐานข้อมูล
@@ -64,14 +64,39 @@ const NewsScreen = ({ navigation }) => {
 
     // Helper function to get image URL from attachment_urls
     const getImageUrl = (attachmentUrls) => {
-        if (attachmentUrls && Array.isArray(attachmentUrls) && attachmentUrls.length > 0) {
-            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-            const imageUrl = attachmentUrls.find(url => 
-                url && typeof url === 'string' && imageExtensions.some(ext => url.toLowerCase().includes(ext))
-            );
-            return imageUrl || 'https://picsum.photos/300/200';
+        try {
+            // ถ้ามี attachment_urls และเป็น string (JSON) ให้แปลงเป็น object
+            if (attachmentUrls && typeof attachmentUrls === 'string') {
+                attachmentUrls = JSON.parse(attachmentUrls);
+            }
+
+            // ตรวจสอบว่ามี attachmentUrls และเป็น array
+            if (attachmentUrls && Array.isArray(attachmentUrls) && attachmentUrls.length > 0) {
+                // หารูปภาพจาก attachment_urls
+                const imageFile = attachmentUrls.find(file => {
+                    // ตรวจสอบ MIME type หรือ resource_type ถ้ามี
+                    if (file.resource_type === 'image') {
+                        return true;
+                    }
+
+                    // ถ้าไม่มี resource_type ให้เช็คจากนามสกุลไฟล์
+                    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+                    return file.url && typeof file.url === 'string' &&
+                        imageExtensions.some(ext => file.url.toLowerCase().includes(ext));
+                });
+
+                // ถ้าเจอไฟล์รูปภาพ ให้ใช้ URL จากไฟล์นั้น
+                if (imageFile && imageFile.url) {
+                    return imageFile.url;
+                }
+            }
+
+            // ถ้าไม่มีรูปภาพ ใช้รูป default
+            return 'https://picsum.photos/300/200';
+        } catch (error) {
+            console.error('Error parsing attachment_urls:', error);
+            return 'https://picsum.photos/300/200';
         }
-        return 'https://picsum.photos/300/200';
     };
 
     // Format date to Thai format
@@ -88,7 +113,7 @@ const NewsScreen = ({ navigation }) => {
     };
 
     const renderNewsCard = ({ item }) => (
-        <TouchableOpacity 
+        <TouchableOpacity
             style={styles.newsCard}
             onPress={() => navigation.navigate('NewsDetail', { announcementId: item.id })}
         >
@@ -141,10 +166,10 @@ const NewsScreen = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-            
+
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={styles.backButton}
                     onPress={() => navigation.goBack()}
                 >
