@@ -21,12 +21,10 @@
       }
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-secure-store"
     ],
-    "assets": [
-      "./assets/fonts"
-    ],
-     "assetBundlePatterns": [
+    "assetBundlePatterns": [
       "**/*"
     ]
   }

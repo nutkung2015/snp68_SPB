@@ -8,11 +8,13 @@ import {
   Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { login } from "../services/authService";
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen({ navigation, recheckLoginStatus }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // เพิ่ม state สำหรับ loading
 
   // const handleLogin = async () => {
   //   // ใช้ token mockup ชั่วคราว
@@ -28,30 +30,22 @@ export default function LoginScreen({ navigation }) {
   //   navigation.replace("Home");
   // };
 
-  const handleLogin = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
-      });
+  // ... (โค้ดส่วนอื่นๆ)
 
-      if (response.ok) {
-        const data = await response.json();
-        await AsyncStorage.setItem("authToken", data.data.token); // Store the token
-        console.log("Stored authToken (Login):", data.data.token); // Add this line
-        setError("");
-        navigation.replace("Home");
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      const response = await login(email, password);
+      if (response.status === "success") {
+          await recheckLoginStatus(); // Trigger recheck to navigate to Home
       } else {
-        setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+        setError(response.message || "Login failed");
       }
     } catch (error) {
-      console.error("Error during login", error);
+      console.error("LoginScreen handleLogin error:", error);
+      setError("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 

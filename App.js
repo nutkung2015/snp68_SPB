@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
   View,
@@ -23,6 +23,10 @@ import {
   Kanit_700Bold,
 } from "@expo-google-fonts/kanit";
 import * as SplashScreen from "expo-splash-screen";
+import {
+  setLogoutCallback,
+  setNavigation,
+} from "./screens/services/authService";
 
 // import หน้าจอทั้งหมด
 import NeighborhoodEmotionsScreen from "./screens/NeighborhoodEmotionsScreen";
@@ -32,6 +36,8 @@ import NewsScreen from "./screens/news/NewsScreen";
 import NewsDetailScreen from "./screens/news/NewsDetailScreen";
 import LoginScreen from "./screens/login/LoginScreen";
 import RegisterScreen from "./screens/register/RegisterScreen";
+import ProfileScreen from "./screens/profile/ProfileScreen";
+import JoinUnitScreen from "./screens/JoinUnitScreen";
 
 // เพิ่ม defaultProps สำหรับ Text component
 Text.defaultProps = {
@@ -123,9 +129,6 @@ const Stack = createNativeStackNavigator();
 // }
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(true);
-
   // โหลด fonts
   let [fontsLoaded] = useFonts({
     Kanit_400Regular,
@@ -134,65 +137,142 @@ export default function App() {
     Kanit_700Bold,
   });
 
-  // useEffect(() => {
-  //   // ตรวจสอบ token ใน AsyncStorage
-  //   const checkLogin = async () => {
-  //     let token = await AsyncStorage.getItem("authToken");
-  //     if (!token) {
-  //       token = ""; // ใช้ mock token
-  //       await AsyncStorage.setItem("authToken", token);
-  //     }
-  //     setIsLoggedIn(!!token);
-  //     setLoading(false);
-  //   };
-  //   checkLogin();
-  // }, []);
+  if (!fontsLoaded) {
+    return null; // หรือแสดง Splash Screen
+  }
 
-  useEffect(() => {
-    const checkLoginStatus = async () => {
+  // Define RootNavigator as an inner component
+  function RootNavigator() {
+    const navigation = useNavigation(); // ได้รับ navigation object ที่นี่
+
+    useEffect(() => {
+      if (navigation) {
+        setNavigation(navigation);
+      }
+    }, [navigation]);
+
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [initialRoute, setInitialRoute] = useState("Login"); // Default initial route
+
+    // Auto-navigate when initialRoute changes and navigation is ready
+    useEffect(() => {
+      if (navigation && initialRoute) {
+        navigation.navigate(initialRoute);
+      }
+    }, [navigation, initialRoute]);
+
+    const recheckLoginStatus = async () => {
       try {
-        const token = await AsyncStorage.getItem('authToken');
-        setIsLoggedIn(!!token); // Set isLoggedIn to true if token exists, false otherwise
+        const rawUserData = await AsyncStorage.getItem("userData");
+        const parsedUserData = rawUserData ? JSON.parse(rawUserData) : null;
+        const token = parsedUserData?.token;
+        setIsLoggedIn(!!token);
+
+        if (token) {
+          console.log("Token exists, checking user data...");
+          console.log("Retrieved parsedUserData:", parsedUserData);
+          if (parsedUserData) {
+            console.log("Parsed userData:", parsedUserData);
+            console.log(
+              "parsedUserData.projectMemberships:",
+              parsedUserData.projectMemberships,
+              "length:",
+              parsedUserData.projectMemberships
+                ? parsedUserData.projectMemberships.length
+                : 0
+            );
+            console.log(
+              "parsedUserData.unitMemberships:",
+              parsedUserData.unitMemberships,
+              "length:",
+              parsedUserData.unitMemberships
+                ? parsedUserData.unitMemberships.length
+                : 0
+            );
+            // Ensure projectMemberships and unitMemberships exist and are arrays before checking length
+            if (
+              parsedUserData.projectMemberships &&
+              parsedUserData.projectMemberships.length > 0 &&
+              parsedUserData.unitMemberships &&
+              parsedUserData.unitMemberships.length > 0
+            ) {
+              setInitialRoute("Home");
+            } else {
+              setInitialRoute("JoinUnitScreen");
+            }
+          } else {
+            // Token exists but no user data, might be an incomplete login or corrupted storage
+            console.warn("Token exists but no userData found in AsyncStorage.");
+            setInitialRoute("Login");
+          }
+        } else {
+          setInitialRoute("Login");
+        }
       } catch (e) {
-        console.error('Failed to load auth token from AsyncStorage', e);
-        setIsLoggedIn(false); // Assume not logged in on error
+        console.error(
+          "Failed to load auth token or user data from AsyncStorage",
+          e
+        );
+        setIsLoggedIn(false);
+        setInitialRoute("Login"); // Fallback to Login on error
       } finally {
         setLoading(false);
       }
     };
 
-    checkLoginStatus();
-  }, []);
+    useEffect(() => {
+      recheckLoginStatus(); // Call it once on mount
 
-  if (loading || !fontsLoaded) {
-    return null; // หรือแสดง Splash Screen
+      // ตั้งค่า callback สำหรับการ logout
+      setLogoutCallback(() => {
+        setIsLoggedIn(false);
+        // When logging out, reset initialRoute to Login and navigate
+        setInitialRoute("Login");
+        navigation.navigate("Login");
+      });
+    }, []);
+
+    if (loading) {
+      // Show splash screen or loading indicator while determining initial route
+      return null; // หรือแสดง Splash Screen
+    }
+
+    return (
+      <Stack.Navigator
+        screenOptions={{ headerShown: false }}
+        initialRouteName={initialRoute}
+      >
+        <Stack.Screen name="JoinUnitScreen" component={JoinUnitScreen} />
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Services" component={ServiceScreen} />
+        <Stack.Screen
+          name="NeighborhoodEmotions"
+          component={NeighborhoodEmotionsScreen}
+        />
+        <Stack.Screen name="Profile">
+          {(props) => (
+            <ProfileScreen {...props} recheckLoginStatus={recheckLoginStatus} />
+          )}
+        </Stack.Screen>
+        <Stack.Screen name="News" component={NewsScreen} />
+        <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
+        <Stack.Screen name="Login">
+          {(props) => (
+            <LoginScreen {...props} recheckLoginStatus={recheckLoginStatus} />
+          )}
+        </Stack.Screen>
+        <Stack.Screen name="Register" component={RegisterScreen} />
+      </Stack.Navigator>
+    );
   }
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isLoggedIn ? (
-          <>
-            <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="Services" component={ServiceScreen} />
-            <Stack.Screen
-              name="NeighborhoodEmotions"
-              component={NeighborhoodEmotionsScreen}
-            />
-            <Stack.Screen name="News" component={NewsScreen} />
-            <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
-          </>
-        ) : (
-          <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
-          </>
-        )}
-      </Stack.Navigator>
+      <RootNavigator />
     </NavigationContainer>
   );
 }
-
 const styles = StyleSheet.create({
   loginContainer: {
     flex: 1,

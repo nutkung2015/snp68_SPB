@@ -97,9 +97,22 @@ exports.login = async (req, res) => {
         id: existingUser.id,
         email: existingUser.email,
         role: existingUser.role,
+        full_name: existingUser.full_name,
       },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
+    );
+
+    // ดึงข้อมูลการเป็นสมาชิกโครงการสำหรับบทบาท Backoffice
+    const [projectMemberships] = await db.promise().query(
+      "SELECT project_id, role FROM project_members WHERE user_id = ? AND role IN (?, ?)",
+      [existingUser.id, 'juristicLeader', 'juristicMember']
+    );
+
+    // ดึงข้อมูลการเป็นสมาชิกยูนิต
+    const [unitMemberships] = await db.promise().query(
+      "SELECT unit_id, role FROM unit_members WHERE user_id = ?",
+      [existingUser.id]
     );
 
     res.status(200).json({
@@ -111,6 +124,8 @@ exports.login = async (req, res) => {
         email: existingUser.email,
         role: existingUser.role,
         token,
+        projectMemberships: projectMemberships, // เพิ่มข้อมูล projectMemberships
+        unitMemberships: unitMemberships, // เพิ่มข้อมูล unitMemberships
       },
     });
   } catch (error) {
@@ -119,5 +134,18 @@ exports.login = async (req, res) => {
       status: "error",
       message: "เกิดข้อผิดพลาดในการเข้าสู่ระบบ",
     });
+  }
+};
+
+exports.getProfile = async (req, res) => {
+  try {
+    // req.user มาจาก authMiddleware ซึ่งมีข้อมูลผู้ใช้ที่ถอดรหัสจาก token
+    const user = req.user;
+
+    // ส่งข้อมูลผู้ใช้กลับไป
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };

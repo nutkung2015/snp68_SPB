@@ -3,6 +3,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 
 const authRoutes = require("./routes/auth");
+const projectRoutes = require("./routes/projects");
 
 // Load environment variables
 dotenv.config();
@@ -30,6 +31,13 @@ app.use("/api/announcements", require("./routes/announcements"));
 
 // Auth routes
 app.use("/api/auth", authRoutes);
+
+const unitRoutes = require("./routes/units");
+app.use("/api/units", unitRoutes);
+
+// Project routes
+app.use("/api/projects", projectRoutes);
+app.use("/api/project_invitations", require("./routes/project_invitations"));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
