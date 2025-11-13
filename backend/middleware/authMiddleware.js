@@ -20,7 +20,7 @@ const authMiddleware = async (req, res, next) => {
     // Optional: Fetch user from DB to ensure user still exists
     const [rows] = await db
       .promise()
-      .execute("SELECT id, email, role, full_name FROM users WHERE id = ?", [
+      .execute("SELECT id, email, role, full_name, phone FROM users WHERE id = ?", [
         req.user.id,
       ]);
     if (rows.length === 0) {
@@ -30,6 +30,16 @@ const authMiddleware = async (req, res, next) => {
         .json({ message: "User not found, authorization denied" });
     }
     req.user = rows[0]; // Update req.user with fresh data from DB
+
+    // Fetch project memberships for the user
+    const [projectMemberships] = await db
+      .promise()
+      .query(
+        "SELECT pm.project_id, pm.role, p.name AS project_name FROM project_members pm JOIN projects p ON pm.project_id = p.id WHERE pm.user_id = ? AND pm.role IN ('juristicLeader', 'juristicMember', 'member', 'security')",
+        [req.user.id]
+      );
+
+    req.user.projectMemberships = projectMemberships; // Add project memberships to user object
 
     next();
   } catch (error) {

@@ -40,7 +40,7 @@ const ServiceScreen = ({ navigation }) => {
             id: '5',
             title: 'เบอร์ฉุกเฉิน',
             icon: 'call-outline',
-            onPress: () => navigation.navigate('Emergency'),
+            onPress: () => navigation.navigate('NumberEmergency'),
         },
         {
             id: '6',

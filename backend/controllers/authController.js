@@ -98,22 +98,29 @@ exports.login = async (req, res) => {
         email: existingUser.email,
         role: existingUser.role,
         full_name: existingUser.full_name,
+        phone: existingUser.phone,
       },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
     // ดึงข้อมูลการเป็นสมาชิกโครงการสำหรับบทบาท Backoffice
-    const [projectMemberships] = await db.promise().query(
-      "SELECT project_id, role FROM project_members WHERE user_id = ? AND role IN (?, ?)",
-      [existingUser.id, 'juristicLeader', 'juristicMember']
-    );
+    const [projectMemberships] = await db
+      .promise()
+      .query(
+        "SELECT pm.project_id, pm.role, p.name AS project_name FROM project_members pm JOIN projects p ON pm.project_id = p.id WHERE pm.user_id = ? AND pm.role IN (?, ?, ?, ?)",
+        [existingUser.id, "juristicLeader", "juristicMember", "member", "security"]
+      );
 
     // ดึงข้อมูลการเป็นสมาชิกยูนิต
-    const [unitMemberships] = await db.promise().query(
-      "SELECT unit_id, role FROM unit_members WHERE user_id = ?",
-      [existingUser.id]
-    );
+    const [unitMemberships] = await db
+      .promise()
+      .query(
+        "SELECT um.unit_id, um.role, u.unit_number FROM unit_members um JOIN units u ON um.unit_id = u.id WHERE um.user_id = ?",
+        [
+          existingUser.id,
+        ]
+      );
 
     res.status(200).json({
       status: "success",
@@ -122,8 +129,10 @@ exports.login = async (req, res) => {
         id: existingUser.id,
         full_name: existingUser.full_name,
         email: existingUser.email,
+        phone: existingUser.phone,
         role: existingUser.role,
         token,
+        projectMemberships: req.user?.projectMemberships || [], // ใช้ข้อมูลจาก authMiddleware
         projectMemberships: projectMemberships, // เพิ่มข้อมูล projectMemberships
         unitMemberships: unitMemberships, // เพิ่มข้อมูล unitMemberships
       },

@@ -10,6 +10,7 @@ import {
     FlatList,
     ActivityIndicator,
     StatusBar,
+    Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BottomNavigation from '../../components/BottomNavigation';
@@ -18,6 +19,7 @@ import {
     Kanit_400Regular,
     Kanit_700Bold,
 } from '@expo-google-fonts/kanit';
+import { AnnouncementsService } from '../../services';
 
 const NewsScreen = ({ navigation }) => {
     const [fontsLoaded] = useFonts({
@@ -26,31 +28,60 @@ const NewsScreen = ({ navigation }) => {
     });
 
     const [announcements, setAnnouncements] = useState([]);
-    const [unreadAnnouncements, setUnreadAnnouncements] = useState([]);
-    const [readAnnouncements, setReadAnnouncements] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedCategory, setSelectedCategory] = useState('หมวดหมู่');
-    const [selectedTimeFilter, setSelectedTimeFilter] = useState('7 วันที่ผ่านมา');
+    const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
+    const [selectedTimeFilter, setSelectedTimeFilter] = useState('ล่าสุด');
+    const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+    const [showTimeDropdown, setShowTimeDropdown] = useState(false);
 
-    // Fetch announcements from API
+    // Filter options
+    const categoryOptions = [
+        { label: 'ทั้งหมด', value: '' },
+        { label: 'ประกาศ', value: 'announcement' },
+        { label: 'กิจกรรม', value: 'event' },
+        { label: 'การบำรุงรักษา', value: 'maintenance' },
+        { label: 'เหตุฉุกเฉิน', value: 'emergency' },
+    ];
+
+    const timeFilterOptions = [
+        { label: 'ล่าสุด', value: 'latest' },
+        { label: '1 วันที่แล้ว', value: '1day' },
+        { label: '7 วันที่แล้ว', value: '7days' },
+        { label: '1 เดือนที่แล้ว', value: '1month' },
+        { label: '3 เดือนที่แล้ว', value: '3months' }
+    ];
+
     useEffect(() => {
         fetchAnnouncements();
     }, []);
 
-    const fetchAnnouncements = async () => {
+    useEffect(() => {
+        fetchAnnouncements(selectedCategory, selectedTimeFilter);
+    }, [selectedCategory, selectedTimeFilter]);
+
+    const fetchAnnouncements = async (category = '', timeFilter = '') => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:5000/api/announcements?status=published');
-            const data = await response.json();
+
+            const params = {
+                status: 'published'
+            };
+
+            // Add category filter
+            if (category && category !== 'ทั้งหมด') {
+                params.category = category;
+            }
+
+            // Add time filter
+            if (timeFilter && timeFilter !== 'ล่าสุด') {
+                params.timeFilter = timeFilter;
+            }
+
+            const data = await AnnouncementsService.getAnnouncements(params);
 
             if (data.status === 'success') {
                 setAnnouncements(data.data);
-                // เป็น simulator logic เช็คจากอ่านเนื่องจากยังไม่เชื่อมกับฐานข้อมูล
-                const unread = data.data.slice(0, 3); // สองอันแรกเป็นอ่านไม่ได้
-                const read = data.data.slice(2); // อันที่เหลือเป็นอ่านได้
-                setUnreadAnnouncements(unread);
-                setReadAnnouncements(read);
             } else {
                 setError('Failed to fetch announcements');
             }
@@ -62,7 +93,6 @@ const NewsScreen = ({ navigation }) => {
         }
     };
 
-    // Helper function to get image URL from attachment_urls
     const getImageUrl = (attachmentUrls) => {
         try {
             // ถ้ามี attachment_urls และเป็น string (JSON) ให้แปลงเป็น object
@@ -159,9 +189,74 @@ const NewsScreen = ({ navigation }) => {
         </View>
     );
 
-    if (!fontsLoaded) {
-        return null;
-    }
+    // Handle category selection
+    const handleCategorySelect = (category) => {
+        setSelectedCategory(category);
+        setShowCategoryDropdown(false);
+    };
+
+    // Handle time filter selection
+    const handleTimeFilterSelect = (timeFilter) => {
+        setSelectedTimeFilter(timeFilter);
+        setShowTimeDropdown(false);
+    };
+
+    // Render dropdown options
+    const renderDropdownOption = (option, isSelected, onSelect) => (
+        <TouchableOpacity
+            key={option.value}
+            style={[
+                styles.dropdownOption,
+                isSelected && styles.dropdownOptionSelected
+            ]}
+            onPress={() => onSelect(option.label)}
+        >
+            <Text style={[
+                styles.dropdownOptionText,
+                isSelected && styles.dropdownOptionTextSelected
+            ]}>
+                {option.label}
+            </Text>
+        </TouchableOpacity>
+    );
+
+    // Render category dropdown
+    const renderCategoryDropdown = () => {
+        if (!showCategoryDropdown) return null;
+
+        return (
+            <View style={styles.dropdownContainer}>
+                <View style={styles.dropdown}>
+                    {categoryOptions.map(option =>
+                        renderDropdownOption(
+                            option,
+                            selectedCategory === option.label,
+                            handleCategorySelect
+                        )
+                    )}
+                </View>
+            </View>
+        );
+    };
+
+    // Render time filter dropdown
+    const renderTimeFilterDropdown = () => {
+        if (!showTimeDropdown) return null;
+
+        return (
+            <View style={styles.dropdownContainer}>
+                <View style={styles.dropdown}>
+                    {timeFilterOptions.map(option =>
+                        renderDropdownOption(
+                            option,
+                            selectedTimeFilter === option.label,
+                            handleTimeFilterSelect
+                        )
+                    )}
+                </View>
+            </View>
+        );
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -177,19 +272,32 @@ const NewsScreen = ({ navigation }) => {
                     <Text style={styles.backText}>ย้อนกลับ</Text>
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>ข่าวสารและประกาศ</Text>
+                <View style={styles.headerRight} />
             </View>
 
             {/* Filter Section */}
             <View style={styles.filterContainer}>
-                <TouchableOpacity style={styles.filterButton}>
+                <TouchableOpacity
+                    style={styles.filterButton}
+                    onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                >
                     <Text style={styles.filterText}>{selectedCategory}</Text>
                     <Ionicons name="chevron-down" size={20} color="#666" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.filterButton}>
+                <TouchableOpacity
+                    style={styles.filterButton}
+                    onPress={() => setShowTimeDropdown(!showTimeDropdown)}
+                >
                     <Text style={styles.filterText}>{selectedTimeFilter}</Text>
                     <Ionicons name="chevron-down" size={20} color="#666" />
                 </TouchableOpacity>
             </View>
+
+            {/* Category Dropdown */}
+            {renderCategoryDropdown()}
+
+            {/* Time Filter Dropdown */}
+            {renderTimeFilterDropdown()}
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 {loading ? (
@@ -205,10 +313,21 @@ const NewsScreen = ({ navigation }) => {
                         </TouchableOpacity>
                     </View>
                 ) : (
-                    <>
-                        {renderSection('ยังไม่อ่าน', unreadAnnouncements, 'ไม่มีข่าวสารที่ยังไม่อ่าน')}
-                        {renderSection('อ่านแล้ว', readAnnouncements, 'ไม่มีข่าวสารที่อ่านแล้ว')}
-                    </>
+                    <View style={styles.section}>
+                        {announcements.length === 0 ? (
+                            <View style={styles.emptyContainer}>
+                                <Text style={styles.emptyText}>ไม่มีข่าวสาร</Text>
+                            </View>
+                        ) : (
+                            <FlatList
+                                data={announcements}
+                                renderItem={renderNewsCard}
+                                keyExtractor={item => item.id}
+                                scrollEnabled={false}
+                                showsVerticalScrollIndicator={false}
+                            />
+                        )}
+                    </View>
                 )}
             </ScrollView>
 
@@ -225,18 +344,23 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
+      headerRight: {
+        width: 40,
+    },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingTop: Platform.OS === 'ios' ? 50 : 16,
+        paddingBottom: 16,
         paddingHorizontal: 16,
-        paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: '#eee',
+        backgroundColor: '#fff',
+        zIndex: 10,
     },
     backButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginRight: 16,
     },
     backText: {
         fontSize: 16,
@@ -244,9 +368,11 @@ const styles = StyleSheet.create({
         marginLeft: 4,
     },
     headerTitle: {
-        fontSize: 20,
-        fontFamily: 'Kanit_700Bold',
         flex: 1,
+        textAlign: 'center',
+        fontSize: 18,
+        fontFamily: 'Kanit_700Bold',
+        marginLeft: -40, // To center the title
     },
     filterContainer: {
         flexDirection: 'row',
@@ -374,6 +500,45 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: 'Kanit_400Regular',
         color: '#666',
+    },
+    dropdownContainer: {
+        position: 'absolute',
+        top: 140, // Position below the filter section
+        left: 16,
+        right: 16,
+        zIndex: 1000,
+        elevation: 5,
+    },
+    dropdown: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    dropdownOption: {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    dropdownOptionSelected: {
+        backgroundColor: '#f0f8ff',
+    },
+    dropdownOptionText: {
+        fontSize: 14,
+        fontFamily: 'Kanit_400Regular',
+        color: '#333',
+    },
+    dropdownOptionTextSelected: {
+        color: '#007AFF',
+        fontFamily: 'Kanit_700Bold',
     },
 });
 

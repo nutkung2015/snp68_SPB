@@ -12,8 +12,8 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Routes
 app.get("/", (req, res) => {
@@ -36,8 +36,16 @@ const unitRoutes = require("./routes/units");
 app.use("/api/units", unitRoutes);
 
 // Project routes
-app.use("/api/projects", projectRoutes);
+app.use("/api", projectRoutes); // Changed from "/api/projects" to "/api" to support /api/project-memberships
 app.use("/api/project_invitations", require("./routes/project_invitations"));
+
+// Repairs routes
+app.use("/api/repairs", require("./routes/repairs"));
+
+app.use(
+  "/api/project-customizations",
+  require("./routes/projectCustomizations")
+);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

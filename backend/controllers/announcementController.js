@@ -12,7 +12,7 @@ cloudinary.config({
 
 // Get all announcements
 exports.getAllAnnouncements = (req, res) => {
-    const { type, audience, status, page = 1, limit = 10 } = req.query;
+    const { type, audience, status, days, latest, page = 1, limit = 10 } = req.query;
     
     let query = 'SELECT * FROM announcements WHERE 1=1';
     const queryParams = [];
@@ -33,9 +33,21 @@ exports.getAllAnnouncements = (req, res) => {
         queryParams.push(status);
     }
     
+    // Add time-based filter
+    if (days) {
+        query += ' AND updated_at >= DATE_SUB(NOW(), INTERVAL ? DAY)';
+        queryParams.push(parseInt(days));
+    }
+    
     // Add pagination
     const offset = (page - 1) * limit;
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    
+    // Sort by updated_at for time-based filtering, otherwise by created_at
+    if (latest || days) {
+        query += ' ORDER BY updated_at DESC LIMIT ? OFFSET ?';
+    } else {
+        query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    }
     queryParams.push(parseInt(limit), parseInt(offset));
     
     db.query(query, queryParams, (err, results) => {
@@ -64,6 +76,11 @@ exports.getAllAnnouncements = (req, res) => {
         if (status) {
             countQuery += ' AND status = ?';
             countParams.push(status);
+        }
+        
+        if (days) {
+            countQuery += ' AND updated_at >= DATE_SUB(NOW(), INTERVAL ? DAY)';
+            countParams.push(parseInt(days));
         }
         
         db.query(countQuery, countParams, (err, countResult) => {

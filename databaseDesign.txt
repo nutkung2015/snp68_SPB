@@ -49,3 +49,50 @@ Table house_memberships {
 }
 
 ----------------------------------------------------------------------------------
+
+ส่วนของระบบแจ้งซ่อมและแจ้งปัญหา
+----------------------------------------------------------------------------------
+
+Table personal_repairs {
+  id                 varchar(255) [pk]
+  unit_id            varchar(255) // ID ของ unit
+  zone               varchar(100) // โซนของบ้าน เช่น "A", "B"
+  reporter_name      varchar(255) // ชื่อผู้แจ้ง
+  reporter_id        varchar(255) // ID ของผู้แจ้ง (optional)
+  submitted_date     datetime // วันที่ยื่นแจ้งซ่อม
+  repair_category    enum('plumbing', 'electrical', 'door_window', 'wall_ceiling', 'floor', 'roof', 'air_conditioning', 'other') // ประเภทงานซ่อม
+  repair_area        varchar(255) // พื้นที่แจ้งซ่อม เช่น "ห้องน้ำชั้น 2"
+  description        text // รายละเอียดงาน
+  image_urls         text // URL รูปภาพ (JSON array)
+  status             enum('pending', 'in_progress', 'completed', 'rejected') // สถานะ
+  assigned_to        varchar(255) // ผู้รับผิดชอบ
+  priority           enum('low', 'medium', 'high', 'urgent') // ความสำคัญ
+  estimated_cost     decimal(10,2) // ค่าใช้จ่ายประมาณการ
+  actual_cost        decimal(10,2) // ค่าใช้จ่ายจริง
+  notes              text // หมายเหตุ
+  completed_date     datetime // วันที่เสร็จสิ้น
+  created_at         datetime
+  updated_at         datetime
+}
+
+Table common_issues {
+  id                 varchar(255) [pk]
+  unit_id            varchar(255) // ID ของ unit
+  zone               varchar(100) // โซนของบ้าน
+  reporter_name      varchar(255) // ชื่อผู้แจ้ง
+  reporter_id        varchar(255) // ID ของผู้แจ้ง (optional)
+  reported_date      datetime // วันที่แจ้ง
+  issue_type         enum('lighting', 'road', 'garden', 'parking', 'elevator', 'pool', 'fitness', 'security', 'cleanliness', 'noise', 'water_supply', 'garbage', 'other') // ประเภทปัญหา
+  location           varchar(255) // สถานที่
+  description        text // รายละเอียดงาน
+  image_urls         text // URL รูปภาพ (JSON array)
+  status             enum('pending', 'in_progress', 'resolved', 'rejected') // สถานะ
+  assigned_to        varchar(255) // ผู้รับผิดชอบ
+  priority           enum('low', 'medium', 'high', 'urgent') // ความสำคัญ
+  notes              text // หมายเหตุ
+  resolved_date      datetime // วันที่แก้ไขเสร็จ
+  created_at         datetime
+  updated_at         datetime
+}
+
+----------------------------------------------------------------------------------

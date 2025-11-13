@@ -1,13 +1,28 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Dimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Assuming you have @expo/vector-icons installed
-import { setNavigation } from '../screens/services/authService'; // Adjust path as needed
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  Dimensions,
+  Alert,
+  ImageBackground,
+  Image,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons"; // Assuming you have @expo/vector-icons installed
+import { setNavigation } from "../services/authService"; // Adjust path as needed
+import { logout } from "../services/authService";
+import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { UnitsService } from "../services";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 const JoinUnitScreen = () => {
-  const [invitationCode, setInvitationCode] = useState('');
+  const [invitationCode, setInvitationCode] = useState("");
+  const [userData, setUserData] = useState(null);
   const navigation = useNavigation();
 
   // Set the navigation object to authService
@@ -15,29 +30,81 @@ const JoinUnitScreen = () => {
     setNavigation(navigation);
   }, [navigation]);
 
-  const handleJoinProject = () => {
-    // Here you would typically call your API to join the unit/project
-    // using the invitationCode
-    console.log('Joining project with code:', invitationCode);
-    // Example: call an API function
-    // joinUnitAPI(invitationCode);
-    // After successful join, you might navigate to the main app screen
-    // navigation.navigate('MainAppScreen');
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const storedUserData = await AsyncStorage.getItem("userData");
+        if (storedUserData) {
+          setUserData(JSON.parse(storedUserData));
+          console.log("Loaded userData:", JSON.parse(storedUserData));
+        }
+      } catch (error) {
+        console.error("Failed to load user data from AsyncStorage", error);
+      }
+    };
+    loadUserData();
+  }, []);
+
+  const getInitials = (fullName) => {
+    if (!fullName) return "";
+    const names = fullName.split(" ");
+    if (names.length === 1) {
+      return names[0].substring(0, 2).toUpperCase();
+    }
+    return (names[0].charAt(0) + names[1].charAt(0)).toUpperCase();
+  };
+
+  const handleJoinProject = async () => {
+    if (!invitationCode) {
+      Alert.alert("Error", "Please enter an invitation code.");
+      return;
+    }
+
+    try {
+      const data = await UnitsService.joinUnit(invitationCode);
+
+      Alert.alert(
+        "Success",
+        data.message || "Successfully joined the project!"
+      );
+      // Navigate to Home after successful join
+      navigation.navigate("Home");
+    } catch (error) {
+      console.error("Error joining project:", error);
+      Alert.alert("Error", error.message || "An unexpected error occurred. Please try again.");
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.headerBackground}>
-        <View style={styles.headerContent}>
-          <Ionicons name="happy-outline" size={30} color="white" style={styles.smileyIcon} />
-          <Text style={styles.headerText}>บริการดีครบครันเป็นกันเองต้องที่</Text>
-          <Text style={styles.headerTitle}>“เสียงเพื่อนบ้าน”</Text>
+      <ImageBackground
+        source={require("../assets/banner_header_3.png")}
+        style={styles.headerBackground}
+        resizeMode="cover"
+        imageStyle={{
+          // เพิ่ม style สำหรับรูปภาพ
+          width: "100%",
+          height: "100%",
+        }}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            {/* <View style={styles.logoContainer}>
+              <Image
+                source={require("../assets/logo_1.png")}
+                style={styles.logoImage}
+              />
+            </View> */}
+          </View>
         </View>
-      </View>
+      </ImageBackground>
 
       <View style={styles.body}>
         <Text style={styles.instructionTitle}>กรอกรหัสคำเชิญ</Text>
-        <Text style={styles.instructionSubtitle}>กรอกรหัสคำเชิญเพื่อเข้าสู่โครงการ</Text>
+        <Text style={styles.instructionSubtitle}>
+          กรอกรหัสคำเชิญเพื่อเข้าสู่โครงการ
+        </Text>
 
         <TextInput
           style={styles.input}
@@ -51,13 +118,17 @@ const JoinUnitScreen = () => {
           <Text style={styles.buttonText}>เข้าสู่โครงการ</Text>
         </TouchableOpacity>
 
-        <Text style={styles.footerText}>
-          ถ้าหากคุณไม่มีคิวอาร์โค้ดหรือรหัสคำเชิญ
-        </Text>
-        <Text style={styles.footerText}>
-          โปรดติดต่อที่นิติบุคคล
-        </Text>
+        <Text style={styles.footerText}>ถ้าหากคุณไม่มีรหัสคำเชิญ</Text>
+        <Text style={styles.footerText}>โปรดติดต่อที่นิติบุคคล</Text>
       </View>
+      {/* {userData && userData.fullName && ( */}
+      <TouchableOpacity
+        style={styles.bottomProfileLinkContainer}
+        onPress={() => logout(navigation)}
+      >
+        <Text style={styles.profileLinkText}>ออกจากระบบ</Text>
+      </TouchableOpacity>
+      {/* )} */}
     </SafeAreaView>
   );
 };
@@ -65,19 +136,21 @@ const JoinUnitScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
+    zIndex: 0, // Ensure SafeAreaView is at the base
   },
   headerBackground: {
-    width: '100%',
+    width: "100%",
     height: height * 0.3, // Adjust height as needed
-    backgroundColor: '#8BC34A', // Placeholder for gradient, adjust to match your gradient
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#8BC34A", // Placeholder for gradient, adjust to match your gradient
+    justifyContent: "center",
+    alignItems: "center",
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
+    position: "relative", // Add relative positioning for absolute children
   },
   headerContent: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
   },
   smileyIcon: {
@@ -85,62 +158,72 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 16,
-    color: 'white',
-    textAlign: 'center',
+    color: "white",
+    textAlign: "center",
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "white",
+    textAlign: "center",
     marginTop: 5,
+  },
+  profileLinkText: {
+    paddingTop: "auto",
+    color: "gray",
+    fontSize: 16,
+    textDecorationLine: "underline",
+  },
+  bottomProfileLinkContainer: {
+    alignItems: "center",
+    paddingBottom: 20,
   },
   body: {
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 30,
-    alignItems: 'center',
+    alignItems: "center",
   },
   instructionTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 5,
   },
   instructionSubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
     marginBottom: 30,
   },
   input: {
-    width: '100%',
+    width: "100%",
     height: 50,
-    borderColor: '#E0E0E0',
+    borderColor: "#E0E0E0",
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 15,
     fontSize: 16,
-    color: '#333',
+    color: "#333",
     marginBottom: 20,
   },
   button: {
-    width: '100%',
+    width: "100%",
     height: 50,
-    backgroundColor: '#4CAF50', // Green button color
+    backgroundColor: "#4CAF50", // Green button color
     borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 30,
   },
   buttonText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
   },
   footerText: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     lineHeight: 22,
   },
 });

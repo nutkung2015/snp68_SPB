@@ -26,11 +26,15 @@ import * as SplashScreen from "expo-splash-screen";
 import {
   setLogoutCallback,
   setNavigation,
-} from "./screens/services/authService";
+} from "./services/authService";
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { EXTERNAL_SERVICES } from "./utils/config";
 
 // import หน้าจอทั้งหมด
 import NeighborhoodEmotionsScreen from "./screens/NeighborhoodEmotionsScreen";
 import HomeScreen from "./screens/HomeScreen";
+import GuardHomeScreen from "./screens/GuardHomeScreen";
 import ServiceScreen from "./screens/ServiceScreen";
 import NewsScreen from "./screens/news/NewsScreen";
 import NewsDetailScreen from "./screens/news/NewsDetailScreen";
@@ -38,6 +42,17 @@ import LoginScreen from "./screens/login/LoginScreen";
 import RegisterScreen from "./screens/register/RegisterScreen";
 import ProfileScreen from "./screens/profile/ProfileScreen";
 import JoinUnitScreen from "./screens/JoinUnitScreen";
+import HomeOptionScreen from "./screens/Myhome/HomeOptionScreen";
+import VilageOptionScreen from "./screens/MyVilage/VilageOption";
+import NumberEmergencyScreen from "./screens/number_emergency/list_number_emergency";
+import ChatScreen from "./screens/ChatScreen";
+import IssueMenuScreen from "./screens/issue/issue_menu";
+import PersonalIssueScreen from "./screens/issue/personal_issue/personal_issue";
+import AddIssueForm from "./screens/issue/personal_issue/AddIssueForm";
+
+// Security screens
+import SecurityServiceScreen from "./screens/security/SecurityServiceScreen";
+import SecurityProfileScreen from "./screens/security/SecurityProfileScreen";
 
 // เพิ่ม defaultProps สำหรับ Text component
 Text.defaultProps = {
@@ -128,7 +143,22 @@ const Stack = createNativeStackNavigator();
 //   );
 // }
 
+// Initialize Firebase outside component
+const firebaseConfig = {
+  apiKey: EXTERNAL_SERVICES.FIREBASE.API_KEY,
+  authDomain: EXTERNAL_SERVICES.FIREBASE.AUTH_DOMAIN,
+  projectId: EXTERNAL_SERVICES.FIREBASE.PROJECT_ID,
+  storageBucket: EXTERNAL_SERVICES.FIREBASE.STORAGE_BUCKET,
+  messagingSenderId: EXTERNAL_SERVICES.FIREBASE.MESSAGING_SENDER_ID,
+  appId: EXTERNAL_SERVICES.FIREBASE.APP_ID,
+  measurementId: EXTERNAL_SERVICES.FIREBASE.MEASUREMENT_ID,
+};
+
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
+
 export default function App() {
+
   // โหลด fonts
   let [fontsLoaded] = useFonts({
     Kanit_400Regular,
@@ -154,6 +184,7 @@ export default function App() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [loading, setLoading] = useState(true);
     const [initialRoute, setInitialRoute] = useState("Login"); // Default initial route
+    const [userRole, setUserRole] = useState(null); // Track user role
 
     // Auto-navigate when initialRoute changes and navigation is ready
     useEffect(() => {
@@ -171,35 +202,45 @@ export default function App() {
 
         if (token) {
           console.log("Token exists, checking user data...");
-          console.log("Retrieved parsedUserData:", parsedUserData);
+          // console.log("Retrieved parsedUserData:", parsedUserData);
           if (parsedUserData) {
-            console.log("Parsed userData:", parsedUserData);
-            console.log(
-              "parsedUserData.projectMemberships:",
-              parsedUserData.projectMemberships,
-              "length:",
-              parsedUserData.projectMemberships
-                ? parsedUserData.projectMemberships.length
-                : 0
-            );
-            console.log(
-              "parsedUserData.unitMemberships:",
-              parsedUserData.unitMemberships,
-              "length:",
-              parsedUserData.unitMemberships
-                ? parsedUserData.unitMemberships.length
-                : 0
-            );
-            // Ensure projectMemberships and unitMemberships exist and are arrays before checking length
-            if (
-              parsedUserData.projectMemberships &&
-              parsedUserData.projectMemberships.length > 0 &&
-              parsedUserData.unitMemberships &&
-              parsedUserData.unitMemberships.length > 0
-            ) {
-              setInitialRoute("Home");
+            // console.log("Parsed userData:", parsedUserData);
+            // console.log(
+            //   "parsedUserData.projectMemberships:",
+            //   parsedUserData.projectMemberships,
+            //   "length:",
+            //   parsedUserData.projectMemberships
+            //     ? parsedUserData.projectMemberships.length
+            //     : 0
+            // );
+            // console.log(
+            //   "parsedUserData.unitMemberships:",
+            //   parsedUserData.unitMemberships,
+            //   "length:",
+            //   parsedUserData.unitMemberships
+            //     ? parsedUserData.unitMemberships.length
+            //     : 0
+            // );
+            
+            // Check user role for Security
+            const role = parsedUserData.role || parsedUserData.roles?.[0];
+            setUserRole(role); // Store user role
+            
+            if (role === "security") {
+              // Security users go to GuardHome
+              setInitialRoute("GuardHome");
             } else {
-              setInitialRoute("JoinUnitScreen");
+              // Regular users - check project and unit memberships
+              if (
+                parsedUserData.projectMemberships &&
+                parsedUserData.projectMemberships.length > 0 &&
+                parsedUserData.unitMemberships &&
+                parsedUserData.unitMemberships.length > 0
+              ) {
+                setInitialRoute("Home");
+              } else {
+                setInitialRoute("JoinUnitScreen");
+              }
             }
           } else {
             // Token exists but no user data, might be an incomplete login or corrupted storage
@@ -227,6 +268,7 @@ export default function App() {
       // ตั้งค่า callback สำหรับการ logout
       setLogoutCallback(() => {
         setIsLoggedIn(false);
+        setUserRole(null); // Clear user role
         // When logging out, reset initialRoute to Login and navigate
         setInitialRoute("Login");
         navigation.navigate("Login");
@@ -238,33 +280,84 @@ export default function App() {
       return null; // หรือแสดง Splash Screen
     }
 
-    return (
-      <Stack.Navigator
-        screenOptions={{ headerShown: false }}
-        initialRouteName={initialRoute}
-      >
-        <Stack.Screen name="JoinUnitScreen" component={JoinUnitScreen} />
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Services" component={ServiceScreen} />
-        <Stack.Screen
-          name="NeighborhoodEmotions"
-          component={NeighborhoodEmotionsScreen}
-        />
-        <Stack.Screen name="Profile">
-          {(props) => (
-            <ProfileScreen {...props} recheckLoginStatus={recheckLoginStatus} />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="News" component={NewsScreen} />
-        <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
-        <Stack.Screen name="Login">
-          {(props) => (
-            <LoginScreen {...props} recheckLoginStatus={recheckLoginStatus} />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="Register" component={RegisterScreen} />
-      </Stack.Navigator>
-    );
+    // Render different stack navigators based on user role
+    if (userRole === "security") {
+      // Security Stack Navigator - Only security-related screens
+      return (
+        <Stack.Navigator
+          screenOptions={{ headerShown: false }}
+          initialRouteName={initialRoute}
+        >
+          <Stack.Screen name="GuardHome" component={GuardHomeScreen} />
+          <Stack.Screen name="SecurityServices" component={SecurityServiceScreen} />
+          <Stack.Screen name="Profile">
+            {(props) => (
+              <SecurityProfileScreen {...props} recheckLoginStatus={recheckLoginStatus} />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="Chat" component={ChatScreen} />
+          <Stack.Screen name="Login">
+            {(props) => (
+              <LoginScreen {...props} recheckLoginStatus={recheckLoginStatus} />
+            )}
+          </Stack.Screen>
+          {/* Add security-specific screens here */}
+        </Stack.Navigator>
+      );
+    } else {
+      // Resident Stack Navigator - Only resident-related screens
+      return (
+        <Stack.Navigator
+          screenOptions={{ headerShown: false }}
+          initialRouteName={initialRoute}
+        >
+          <Stack.Screen name="JoinUnitScreen" component={JoinUnitScreen} />
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Services" component={ServiceScreen} />
+          <Stack.Screen
+            name="NeighborhoodEmotions"
+            component={NeighborhoodEmotionsScreen}
+          />
+          <Stack.Screen name="Profile">
+            {(props) => (
+              <ProfileScreen {...props} recheckLoginStatus={recheckLoginStatus} />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="News" component={NewsScreen} />
+          <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
+          <Stack.Screen name="Login">
+            {(props) => (
+              <LoginScreen {...props} recheckLoginStatus={recheckLoginStatus} />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="Register" component={RegisterScreen} />
+
+          {/* home */}
+          <Stack.Screen name="HomeOption" component={HomeOptionScreen} />
+          {/* vilage */}
+          <Stack.Screen name="VilageOption" component={VilageOptionScreen} />
+          {/* number emergency */}
+          <Stack.Screen name="NumberEmergency" component={NumberEmergencyScreen} />
+          <Stack.Screen name="Chat" component={ChatScreen} />
+          <Stack.Screen name="IssueMenu" component={IssueMenuScreen} />
+          <Stack.Screen 
+            name="PersonalIssue" 
+            component={PersonalIssueScreen} 
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="AddIssue" 
+            component={AddIssueForm} 
+            options={{ 
+              headerShown: false,
+              presentation: 'modal',
+              cardOverlayEnabled: true,
+              cardStyle: { backgroundColor: 'transparent' },
+            }}
+          />
+        </Stack.Navigator>
+      );
+    }
   }
 
   return (

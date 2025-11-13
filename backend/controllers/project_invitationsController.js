@@ -10,13 +10,13 @@ exports.createInvitation = async (req, res) => {
     const expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000); // Expires in 24 hours
 
     // Validate the role for the invitation
-    const allowedRoles = ['juristicLeader', 'juristicMember'];
+    const allowedRoles = ['juristicLeader', 'juristicMember', 'security'];
     let invitationRole = 'juristicMember'; // Default role for invitation
 
     if (role && allowedRoles.includes(role)) {
       invitationRole = role;
     } else if (role && !allowedRoles.includes(role)) {
-      return res.status(400).json({ message: "Invalid role specified for invitation. Allowed roles are 'juristicLeader' or 'juristicMember'." });
+      return res.status(400).json({ message: "Invalid role specified for invitation. Allowed roles are 'juristicLeader', 'juristicMember', or 'security'." });
     }
 
     const [result] = await db.promise().execute(
@@ -30,6 +30,110 @@ exports.createInvitation = async (req, res) => {
   }
 };
 
+exports.getInvitations = async (req, res) => {
+  try {
+    const user_id = req.user.id;
+    const user_role = req.user.role; // Role from users table (JWT token)
+    const { project_id } = req.query; // Get project_id from query params
+
+    console.log('=== DEBUG getInvitations ===');
+    console.log('user_id:', user_id);
+    console.log('user_role:', user_role);
+    console.log('project_id:', project_id);
+    console.log('projectMemberships:', JSON.stringify(req.user.projectMemberships, null, 2));
+
+    let invitations = [];
+
+    // Permission 1: super-admin - check role in users table only
+    if (user_role === 'super-admin') {
+      console.log('Accessing as super-admin');
+      const [allInvitations] = await db.promise().execute(
+        `SELECT
+          pi.id,
+          pi.project_id,
+          pi.sender_id,
+          pi.invitation_code,
+          pi.role,
+          pi.status,
+          pi.expires_at,
+          pi.created_at,
+          p.name AS project_name,
+          u.full_name AS sender_name,
+          u.email AS sender_email
+        FROM project_invitations pi
+        LEFT JOIN projects p ON pi.project_id = p.id
+        LEFT JOIN users u ON pi.sender_id = u.id
+        ORDER BY pi.created_at DESC`
+      );
+      invitations = allInvitations;
+    }
+    // Permission 2: juristicLeader, juristicMember - check project_members table only (ignore JWT role)
+    else {
+      console.log('Accessing as juristic role (ignoring JWT role check)');
+
+      // Check if project_id is provided
+      if (!project_id) {
+        console.log('ERROR: project_id is required');
+        return res.status(400).json({
+          message: "project_id is required"
+        });
+      }
+
+      // Check if user has membership in this project from projectMemberships
+      console.log('Looking for project membership for project_id:', project_id);
+      const projectMembership = req.user.projectMemberships.find(
+        membership => membership.project_id === project_id &&
+        (membership.role === 'juristicLeader' || membership.role === 'juristicMember')
+      );
+
+      console.log('Found project membership:', projectMembership);
+
+      if (!projectMembership) {
+        console.log('ERROR: No valid project membership found');
+        return res.status(403).json({
+          message: "You don't have permission to view invitations for this project"
+        });
+      }
+
+      console.log('Fetching invitations for project:', project_id);
+      // Fetch invitations for the specific project
+      const [projectInvitations] = await db.promise().execute(
+        `SELECT
+          pi.id,
+          pi.project_id,
+          pi.sender_id,
+          pi.invitation_code,
+          pi.role,
+          pi.status,
+          pi.expires_at,
+          pi.created_at,
+          p.name AS project_name,
+          u.full_name AS sender_name,
+          u.email AS sender_email
+        FROM project_invitations pi
+        LEFT JOIN projects p ON pi.project_id = p.id
+        LEFT JOIN users u ON pi.sender_id = u.id
+        WHERE pi.project_id = ?
+        ORDER BY pi.created_at DESC`,
+        [project_id]
+      );
+      invitations = projectInvitations;
+      console.log('Found invitations:', invitations.length);
+    }
+
+    console.log('Returning invitations:', invitations.length);
+    res.status(200).json({
+      status: "success",
+      message: "Invitations fetched successfully",
+      data: invitations,
+      count: invitations.length
+    });
+  } catch (error) {
+    console.error("Error in getInvitations:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.joinProject = async (req, res) => {
   try {
     const { invitation_code } = req.body; // No need for role in req.body anymore
@@ -37,7 +141,10 @@ exports.joinProject = async (req, res) => {
 
     // 1. Find the invitation
     const [invitations] = await db.promise().execute(
-      "SELECT * FROM project_invitations WHERE invitation_code = ? AND expires_at > NOW() AND status = 'pending'",
+      `SELECT pi.*, p.name AS project_name
+       FROM project_invitations pi
+       LEFT JOIN projects p ON pi.project_id = p.id
+       WHERE pi.invitation_code = ? AND pi.expires_at > NOW() AND pi.status = 'pending'`,
       [invitation_code]
     );
 
@@ -72,7 +179,9 @@ exports.joinProject = async (req, res) => {
       [invitation.id]
     );
 
-    res.status(200).json({ message: "Successfully joined the project!", project_id: project_id, role: memberRole });
+    const project_name = invitation.project_name || 'Unknown Project';
+
+    res.status(200).json({ message: "Successfully joined the project!", project_id: project_id, project_name: project_name, role: memberRole });
   } catch (error) {
     console.error("Error in joinProject:", error);
     res.status(500).json({ message: "Server error" });

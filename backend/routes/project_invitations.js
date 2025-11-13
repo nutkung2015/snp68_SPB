@@ -7,6 +7,10 @@ const authMiddleware = require('../middleware/authMiddleware');
 // URL: POST /api/project_invitations/create
 router.post('/create', authMiddleware, projectInvitationsController.createInvitation);
 
+// Route to get invitations (with permission-based filtering)
+// URL: GET /api/project_invitations?project_id=xxx (project_id required for juristicLeader/juristicMember)
+router.get('/', authMiddleware, projectInvitationsController.getInvitations);
+
 // Route to join a project using an invitation code
 // URL: POST /api/project_invitations/join
 router.post('/join', authMiddleware, projectInvitationsController.joinProject);

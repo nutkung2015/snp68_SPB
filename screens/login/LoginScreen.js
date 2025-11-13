@@ -6,9 +6,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  SafeAreaView,
+  ImageBackground,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { login } from "../services/authService";
+import { login } from "../../services/authService";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function LoginScreen({ navigation, recheckLoginStatus }) {
   const [email, setEmail] = useState("");
@@ -21,8 +25,6 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
   //   if (email === "test@email.com" && password === "1234") {
   //     setError("");
   //     navigation.navigate("Home");
-  //   } else {
-  //     setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
   //   }
 
   //   const mockToken = "mock-token-12345";
@@ -37,7 +39,7 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
     try {
       const response = await login(email, password);
       if (response.status === "success") {
-          await recheckLoginStatus(); // Trigger recheck to navigate to Home
+        await recheckLoginStatus(); // Trigger recheck to navigate to Home
       } else {
         setError(response.message || "Login failed");
       }
@@ -50,111 +52,139 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>บริการดีครบครับเป็นกันเองต้องที่</Text>
-        <View style={styles.logoCircle}>
-          <Image
-            source={require("../../assets/logo_1.png")}
-            style={styles.logo}
-          />
-        </View>
-        <Text style={styles.appName}>"เสียงเพื่อนบ้าน"</Text>
-      </View>
-      <View style={styles.form}>
-        <Text style={styles.loginTitle}>ล็อกอินเพื่อเข้าสู่ระบบ</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="email"
-          placeholderTextColor="#aaa"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="password"
-          placeholderTextColor="#aaa"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>เข้าสู่ระบบ</Text>
-        </TouchableOpacity>
-      </View>
-      <TouchableOpacity
-        style={styles.registerLink}
-        onPress={() => navigation.navigate("Register")}
+    <SafeAreaView style={styles.container}>
+      <ImageBackground
+        source={require("../../assets/mockup_banner_header_2.png")}
+        style={styles.headerBackground}
+        resizeMode="cover"
+        imageStyle={{
+          // เพิ่ม style สำหรับรูปภาพ
+          width: "100%",
+          height: "100%",
+        }}
       >
-        <Text style={styles.registerText}>
-          ถ้าคุณไม่มีรหัส <Text style={{ color: "#3ec6a8" }}>สมัครที่นี่</Text>
-        </Text>
-      </TouchableOpacity>
-    </View>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View style={styles.logoContainer}>
+              {/* <Image
+                source={require("../../assets/logo_1.png")}
+                style={styles.logoImage}
+              /> */}
+            </View>
+          </View>
+        </View>
+      </ImageBackground>
+
+      <SafeAreaView style={styles.formContainer}>
+        <View style={styles.form}>
+          <Text style={styles.loginTitle}>ล็อกอินเพื่อเข้าสู่ระบบ</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="email"
+            placeholderTextColor="#205248"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="password"
+            placeholderTextColor="#205248"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+            <Text style={styles.loginButtonText}>เข้าสู่ระบบ</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity
+          style={styles.registerLink}
+          onPress={() => navigation.navigate("Register")}
+        >
+          <Text style={styles.registerText}>
+            ถ้าคุณไม่มีรหัส{" "}
+            <Text style={{ color: "#3ec6a8" }}>สมัครที่นี่</Text>
+          </Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "linear-gradient(135deg, #a8e063 0%, #56ab2f 100%)",
-    alignItems: "center",
-    justifyContent: "flex-start",
+    backgroundColor: "#f5f5f5",
+  },
+  headerBackground: {
+    height: "25%",
+    backgroundColor: "#666",
+    paddingBottom: 16,
   },
   header: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "transparent",
+  },
+  headerContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 40,
-    marginBottom: 24,
   },
-  headerText: {
-    fontSize: 16,
-    color: "#fff",
-    marginBottom: 8,
+  notificationButton: {
+    position: "relative",
+    padding: 8,
   },
-  logoCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#fff",
+
+  logoContainer: {
+    // backgroundColor: "#666",
+    padding: 8,
+    borderRadius: 8,
+  },
+  logoImage: {
+    width: 50, // กำหนดความกว้างของรูปภาพ
+    height: 50, // กำหนดความสูงของรูปภาพ
+    resizeMode: "contain", // ปรับขนาดรูปภาพให้พอดีโดยไม่ตัดส่วนใดส่วนหนึ่งออก
+  },
+  formContainer: {
+    flex: 1,
+    // justifyContent: "center",
     alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
   },
-  logo: {
-    width: 60,
-    height: 60,
-  },
-  appName: {
-    fontSize: 20,
-    color: "#fff",
-    fontWeight: "bold",
-    marginBottom: 16,
-  },
+
   form: {
+    // alignItems: "center",
     width: "90%",
     alignItems: "center",
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     borderRadius: 16,
     padding: 24,
     marginBottom: 24,
+    marginTop: 70, // ดึง form ขึ้นมาทับ headerBackground เล็กน้อย
+    zIndex: 1, // ให้ form อยู่ด้านบน
   },
   loginTitle: {
     fontSize: 18,
     color: "#222",
     marginBottom: 16,
-    fontWeight: "bold",
+    fontFamily: "Kanit_600SemiBold",
+    // fontWeight: "bold",
   },
   input: {
     width: "100%",
     height: 48,
-    backgroundColor: "#f6f6f6",
+    // backgroundColor: "#cde8e2",
     borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#205248",
     paddingHorizontal: 16,
     fontSize: 16,
     marginBottom: 12,
-    color: "#222",
+    color: "#205248",
+    fontFamily: "Kanit_400Regular", // ต้อง import font ก่อน
   },
   loginButton: {
     width: "100%",
@@ -168,7 +198,8 @@ const styles = StyleSheet.create({
   loginButtonText: {
     color: "#fff",
     fontSize: 18,
-    fontWeight: "bold",
+    fontFamily: "Kanit_600SemiBold",
+    // fontWeight: "bold",
   },
   errorText: {
     color: "red",
@@ -180,5 +211,45 @@ const styles = StyleSheet.create({
   registerText: {
     color: "#222",
     fontSize: 14,
+  },
+  homeAddressCard: {
+    margin: 16,
+    marginTop: 8,
+    paddingTop: 16,
+    paddingBottom: 16,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    elevation: 3,
+  },
+  gradientCard: {
+    width: "100%",
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  addressIcon: {
+    backgroundColor: "#205248",
+    padding: 8,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  addressContent: {
+    flex: 1,
+  },
+  addressLabel: {
+    fontSize: 14,
+    color: "#666",
+    // fontFamily: "Kanit_400Regular", // ต้อง import font ก่อน
+  },
+  addressText: {
+    fontSize: 16,
+    // fontFamily: "Kanit_700Bold", // ต้อง import font ก่อน
   },
 });

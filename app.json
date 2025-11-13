@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "MyApp",
-    "slug": "my-app",
+    "name": "SiengPuenBan",
+    "slug": "sieng-puen-ban",
     "version": "1.0.0",
     "sdkVersion": "54.0.0",
     "platforms": [
@@ -12,7 +12,9 @@
     "extra": {
       "eas": {
         "projectId": "7c6d8598-fa21-4f26-ab88-eb019a0d52b7"
-      }
+      },
+      "APP_ENV": "development",
+      "DEBUG": true
     },
     "ios": {
       "bundleIdentifier": "com.nutkung2015.myapp",
@@ -20,12 +22,23 @@
         "ITSAppUsesNonExemptEncryption": false
       }
     },
+    "android": {
+      "usesCleartextTraffic": true
+    },
     "plugins": [
       "expo-font",
       "expo-secure-store"
     ],
     "assetBundlePatterns": [
       "**/*"
-    ]
+    ],
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    }
   }
 }
