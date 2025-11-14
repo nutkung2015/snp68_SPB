@@ -22,6 +22,7 @@ import {
   Kanit_700Bold,
 } from "@expo-google-fonts/kanit";
 import { AnnouncementsService } from "../services";
+import ProjectCustomizationsService from "../services/projectCustomizationsService"; // Import ProjectCustomizations service
 import apiService from "../services/apiService"; // Import API service
 
 const HomeScreen = ({ navigation }) => {
@@ -77,14 +78,15 @@ const HomeScreen = ({ navigation }) => {
     if (userData?.projectMemberships?.[0]?.project_id) {
       fetchProjectCustomizations(userData.projectMemberships[0].project_id);
     }
-    fetchAnnouncements();
+    fetchAnnouncements(); // ตรวจสอบว่า fetchAnnouncements() ทำงานได้ถูกต้อง
   }, [userData]);
 
   const fetchProjectCustomizations = async (projectId) => {
     try {
       setLoading(true);
-      const response = await apiService.get(`/projectCustomizations/${projectId}`); // Fetch customization data
-      setCustomizationData(response.data);
+      const response =
+        await ProjectCustomizationsService.getProjectCustomizations(projectId);
+      setCustomizationData(response.data); // ตั้งค่าข้อมูลที่ได้จาก API
     } catch (err) {
       console.error("Error fetching project customizations:", err);
       setError("Failed to fetch project customizations");
@@ -117,10 +119,14 @@ const HomeScreen = ({ navigation }) => {
   const renderNewsItem = ({ item }) => (
     <TouchableOpacity
       style={styles.newsCard}
-      onPress={() => navigation.navigate("NewsDetail", { announcementId: item.id })}
+      onPress={() =>
+        navigation.navigate("NewsDetail", { announcementId: item.id })
+      }
     >
       <Image
-        source={{ uri: item.attachment_urls || "https://picsum.photos/300/200" }}
+        source={{
+          uri: item.attachment_urls || "https://picsum.photos/300/200",
+        }}
         style={styles.newsImage}
       />
       <View style={styles.newsContent}>
@@ -153,7 +159,11 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.headerContent}>
             <View style={styles.logoContainer}>
               <Image
-                source={{ uri: customizationData?.logo_url || require("../assets/logo_3_white.png") }}
+                source={{
+                  uri:
+                    customizationData?.logo_url ||
+                    require("../assets/logo_3_white.png"),
+                }}
                 style={styles.logoImage}
               />
             </View>
@@ -168,7 +178,10 @@ const HomeScreen = ({ navigation }) => {
 
         <TouchableOpacity style={styles.homeAddressCard}>
           <LinearGradient
-            colors={[customizationData?.primary_color || "#4BB59F", customizationData?.secondary_color || "#FFD840"]}
+            colors={[
+              customizationData?.primary_color || "#4BB59F",
+              customizationData?.secondary_color || "#FFD840",
+            ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.gradientCard}
@@ -177,9 +190,12 @@ const HomeScreen = ({ navigation }) => {
               <Ionicons name="home-outline" size={24} color="#fff" />
             </View>
             <View style={styles.addressContent}>
-              <Text style={[styles.addressLabel, { color: "#fff" }]}>บ้านของฉัน</Text>
+              <Text style={[styles.addressLabel, { color: "#fff" }]}>
+                บ้านของฉัน
+              </Text>
               <Text style={[styles.addressText, { color: "#fff" }]}>
-                {userData?.unitMemberships?.[0]?.unit_number} {userData?.projectMemberships?.[0]?.project_name}
+                {userData?.unitMemberships?.[0]?.unit_number}{" "}
+                {userData?.projectMemberships?.[0]?.project_name}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color="#fff" />
@@ -193,11 +209,12 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
-        {!customizationData && !loading && (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>ไม่มีข้อมูลการปรับแต่ง</Text>
-          </View>
-        )}
+        {(!customizationData || Object.keys(customizationData).length === 0) &&
+          !loading && (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>ไม่มีข้อมูลการปรับแต่ง</Text>
+            </View>
+          )}
         {announcements.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>ข่าวสารและประกาศ</Text>
