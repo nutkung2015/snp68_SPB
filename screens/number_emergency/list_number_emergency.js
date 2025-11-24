@@ -141,7 +141,7 @@ export default function ListNumberEmergencyScreen({ navigation }) {
         </View>
       </Modal>
 
-      <BottomNavigation navigation={navigation} activeScreen="Emergency" />
+      {/* <BottomNavigation navigation={navigation} activeScreen="Emergency" /> */}
     </SafeAreaView>
   );
 }

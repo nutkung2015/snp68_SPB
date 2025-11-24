@@ -27,6 +27,28 @@ class IssueService {
     }
   }
 
+  static async getPersonalRepairByResidents(projectId) {
+    try {
+      const token = await ApiService.getToken();
+      const response = await ApiService.get(`/api/repairs/personal/my-repairs?project_id=${projectId}`, token);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching personal repairs for resident:", error.response || error);
+      throw error;
+    }
+  }
+
+  static async getPersonalRepairById(issueId) {
+    try {
+      const token = await ApiService.getToken();
+      const response = await ApiService.get(`/api/repairs/personal/${issueId}`, token);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching personal repair details:", error.response || error);
+      throw error;
+    }
+  }
+
   static async convertImagesToBase64(images) {
     const imagePromises = images.map(async (uri) => {
       const response = await fetch(uri);

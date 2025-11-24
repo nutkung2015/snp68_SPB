@@ -42,6 +42,10 @@ app.use("/api/project_invitations", require("./routes/project_invitations"));
 // Repairs routes
 app.use("/api/repairs", require("./routes/repairs"));
 
+// Juristic routes
+app.use("/api/juristic", require("./routes/juristicRoutes"));
+
+
 app.use(
   "/api/project-customizations",
   require("./routes/projectCustomizations")

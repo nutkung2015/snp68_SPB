@@ -21,11 +21,16 @@ router.post('/personal', repairController.createPersonalRepair);
 // ดึงรายการแจ้งซ่อมทรัพย์สินส่วนบุคคลทั้งหมด
 router.get('/personal', repairController.getPersonalRepairs);
 
+// ดึงรายการแจ้งซ่อมทรัพย์สินส่วนบุคคลสำหรับผู้พักอาศัย (ตาม reporter_id)
+router.get('/personal/my-repairs', repairController.getPersonalRepairsForResident);
+
+
 // ดึงรายการแจ้งซ่อมทรัพย์สินส่วนบุคคลตาม ID
 router.get('/personal/:id', repairController.getPersonalRepairById);
 
-// อัพเดทสถานะการแจ้งซ่อมทรัพย์สินส่วนบุคคล
+// อัพเดทสถานะการแจ้งซ่อมทรัพย์สินส่วนบุคคล (รองรับทั้ง PATCH และ PUT)
 router.patch('/personal/:id', repairController.updatePersonalRepairStatus);
+router.put('/personal/:id', repairController.updatePersonalRepairStatus);
 
 // ลบรายการแจ้งซ่อมทรัพย์สินส่วนบุคคล
 router.delete('/personal/:id', repairController.deletePersonalRepair);

@@ -89,10 +89,10 @@ const ServiceScreen = ({ navigation }) => {
             </ScrollView>
 
             {/* Bottom Navigation */}
-            <BottomNavigation
+            {/* <BottomNavigation
                 navigation={navigation}
                 activeScreen="Services"
-            />
+            /> */}
         </SafeAreaView>
     );
 };

@@ -16,14 +16,15 @@ import BottomNavigation from "../components/BottomNavigation";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { HomeOptionScreen } from "./Myhome/HomeOptionScreen";
+import apiService from "../services/apiService"; // Import API service
+
 import {
   useFonts,
   Kanit_400Regular,
   Kanit_700Bold,
 } from "@expo-google-fonts/kanit";
 import { AnnouncementsService } from "../services";
-import ProjectCustomizationsService from "../services/projectCustomizationsService"; // Import ProjectCustomizations service
-import apiService from "../services/apiService"; // Import API service
+import ProjectCustomizationsService from "../services/projectCustomizationsService";
 
 const HomeScreen = ({ navigation }) => {
   const [fontsLoaded] = useFonts({
@@ -35,6 +36,10 @@ const HomeScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [customizationData, setCustomizationData] = useState(null); // State for ProjectCustomizations
+  const [loadingAnnouncements, setLoadingAnnouncements] = useState(true); // Loading state for announcements
+
+  const [secondaryColor, setSecondaryColor] = useState("#33FF57"); // Default color
+  const [primaryColor, setPrimaryColor] = useState("#4BB59F"); // Default color
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -60,6 +65,75 @@ const HomeScreen = ({ navigation }) => {
 
   const [userData, setUserData] = useState(null);
 
+  // useEffect(() => {
+  //   const loadUserData = async () => {
+  //     try {
+  //       const storedUserData = await AsyncStorage.getItem("userData");
+  //       if (storedUserData) {
+  //         setUserData(JSON.parse(storedUserData));
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to load user data from AsyncStorage", error);
+  //     }
+  //   };
+  //   loadUserData();
+  // }, []);
+
+  // // Fetch announcements from API
+  // useEffect(() => {
+  //   if (userData?.projectMemberships?.[0]?.project_id) {
+  //     fetchProjectCustomizations(userData.projectMemberships[0].project_id);
+  //   }
+  //   fetchAnnouncements(); // ตรวจสอบว่า fetchAnnouncements() ทำงานได้ถูกต้อง
+  // }, [userData]);
+
+
+
+  const fetchProjectCustomizations = async (projectId) => {
+    try {
+      setLoading(true);
+      const response = await ProjectCustomizationsService.getProjectCustomizations(projectId);
+      console.log("RESPONSE FROM API:", response); // แทรก debug
+      // นี่คือเจาะชั้น response ที่ถูกต้อง
+      if (response) {
+        setCustomizationData(response);
+        if (response.primary_color, response.secondary_color) {
+          setPrimaryColor(response.primary_color);
+          setSecondaryColor(response.secondary_color);
+        }
+
+      }
+    } catch (err) {
+      console.error("Error fetching project customizations:", err);
+      setError("Failed to fetch project customizations");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAnnouncements = async () => {
+    try {
+      setLoadingAnnouncements(true); // Separate loading state for announcements
+      const data = await AnnouncementsService.getAnnouncements({
+        limit: 5,
+        status: "published",
+      });
+
+      if (data.status === "success") {
+        setAnnouncements(data.data);
+      } else {
+        setError("Failed to fetch announcements");
+      }
+    } catch (err) {
+      console.error("Error fetching announcements:", err);
+      setError("Network error");
+    } finally {
+      setLoadingAnnouncements(false); // Ensure loading state is updated
+    }
+  };
+
+
+
   useEffect(() => {
     const loadUserData = async () => {
       try {
@@ -75,44 +149,78 @@ const HomeScreen = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    if (userData?.projectMemberships?.[0]?.project_id) {
-      fetchProjectCustomizations(userData.projectMemberships[0].project_id);
-    }
-    fetchAnnouncements(); // ตรวจสอบว่า fetchAnnouncements() ทำงานได้ถูกต้อง
+    const fetchData = async () => {
+      if (userData?.projectMemberships?.[0]?.project_id) {
+        await fetchProjectCustomizations(
+          userData.projectMemberships[0].project_id
+        );
+      }
+      await fetchAnnouncements(); // Always fetch announcements
+    };
+    fetchData();
   }, [userData]);
 
-  const fetchProjectCustomizations = async (projectId) => {
-    try {
-      setLoading(true);
-      const response =
-        await ProjectCustomizationsService.getProjectCustomizations(projectId);
-      setCustomizationData(response.data); // ตั้งค่าข้อมูลที่ได้จาก API
-    } catch (err) {
-      console.error("Error fetching project customizations:", err);
-      setError("Failed to fetch project customizations");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ในตัว component (นอก useEffect)
+  console.log("Render primaryColor:", primaryColor);
 
-  const fetchAnnouncements = async () => {
-    try {
-      setLoading(true);
-      const data = await AnnouncementsService.getAnnouncements({
-        limit: 5,
-        status: "published",
-      });
+  <TouchableOpacity
+    style={[styles.menuButton, { backgroundColor: primaryColor }]} // ใช้ primaryColor
+    onPress={() => navigation.navigate("HomeOption")}
+  >
+    <Ionicons name="home-outline" size={24} color="#fff" />
+    <Text style={styles.menuText}>บ้านของฉัน</Text>
+  </TouchableOpacity>;
 
-      if (data.status === "success") {
-        setAnnouncements(data.data);
-      } else {
-        setError("Failed to fetch announcements");
+  const renderMenuItem = (icon, label, onPress) => (
+    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
+      <View style={[styles.menuIconContainer, { borderColor: secondaryColor }]}>
+        <Ionicons name={icon} size={28} color={secondaryColor} />
+      </View>
+      <Text style={styles.menuLabel}>{label}</Text>
+    </TouchableOpacity>
+  );
+
+  // Helper function to get image URL from attachment_urls
+  const getImageUrl = (attachmentUrls) => {
+    try {
+      // ถ้ามี attachment_urls และเป็น string (JSON) ให้แปลงเป็น object
+      if (attachmentUrls && typeof attachmentUrls === "string") {
+        attachmentUrls = JSON.parse(attachmentUrls);
       }
-    } catch (err) {
-      console.error("Error fetching announcements:", err);
-      setError("Network error");
-    } finally {
-      setLoading(false);
+
+      // ตรวจสอบว่ามี attachmentUrls และเป็น array
+      if (
+        attachmentUrls &&
+        Array.isArray(attachmentUrls) &&
+        attachmentUrls.length > 0
+      ) {
+        // หารูปภาพจาก attachment_urls
+        const imageFile = attachmentUrls.find((file) => {
+          // ตรวจสอบ MIME type หรือ resource_type ถ้ามี
+          if (file.resource_type === "image") {
+            return true;
+          }
+
+          // ถ้าไม่มี resource_type ให้เช็คจากนามสกุลไฟล์
+          const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+          return (
+            file.url &&
+            typeof file.url === "string" &&
+            imageExtensions.some((ext) => file.url.toLowerCase().includes(ext))
+          );
+        });
+
+        // ถ้าเจอไฟล์รูปภาพ ให้ใช้ URL จากไฟล์นั้น
+        if (imageFile && imageFile.url) {
+          return imageFile.url;
+        }
+      }
+
+      // ถ้าไม่มีรูปภาพ ใช้รูป default
+      return "https://picsum.photos/300/200";
+    } catch (error) {
+      console.error("Error parsing attachment_urls:", error);
+      return "https://picsum.photos/300/200";
     }
   };
 
@@ -124,9 +232,7 @@ const HomeScreen = ({ navigation }) => {
       }
     >
       <Image
-        source={{
-          uri: item.attachment_urls || "https://picsum.photos/300/200",
-        }}
+        source={{ uri: getImageUrl(item.attachment_urls) }}
         style={styles.newsImage}
       />
       <View style={styles.newsContent}>
@@ -140,84 +246,145 @@ const HomeScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
-  if (!fontsLoaded) {
-    return null;
-  }
-
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground
+      {/* แทนที่ View ด้วย ImageBackground */}
+      {/* <ImageBackground
         source={require("../assets/banner_header_3.png")}
         style={styles.headerBackground}
         resizeMode="cover"
         imageStyle={{
+          // เพิ่ม style สำหรับรูปภาพ
           width: "100%",
           height: "100%",
         }}
       >
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <View style={styles.logoContainer}>
-              <Image
-                source={{
-                  uri:
-                    customizationData?.logo_url ||
-                    require("../assets/logo_3_white.png"),
-                }}
-                style={styles.logoImage}
-              />
-            </View>
+      </ImageBackground> */}
+      {/* Header */}
+      <LinearGradient
+        colors={["#143D60", "#A0C878"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.gradientCardHeader}
+      >
+        {/* Row 1: Logo (ซ้าย) - Actions (ขวา) */}
+        <View style={styles.headerRowTop}>
+          <Image
+            source={require("../assets/logo_3_white.png")}
+            style={styles.logoImage}
+          />
+          <View style={styles.headerActions}>
             <TouchableOpacity style={styles.notificationButton}>
-              <Ionicons name="notifications-outline" size={24} color="#fff" />
+              <Ionicons name="notifications-outline" size={24} color="#18545d" />
               <View style={styles.notificationBadge}>
                 <Text style={styles.badgeText}>5</Text>
               </View>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.profileCircle} onPress={() => navigation.navigate("Profile")}>
+              <Text style={styles.profileText}>NC</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        {/* Row 2: ไอคอนบ้าน + user info */}
+        <View style={styles.headerRowBottom}>
+          <Ionicons
+            name="home"
+            size={32}
+            color="#fff"
+            style={styles.headerHouseIcon}
+          />
+          <View style={styles.headerUserBox}>
+            <Text style={styles.headerUserName}>สวัสดีคุณ {userData?.full_name}</Text>
+            <Text style={styles.headerUserAddress}>{" "}
+              {userData?.unitMemberships?.[0]?.unit_number}{" "}
+              {userData?.projectMemberships?.[0]?.project_name}</Text>
+          </View>
+        </View>
+      </LinearGradient>
+
+
+      {/* บ้านของฉัน */}
+
+
+
+      <ScrollView style={styles.content}>
+        {/* ข้อมูลหมู่บ้านและบ้าน */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>ข้อมูลหมู่บ้านและบ้าน</Text>
+          <View style={styles.menuGrid}>
+            <TouchableOpacity
+              style={[styles.menuButton, { backgroundColor: primaryColor }]} // ใช้ primaryColor
+              onPress={() => navigation.navigate("HomeOption")}
+            >
+              <Ionicons name="home-outline" size={24} color="#fff" />
+              <Text style={styles.menuText}>บ้านของฉัน</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.menuButton, { backgroundColor: primaryColor }]}
+              onPress={() => navigation.navigate("VilageOption")}
+            >
+              <Ionicons name="people-outline" size={24} color="#fff" />
+              <Text style={styles.menuText}>หมู่บ้านของฉัน</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.homeAddressCard}>
-          <LinearGradient
-            colors={[
-              customizationData?.primary_color || "#4BB59F",
-              customizationData?.secondary_color || "#FFD840",
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradientCard}
-          >
-            <View style={styles.addressIcon}>
-              <Ionicons name="home-outline" size={24} color="#fff" />
-            </View>
-            <View style={styles.addressContent}>
-              <Text style={[styles.addressLabel, { color: "#fff" }]}>
-                บ้านของฉัน
-              </Text>
-              <Text style={[styles.addressText, { color: "#fff" }]}>
-                {userData?.unitMemberships?.[0]?.unit_number}{" "}
-                {userData?.projectMemberships?.[0]?.project_name}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="#fff" />
-          </LinearGradient>
-        </TouchableOpacity>
-      </ImageBackground>
-
-      <ScrollView style={styles.content}>
-        {error && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
+        {/* รายการโปรด */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>บริการทั้งหมด</Text>
+            {/* <TouchableOpacity>
+              <Text style={styles.seeAllText}>ดูเพิ่มเติม {">"}</Text>
+            </TouchableOpacity> */}
           </View>
-        )}
-        {(!customizationData || Object.keys(customizationData).length === 0) &&
-          !loading && (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>ไม่มีข้อมูลการปรับแต่ง</Text>
-            </View>
-          )}
-        {announcements.length > 0 && (
-          <View style={styles.section}>
+          <View style={styles.favoriteGrid}>
+            {renderMenuItem("megaphone-outline", "ข่าวสาร", () =>
+              navigation.navigate("News")
+            )}
+            {renderMenuItem("warning-outline", "แจ้งปัญหา", () =>
+              navigation.navigate("IssueMenu")
+            )}
+            {renderMenuItem("car-outline", "ผู้มาเยี่ยม", () =>
+              navigation.navigate("Visitors")
+            )}
+            {renderMenuItem("chatbubble-outline", "ขอความช่วยเหลือ", () =>
+              navigation.navigate("HelpRequest")
+            )}
+            {renderMenuItem("call-outline", "เบอร์ฉุกเฉิน", () =>
+              navigation.navigate("NumberEmergency")
+            )}
+          </View>
+        </View>
+
+        {/* ข่าวสารและประกาศ */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>ข่าวสารและประกาศ</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("News")}>
+              <Text style={styles.seeAllText}>ดูทั้งหมด {">"}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#666" />
+              <Text style={styles.loadingText}>กำลังโหลด...</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity
+                onPress={fetchAnnouncements}
+                style={styles.retryButton}
+              >
+                <Text style={styles.retryText}>ลองใหม่</Text>
+              </TouchableOpacity>
+            </View>
+          ) : announcements.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>ไม่มีข่าวสารในขณะนี้</Text>
+            </View>
+          ) : (
             <FlatList
               data={announcements}
               renderItem={renderNewsItem}
@@ -226,10 +393,10 @@ const HomeScreen = ({ navigation }) => {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.newsListContainer}
             />
-          </View>
-        )}
+          )}
+        </View>
       </ScrollView>
-      <BottomNavigation navigation={navigation} activeScreen="Home" />
+      {/* <BottomNavigation navigation={navigation} activeScreen="Home" /> */}
     </SafeAreaView>
   );
 };
@@ -239,121 +406,180 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f5f5f5",
   },
-  headerBackground: {
-    backgroundColor: "#666",
+
+  gradientCardHeader: {
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    paddingHorizontal: 18,
+    paddingTop: 20,
+    paddingBottom: 26,
+    marginTop: 0,
+    marginHorizontal: 0,
+    // marginBottom: 18,
+    position: "relative",
+    minHeight: 144,
+    justifyContent: "flex-end"
   },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "transparent",
-  },
-  headerContent: {
+  headerRowTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    // ไม่มี position absolute แล้ว
+  },
+  logoImage: {
+    width: 42,
+    height: 42,
+    resizeMode: "contain",
+  },
   notificationButton: {
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    padding: 10,
+    marginRight: 9,
     position: "relative",
-    padding: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 2,
   },
   notificationBadge: {
     position: "absolute",
-    top: 4,
-    right: 4,
-    backgroundColor: "red",
-    borderRadius: 10,
-    width: 20,
-    height: 20,
+    top: 3,
+    right: 2,
+    backgroundColor: "#18545d",
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 3,
   },
   badgeText: {
     color: "#fff",
-    fontSize: 12,
-    fontFamily: "Kanit_400Regular",
+    fontSize: 11,
+    fontWeight: "bold",
+    fontFamily: "Kanit_700Bold",
+    textAlign: "center",
   },
-  logoContainer: {
-    padding: 8,
-    borderRadius: 8,
-  },
-  logoImage: {
-    width: 50,
-    height: 50,
-    resizeMode: "contain",
-  },
-  content: {
-    flex: 1,
-  },
-  homeAddressCard: {
-    margin: 16,
-    marginTop: 8,
-    paddingTop: 16,
-    paddingBottom: 16,
-    borderRadius: 12,
-    flexDirection: "row",
+  profileCircle: {
+    width: 47,
+    height: 47,
+    borderRadius: 25,
+    backgroundColor: "#fff",
     alignItems: "center",
-    elevation: 3,
-  },
-  gradientCard: {
-    width: "100%",
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: "row",
-    alignItems: "center",
+    justifyContent: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  addressIcon: {
-    backgroundColor: "#205248",
-    padding: 8,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  addressContent: {
-    flex: 1,
-  },
-  addressLabel: {
-    fontSize: 14,
-    color: "#666",
-    fontFamily: "Kanit_400Regular",
-  },
-  addressText: {
+  profileText: {
+    color: "#205248",
+    fontWeight: "bold",
     fontSize: 16,
     fontFamily: "Kanit_700Bold",
   },
-  errorContainer: {
+  headerRowBottom: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 20,
+    marginTop: 20,
   },
-  errorText: {
-    color: "#ff6b6b",
-    fontFamily: "Kanit_400Regular",
-    marginBottom: 8,
+  headerHouseIcon: {
+    marginRight: 10,
+    marginBottom: 2,
   },
-  emptyContainer: {
-    alignItems: "center",
-    paddingVertical: 20,
+  headerUserBox: {
+    justifyContent: "center",
   },
-  emptyText: {
-    color: "#666",
+  headerUserName: {
+    color: "#fff",
+    fontSize: 16,
+    fontFamily: "Kanit_700Bold",
+    marginBottom: 1,
+  },
+  headerUserAddress: {
+    color: "#fff",
+    fontSize: 13.5,
     fontFamily: "Kanit_400Regular",
   },
   section: {
     paddingHorizontal: 20,
     paddingTop: 20,
     backgroundColor: "#fff",
-    marginBottom: 8,
+    marginBottom: 10,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 20,
     fontFamily: "Kanit_700Bold",
-    marginBottom: 16,
+    color: "#183D3D",
+  },
+  seeAllText: {
+    color: "#666",
+    fontFamily: "Kanit_400Regular",
+  },
+  menuGrid: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 16,
+  },
+  menuButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 22,
+    backgroundColor: "#4BB59F",
+    borderRadius: 12,
+    width: "48%",
+  },
+  menuText: {
+    marginLeft: 8,
+    color: "#fff",
+    fontFamily: "Kanit_400Regular",
+  },
+  favoriteGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  menuItem: {
+    width: "23%",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  menuIconContainer: {
+    borderWidth: 2.2,
+    borderColor: "#4BB59F",
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  menuLabel: {
+    fontSize: 14,
+    color: "#205248",
+    textAlign: "center",
+    fontFamily: "Kanit_400Regular",
   },
   newsListContainer: {
     paddingHorizontal: 4,
+  },
+  newsContainer: {
+    borderRadius: 12,
+    overflow: "hidden",
   },
   newsCard: {
     width: 280,
@@ -385,6 +611,44 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#205248",
     lineHeight: 20,
+    fontFamily: "Kanit_400Regular",
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+  },
+  loadingText: {
+    marginLeft: 8,
+    color: "#666",
+    fontFamily: "Kanit_400Regular",
+  },
+  errorContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  errorText: {
+    color: "#ff6b6b",
+    fontFamily: "Kanit_400Regular",
+    marginBottom: 8,
+  },
+  retryButton: {
+    backgroundColor: "#f5f5f5",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: "#666",
+    fontFamily: "Kanit_400Regular",
+  },
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  emptyText: {
+    color: "#666",
     fontFamily: "Kanit_400Regular",
   },
 });

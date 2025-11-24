@@ -49,6 +49,7 @@ import ChatScreen from "./screens/ChatScreen";
 import IssueMenuScreen from "./screens/issue/issue_menu";
 import PersonalIssueScreen from "./screens/issue/personal_issue/personal_issue";
 import AddIssueForm from "./screens/issue/personal_issue/AddIssueForm";
+import PersonalIssueDetailScreen from "./screens/issue/personal_issue/personal_issue_detail";
 
 // Security screens
 import SecurityServiceScreen from "./screens/security/SecurityServiceScreen";
@@ -221,11 +222,11 @@ export default function App() {
             //     ? parsedUserData.unitMemberships.length
             //     : 0
             // );
-            
+
             // Check user role for Security
             const role = parsedUserData.role || parsedUserData.roles?.[0];
             setUserRole(role); // Store user role
-            
+
             if (role === "security") {
               // Security users go to GuardHome
               setInitialRoute("GuardHome");
@@ -340,20 +341,25 @@ export default function App() {
           <Stack.Screen name="NumberEmergency" component={NumberEmergencyScreen} />
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="IssueMenu" component={IssueMenuScreen} />
-          <Stack.Screen 
-            name="PersonalIssue" 
-            component={PersonalIssueScreen} 
+          <Stack.Screen
+            name="PersonalIssue"
+            component={PersonalIssueScreen}
             options={{ headerShown: false }}
           />
-          <Stack.Screen 
-            name="AddIssue" 
-            component={AddIssueForm} 
-            options={{ 
+          <Stack.Screen
+            name="AddIssue"
+            component={AddIssueForm}
+            options={{
               headerShown: false,
               presentation: 'modal',
               cardOverlayEnabled: true,
               cardStyle: { backgroundColor: 'transparent' },
             }}
+          />
+          <Stack.Screen
+            name="IssueDetail"
+            component={PersonalIssueDetailScreen}
+            options={{ headerShown: false }}
           />
         </Stack.Navigator>
       );

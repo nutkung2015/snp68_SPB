@@ -221,7 +221,7 @@ const ProfileScreen = ({ recheckLoginStatus }) => {
         </TouchableOpacity>
       </ScrollView>
 
-      <BottomNavigation navigation={navigation} activeScreen="Profile" />
+      {/* <BottomNavigation navigation={navigation} activeScreen="Profile" /> */}
     </SafeAreaView>
   );
 };

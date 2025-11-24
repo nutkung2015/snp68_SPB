@@ -52,7 +52,8 @@ export default function AddIssueForm({ route, navigation }) {
             houseNumber: unitNumber,
             zone: user.projectMemberships?.[0]?.project_name || "",
             reporterName: user.full_name || "",
-            repairType: repairType?.name || "",
+            repairType: repairType?.value || "",
+            repairTypeName: repairType?.name || "",
           }));
         }
       } catch (error) {
@@ -69,7 +70,8 @@ export default function AddIssueForm({ route, navigation }) {
     reporterName: "",
     reportDate: new Date(),
     repairArea: "",
-    repairType: repairType?.name || "",
+    repairType: repairType?.value || "",
+    repairTypeName: repairType?.name || "",
     description: "",
     images: [],
   });
@@ -253,43 +255,26 @@ export default function AddIssueForm({ route, navigation }) {
             <Text style={styles.backButtonText}>ย้อนกลับ</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>แจ้งซ่อมบ้าน</Text>
+          <Text style={styles.gap100px}>.</Text>
         </View>
 
         <ScrollView style={styles.formContainer}>
           {/* บ้านเลขที่ */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>บ้านเลขที่</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={[styles.input, styles.disabledInput]}
-                value={formData.houseNumber}
-                editable={false}
-              />
-            </View>
+          <View style={styles.inputGroup_normalText}>
+            <Text style={styles.label_normalText}>บ้านเลขที่</Text>
+            <Text style={styles.valueText_normalText}>{formData.houseNumber}</Text>
           </View>
 
           {/* โซน */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>โซน</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={[styles.input, styles.disabledInput]}
-                value={formData.zone}
-                editable={false}
-              />
-            </View>
+          <View style={styles.inputGroup_normalText}>
+            <Text style={styles.label_normalText}>โซน</Text>
+            <Text style={styles.valueText_normalText}>{formData.zone}</Text>
           </View>
 
           {/* ชื่อผู้แจ้ง */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>ชื่อผู้แจ้ง</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={[styles.input, styles.disabledInput]}
-                value={formData.reporterName}
-                editable={false}
-              />
-            </View>
+          <View style={styles.inputGroup_normalText}>
+            <Text style={styles.label_normalText}>ชื่อผู้แจ้ง</Text>
+            <Text style={styles.valueText_normalText}>{formData.reporterName}</Text>
           </View>
 
           {/* วันที่ยื่น */}
@@ -345,7 +330,7 @@ export default function AddIssueForm({ route, navigation }) {
             <View style={styles.inputContainer}>
               <TextInput
                 style={[styles.input, styles.disabledInput]}
-                value={formData.repairType}
+                value={formData.repairTypeName}
                 editable={false}
               />
             </View>
@@ -469,6 +454,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
+    display: "flex",
+    justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
@@ -477,15 +464,19 @@ const styles = StyleSheet.create({
   backButton: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 16,
+    justifyContent: "center",
   },
   backButtonText: {
     fontSize: 16,
     marginLeft: 4,
+    fontFamily: "Kanit_400Regular",
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
+    fontFamily: "Kanit_500Medium",
+    alignItems: "center",
+    justifyContent: "center",
   },
   formContainer: {
     flex: 1,
@@ -499,6 +490,18 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 8,
     fontWeight: "500",
+    fontFamily: "Kanit_500Medium",
+  },
+  valueText: {
+    fontSize: 16,
+    color: "#666",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    fontFamily: "Kanit_400Regular",
   },
   inputContainer: {
     flexDirection: "row",
@@ -514,6 +517,7 @@ const styles = StyleSheet.create({
     height: 48,
     color: "#333",
     paddingVertical: 12,
+    fontFamily: "Kanit_400Regular",
   },
   disabledInput: {
     backgroundColor: "#ffffffff",
@@ -524,6 +528,7 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     color: "#205248",
+    fontFamily: "Kanit_400Regular",
   },
   icon: {
     marginLeft: 8,
@@ -551,6 +556,7 @@ const styles = StyleSheet.create({
     color: "#205248",
     marginLeft: 8,
     fontWeight: "500",
+    fontFamily: "Kanit_500Medium",
   },
   imagePreviewScroll: {
     marginTop: 10,
@@ -591,6 +597,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+    fontFamily: "Kanit_600SemiBold",
   },
   modalOverlay: {
     flex: 1,
@@ -616,6 +623,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
+    fontFamily: "Kanit_600SemiBold",
   },
   areaItem: {
     flexDirection: "row",
@@ -631,5 +639,31 @@ const styles = StyleSheet.create({
   areaText: {
     fontSize: 16,
     color: "#333",
+    fontFamily: "Kanit_400Regular",
+  },
+  // New styles for read-only text fields
+  inputGroup_normalText: {
+    marginBottom: 20,
+  },
+  label_normalText: {
+    fontSize: 14,
+    color: "#333",
+    marginBottom: 8,
+    fontWeight: "500",
+    fontFamily: "Kanit_500Medium",
+  },
+  valueText_normalText: {
+    fontSize: 16,
+    color: "#333",
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 8,
+    fontFamily: "Kanit_400Regular",
+  },
+  gap100px: {
+    width: "100px",
+    // display: "none",
+    opacity: 0,
   },
 });

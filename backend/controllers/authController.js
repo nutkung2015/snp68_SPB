@@ -109,7 +109,13 @@ exports.login = async (req, res) => {
       .promise()
       .query(
         "SELECT pm.project_id, pm.role, p.name AS project_name FROM project_members pm JOIN projects p ON pm.project_id = p.id WHERE pm.user_id = ? AND pm.role IN (?, ?, ?, ?)",
-        [existingUser.id, "juristicLeader", "juristicMember", "member", "security"]
+        [
+          existingUser.id,
+          "juristicLeader",
+          "juristicMember",
+          "member",
+          "security",
+        ]
       );
 
     // ดึงข้อมูลการเป็นสมาชิกยูนิต
@@ -117,10 +123,23 @@ exports.login = async (req, res) => {
       .promise()
       .query(
         "SELECT um.unit_id, um.role, u.unit_number FROM unit_members um JOIN units u ON um.unit_id = u.id WHERE um.user_id = ?",
-        [
-          existingUser.id,
-        ]
+        [existingUser.id]
       );
+
+    // ดึงข้อมูล projectCustomizations ตาม project_id (ถ้ามี)
+    let projectCustomizations = null;
+    if (projectMemberships.length > 0) {
+      const projectId = projectMemberships[0].project_id;
+      const [customRows] = await db
+        .promise()
+        .query(
+          "SELECT * FROM projectcustomizations WHERE project_id = ? LIMIT 1",
+          [projectId]
+        );
+      if (customRows.length > 0) {
+        projectCustomizations = customRows[0];
+      }
+    }
 
     res.status(200).json({
       status: "success",
@@ -135,6 +154,7 @@ exports.login = async (req, res) => {
         projectMemberships: req.user?.projectMemberships || [], // ใช้ข้อมูลจาก authMiddleware
         projectMemberships: projectMemberships, // เพิ่มข้อมูล projectMemberships
         unitMemberships: unitMemberships, // เพิ่มข้อมูล unitMemberships
+        projectCustomizations: projectCustomizations, // เพิ่มข้อมูล projectCustomizations
       },
     });
   } catch (error) {

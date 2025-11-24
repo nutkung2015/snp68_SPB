@@ -121,6 +121,7 @@ exports.getPersonalRepairs = async (req, res) => {
       unit_id,
       status,
       repair_category,
+      priority,
       limit = 50,
       offset = 0,
     } = req.query;
@@ -154,6 +155,11 @@ exports.getPersonalRepairs = async (req, res) => {
       params.push(repair_category);
     }
 
+    if (priority) {
+      query += " AND priority = ?";
+      params.push(priority);
+    }
+
     query += " ORDER BY submitted_date DESC LIMIT ? OFFSET ?";
     params.push(parseInt(limit), parseInt(offset));
 
@@ -181,6 +187,86 @@ exports.getPersonalRepairs = async (req, res) => {
     });
   }
 };
+
+// ดึงรายการแจ้งซ่อมทรัพย์สินส่วนบุคคลสำหรับผู้พักอาศัย (ตาม reporter_id)
+exports.getPersonalRepairsForResident = async (req, res) => {
+  try {
+    const {
+      project_id,
+      status,
+      repair_category,
+      priority,
+      limit = 50,
+      offset = 0,
+    } = req.query;
+
+    // ดึง reporter_id จาก req.user (ผู้ใช้ที่ login)
+    const reporter_id = req.user.id;
+
+    // Debug: Log ค่าที่ได้รับ
+    console.log('=== Debug getPersonalRepairsForResident ===');
+    console.log('req.user:', req.user);
+    console.log('reporter_id:', reporter_id);
+    console.log('project_id:', project_id);
+
+    // ตรวจสอบ required fields
+    if (!project_id) {
+      return res.status(400).json({
+        status: "error",
+        message: "กรุณาระบุ project_id",
+      });
+    }
+
+    let query = "SELECT * FROM personal_repairs WHERE reporter_id = ? AND project_id = ?";
+    const params = [reporter_id, project_id];
+
+    console.log('SQL Query:', query);
+    console.log('Query Params:', params);
+
+    // เพิ่มเงื่อนไขเพิ่มเติม
+    if (status) {
+      query += " AND status = ?";
+      params.push(status);
+    }
+
+    if (repair_category) {
+      query += " AND repair_category = ?";
+      params.push(repair_category);
+    }
+
+    if (priority) {
+      query += " AND priority = ?";
+      params.push(priority);
+    }
+
+    query += " ORDER BY submitted_date DESC LIMIT ? OFFSET ?";
+    params.push(parseInt(limit), parseInt(offset));
+
+    const [rows] = await db.promise().query(query, params);
+
+    const repairs = rows.map((row) => ({
+      ...row,
+      image_urls: row.image_urls ? JSON.parse(row.image_urls) : [],
+    }));
+
+    res.json({
+      status: "success",
+      data: repairs,
+      count: repairs.length,
+      pagination: {
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching personal repairs for resident:", error);
+    res.status(500).json({
+      status: "error",
+      message: "เกิดข้อผิดพลาดในการดึงข้อมูล",
+    });
+  }
+};
+
 
 // ดึงรายการแจ้งซ่อมทรัพย์สินส่วนบุคคลตาม ID
 exports.getPersonalRepairById = async (req, res) => {
@@ -219,7 +305,7 @@ exports.getPersonalRepairById = async (req, res) => {
 exports.updatePersonalRepairStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, assigned_to, notes, estimated_cost, actual_cost } =
+    const { status, assigned_to, assigned_to_id, notes, estimated_cost, actual_cost, repair_category } =
       req.body;
 
     let query = "UPDATE personal_repairs SET status = ?, updated_at = NOW()";
@@ -228,6 +314,16 @@ exports.updatePersonalRepairStatus = async (req, res) => {
     if (assigned_to !== undefined) {
       query += ", assigned_to = ?";
       params.push(assigned_to);
+    }
+
+    if (assigned_to_id !== undefined) {
+      query += ", assigned_to_id = ?";
+      params.push(assigned_to_id);
+    }
+
+    if (repair_category !== undefined) {
+      query += ", repair_category = ?";
+      params.push(repair_category);
     }
 
     if (notes !== undefined) {

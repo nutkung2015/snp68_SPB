@@ -3,13 +3,13 @@ import { View, Text, TouchableOpacity, Modal, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const repairTypes = [
-    { id: 1, name: 'ระบบไฟฟ้า', icon: 'flash-on' },
-    { id: 2, name: 'ระบบประปา', icon: 'water-drop' },
-    { id: 3, name: 'ระบบปรับอากาศ', icon: 'ac-unit' },
-    { id: 4, name: 'ระบบประตู-หน้าต่าง', icon: 'window' },
-    { id: 5, name: 'ระบบผนัง-ฝ้าเพดาน', icon: 'wallpaper' },
-    { id: 6, name: 'ระบบสุขภัณฑ์', icon: 'bathtub' },
-    { id: 7, name: 'อื่นๆ', icon: 'more-horiz' },
+    { id: 1, value: 'electrical', name: 'ระบบไฟฟ้า', icon: 'flash-on' },
+    { id: 2, value: 'plumbing', name: 'ระบบประปา', icon: 'water-drop' },
+    { id: 3, value: 'air_conditioning', name: 'ระบบปรับอากาศ', icon: 'ac-unit' },
+    { id: 4, value: 'door_window', name: 'ระบบประตู-หน้าต่าง', icon: 'window' },
+    { id: 5, value: 'wall_roof', name: 'ระบบผนัง-ฝ้าเพดาน', icon: 'wallpaper' },
+    { id: 6, value: 'sanitary', name: 'ระบบสุขภัณฑ์', icon: 'bathtub' },
+    { id: 7, value: 'other', name: 'อื่นๆ', icon: 'more-horiz' },
 ];
 
 export default function RepairTypeModal({ visible, onClose, onSelectType }) {
@@ -78,6 +78,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: '#333',
+        fontFamily: "Kanit_500Medium",
     },
     modalDescription: {
         fontSize: 14,
@@ -85,6 +86,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         textAlign: 'center',
         paddingBottom: 10,
+        fontFamily: "Kanit_500Medium",
     },
     closeButton: {
         padding: 5,
@@ -93,6 +95,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
+        fontFamily: "Kanit_500Medium",
     },
     typeItem: {
         width: '48%',
@@ -102,6 +105,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         padding: 12,
         marginBottom: 12,
+        fontFamily: "Kanit_500Medium",
     },
     typeIconContainer: {
         backgroundColor: '#e0f2f1',
@@ -111,10 +115,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
+        fontFamily: "Kanit_500Medium",
     },
     typeName: {
         fontSize: 14,
         color: '#333',
         flex: 1,
+        fontFamily: "Kanit_500Medium",
     },
 });

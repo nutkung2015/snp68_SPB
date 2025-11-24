@@ -280,7 +280,7 @@ const SecurityProfileScreen = ({ recheckLoginStatus }) => {
                 </TouchableOpacity>
             </ScrollView>
 
-            <SecurityBottomNavigation navigation={navigation} activeScreen="Profile" />
+            {/* <SecurityBottomNavigation navigation={navigation} activeScreen="Profile" /> */}
         </SafeAreaView>
     );
 };

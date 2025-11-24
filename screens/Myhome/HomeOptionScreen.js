@@ -55,7 +55,7 @@ export default function HomeOptionScreen({ navigation }) {
           onPress={() => console.log("ผู้อยู่อาศัย pressed")}
         />
       </View>
-      <BottomNavigation navigation={navigation} activeScreen="HomeOption" />
+      {/* <BottomNavigation navigation={navigation} activeScreen="HomeOption" /> */}
     </SafeAreaView>
   );
 }

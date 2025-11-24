@@ -12,6 +12,7 @@ import {
     StatusBar,
     Platform
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import BottomNavigation from '../../components/BottomNavigation';
 import {
@@ -53,29 +54,44 @@ const NewsScreen = ({ navigation }) => {
     ];
 
     useEffect(() => {
-        fetchAnnouncements();
-    }, []);
-
-    useEffect(() => {
         fetchAnnouncements(selectedCategory, selectedTimeFilter);
     }, [selectedCategory, selectedTimeFilter]);
 
-    const fetchAnnouncements = async (category = '', timeFilter = '') => {
+    const fetchAnnouncements = async (categoryLabel = '', timeFilterLabel = '') => {
         try {
             setLoading(true);
 
-            const params = {
-                status: 'published'
-            };
-
-            // Add category filter
-            if (category && category !== 'ทั้งหมด') {
-                params.category = category;
+            // Get user data to find project_id
+            const userDataStr = await AsyncStorage.getItem('userData');
+            let projectId = null;
+            if (userDataStr) {
+                const userData = JSON.parse(userDataStr);
+                if (userData.projectMemberships && userData.projectMemberships.length > 0) {
+                    projectId = userData.projectMemberships[0].project_id;
+                }
             }
 
+            const params = {
+                status: 'published',
+                projectId: projectId // Add projectId to params
+            };
+
+            // Find value from label for Category
+            const categoryOption = categoryOptions.find(opt => opt.label === categoryLabel);
+            const categoryValue = categoryOption ? categoryOption.value : '';
+
+            // Add category filter
+            if (categoryValue) {
+                params.category = categoryValue;
+            }
+
+            // Find value from label for Time Filter
+            const timeOption = timeFilterOptions.find(opt => opt.label === timeFilterLabel);
+            const timeFilterValue = timeOption ? timeOption.value : '';
+
             // Add time filter
-            if (timeFilter && timeFilter !== 'ล่าสุด') {
-                params.timeFilter = timeFilter;
+            if (timeFilterValue) {
+                params.timeFilter = timeFilterValue;
             }
 
             const data = await AnnouncementsService.getAnnouncements(params);
@@ -331,10 +347,10 @@ const NewsScreen = ({ navigation }) => {
                 )}
             </ScrollView>
 
-            <BottomNavigation
+            {/* <BottomNavigation
                 navigation={navigation}
                 activeScreen="Home"
-            />
+            /> */}
         </SafeAreaView>
     );
 };
@@ -344,7 +360,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
-      headerRight: {
+    headerRight: {
         width: 40,
     },
     header: {

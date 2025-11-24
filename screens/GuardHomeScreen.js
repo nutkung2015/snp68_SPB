@@ -206,7 +206,7 @@ const GuardHomeScreen = ({ navigation }) => {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <SecurityBottomNavigation navigation={navigation} activeScreen="GuardHome" />
+      {/* <SecurityBottomNavigation navigation={navigation} activeScreen="GuardHome" /> */}
     </SafeAreaView>
   );
 };

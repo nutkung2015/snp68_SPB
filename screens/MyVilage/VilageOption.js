@@ -50,7 +50,7 @@ export default function VilageOptionScreen({ navigation }) {
           onPress={() => console.log("การต่อเติมบ้าน pressed")}
         />
       </View>
-      <BottomNavigation navigation={navigation} activeScreen="VilageOption" />
+      {/* <BottomNavigation navigation={navigation} activeScreen="VilageOption" /> */}
     </SafeAreaView>
   );
 }

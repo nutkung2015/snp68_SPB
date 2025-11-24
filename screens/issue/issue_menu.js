@@ -55,7 +55,7 @@ export default function IssueMenuScreen({ navigation }) {
           onPress={() => navigation.navigate('IssueHistory')}
         /> */}
       </View>
-      <BottomNavigation navigation={navigation} activeScreen="IssueMenu" />
+      {/* <BottomNavigation navigation={navigation} activeScreen="IssueMenu" /> */}
     </SafeAreaView>
   );
 }

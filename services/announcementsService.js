@@ -6,15 +6,22 @@ class AnnouncementsService {
   static async getAnnouncements(params = {}) {
     try {
       const queryParams = new URLSearchParams();
-      
+
       if (params.limit) queryParams.append('limit', params.limit);
       if (params.status) queryParams.append('status', params.status);
       if (params.category) queryParams.append('category', params.category);
       if (params.timeFilter) queryParams.append('timeFilter', params.timeFilter);
-      
+      if (params.projectId) queryParams.append('project_id', params.projectId);
+
       const queryString = queryParams.toString();
-      const endpoint = `/api/announcements${queryString ? `?${queryString}` : ''}`;
-      
+      let endpoint = '/api/announcements';
+
+      if (params.projectId) {
+        endpoint += '/resident';
+      }
+
+      endpoint += queryString ? `?${queryString}` : '';
+
       const token = await ApiService.getToken();
       return await ApiService.get(endpoint, token);
     } catch (error) {

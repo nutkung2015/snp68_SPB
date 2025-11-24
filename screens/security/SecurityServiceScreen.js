@@ -133,10 +133,10 @@ const SecurityServiceScreen = ({ navigation }) => {
             </ScrollView>
 
             {/* Bottom Navigation */}
-            <SecurityBottomNavigation
+            {/* <SecurityBottomNavigation
                 navigation={navigation}
                 activeScreen="SecurityServices"
-            />
+            /> */}
         </SafeAreaView>
     );
 };
