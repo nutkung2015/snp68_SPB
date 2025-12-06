@@ -7,9 +7,8 @@ export const API_CONFIG = {
   // เลือก API URL ตาม environment
   BASE_URL:
     ENV.APP_ENV === "production"
-      ? ENV.PROD_API_BASE_URL || "https://your-production-api.com"
-      : ENV.DEV_API_BASE_URL || ENV.API_BASE_URL || "http://127.0.0.1:5000",
-  // อย่าลืมเปลี่ยนกลับถ้าใช้ ngrok
+      ? ENV.PROD_API_BASE_URL || "https://snp68-spb.onrender.com"
+      : ENV.DEV_API_BASE_URL || "http://127.0.0.1:5000",
   VERSION: ENV.API_VERSION || "v1",
 };
 
@@ -104,13 +103,8 @@ export const WEATHER_CONFIG = {
 
 // Helper Functions สำหรับ Expo
 export const getApiBaseUrl = () => {
-  // Use environment variable if available (for production)
-  if (ENV.API_BASE_URL) {
-    return ENV.API_BASE_URL;
-  }
-
-  // For Expo development - use localhost with tunnel
-  return "http://127.0.0.1:5000";
+  // ใช้ API_CONFIG.BASE_URL ที่ตั้งค่าไว้แล้ว
+  return API_CONFIG.BASE_URL;
 };
 
 export const getApiUrl = (endpoint) => {
