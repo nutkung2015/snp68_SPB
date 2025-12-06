@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  ImageBackground,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import SecurityBottomNavigation from "../components/SecurityBottomNavigation";
@@ -17,7 +16,10 @@ import {
   useFonts,
   Kanit_400Regular,
   Kanit_700Bold,
+  Kanit_600SemiBold,
+  Kanit_500Medium,
 } from "@expo-google-fonts/kanit";
+import ProjectCustomizationsService from "../services/projectCustomizationsService";
 
 const GuardHomeScreen = ({ navigation }) => {
   const [fontsLoaded] = useFonts({
@@ -26,13 +28,20 @@ const GuardHomeScreen = ({ navigation }) => {
   });
 
   const [userData, setUserData] = useState(null);
+  const [secondaryColor, setSecondaryColor] = useState("#155B5B");
+  const [primaryColor, setPrimaryColor] = useState("#14336B");
+  const [logoUrl, setLogoUrl] = useState(null);
 
   useEffect(() => {
     const loadUserData = async () => {
       try {
         const storedUserData = await AsyncStorage.getItem("userData");
         if (storedUserData) {
-          setUserData(JSON.parse(storedUserData));
+          const parsedUserData = JSON.parse(storedUserData);
+          setUserData(parsedUserData);
+          if (parsedUserData?.projectMemberships?.[0]?.project_id) {
+            fetchProjectCustomizations(parsedUserData.projectMemberships[0].project_id);
+          }
         }
       } catch (error) {
         console.error("Failed to load user data from AsyncStorage", error);
@@ -41,69 +50,68 @@ const GuardHomeScreen = ({ navigation }) => {
     loadUserData();
   }, []);
 
+  const fetchProjectCustomizations = async (projectId) => {
+    try {
+      const response = await ProjectCustomizationsService.getProjectCustomizations(projectId);
+      if (response) {
+        if (response.primary_color) setPrimaryColor(response.primary_color);
+        if (response.secondary_color) setSecondaryColor(response.secondary_color);
+        if (response.logo_url) setLogoUrl(response.logo_url);
+      }
+    } catch (err) {
+      console.error("Error fetching project customizations:", err);
+    }
+  };
+
   if (!fontsLoaded) {
     return null;
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header Background */}
-      <ImageBackground
-        source={require("../assets/banner_header_3.png")}
-        style={styles.headerBackground}
-        resizeMode="cover"
-        imageStyle={{
-          width: "100%",
-          height: "100%",
-        }}
+      {/* Header */}
+      <LinearGradient
+        colors={[primaryColor || "#4BB59F", secondaryColor || "#155B5B"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.gradientCardHeader}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <View style={styles.logoContainer}>
-              <Image
-                source={require("../assets/logo_3_white.png")}
-                style={styles.logoImage}
-              />
-            </View>
+        {/* Row 1: Logo (ซ้าย) - Actions (ขวา) */}
+        <View style={styles.headerRowTop}>
+          <Image
+            source={logoUrl ? { uri: logoUrl } : require("../assets/logo_3_white.png")}
+            style={styles.logoImage}
+          />
+          <View style={styles.headerActions}>
             <TouchableOpacity style={styles.notificationButton}>
-              <Ionicons name="notifications-outline" size={24} color="#fff" />
+              <Ionicons name="notifications-outline" size={24} color="#18545d" />
               <View style={styles.notificationBadge}>
                 <Text style={styles.badgeText}>5</Text>
               </View>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.profileCircle} onPress={() => navigation.navigate("Profile")}>
+              <Text style={styles.profileText}>
+                {userData?.full_name ? userData.full_name.substring(0, 2).toUpperCase() : "GD"}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
-
-        {/* Welcome Message
-        <View style={styles.welcomeContainer}>
-          <Text style={styles.welcomeText}>ระบบการดีครับครับเป็นกันเองต้องการ</Text>
-          <Text style={styles.welcomeSubtext}>"เสี่ยงเพื่อนบ้าน"</Text>
-        </View> */}
-
-        {/* Guard Info Card */}
-        <TouchableOpacity style={[styles.guardInfoCard]}>
-          <LinearGradient
-            colors={["#4BB59F", "#FFD840"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradientCard}
-          >
-            <View style={styles.guardIcon}>
-              <Ionicons name="home-outline" size={24} color="#fff" />
-            </View>
-            <View style={styles.guardContent}>
-              <Text style={[styles.guardLabel, { color: "#fff" }]}>
-                โครงการของฉัน
-              </Text>
-              <Text style={[styles.guardText, { color: "#fff" }]}>
-                {userData?.projectMemberships?.[0]?.project_name || "พฤกษ์130/1"}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="#fff" />
-          </LinearGradient>
-        </TouchableOpacity>
-      </ImageBackground>
+        {/* Row 2: ไอคอนบ้าน + user info */}
+        <View style={styles.headerRowBottom}>
+          <Ionicons
+            name="shield-checkmark"
+            size={32}
+            color="#fff"
+            style={styles.headerHouseIcon}
+          />
+          <View style={styles.headerUserBox}>
+            <Text style={styles.headerUserName}>สวัสดีคุณ {userData?.full_name || "รปภ."}</Text>
+            <Text style={styles.headerUserAddress}>
+              {userData?.projectMemberships?.[0]?.project_name || "โครงการ"}
+            </Text>
+          </View>
+        </View>
+      </LinearGradient>
 
       <ScrollView style={styles.content}>
         {/* บริการทั้งหมด */}
@@ -114,93 +122,68 @@ const GuardHomeScreen = ({ navigation }) => {
           <View style={styles.menuGrid}>
             {/* รถเข้าโครงการ */}
             <TouchableOpacity
-              style={[styles.menuCard, { opacity: 0.75 }]}
+              style={[styles.menuCard, { opacity: 0.75, borderColor: primaryColor || "#205248" }]}
               onPress={() => navigation.navigate("VehicleEntry")}
             >
-              <LinearGradient
-                colors={["#4DB59F", "#A8C957"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.menuGradient}
-              >
+              <View style={[styles.menuGradient, { backgroundColor: primaryColor || "#4DB59F" }]}>
                 <View style={styles.menuIconWrapper}>
                   <Ionicons name="car-outline" size={32} color="#fff" />
                 </View>
                 <Text style={styles.menuCardText}>รถเข้าโครงการ</Text>
-              </LinearGradient>
+              </View>
             </TouchableOpacity>
 
             {/* แจ้งปัญหา */}
             <TouchableOpacity
-              style={[styles.menuCard, { opacity: 0.75 }]}
+              style={[styles.menuCard, { opacity: 0.75, borderColor: primaryColor || "#205248" }]}
               onPress={() => navigation.navigate("ReportIssue")}
             >
-              <LinearGradient
-                colors={["#4DB59F", "#A8C957"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.menuGradient}
-              >
+              <View style={[styles.menuGradient, { backgroundColor: primaryColor || "#4DB59F" }]}>
                 <View style={styles.menuIconWrapper}>
                   <Ionicons name="warning-outline" size={32} color="#fff" />
                 </View>
                 <Text style={styles.menuCardText}>แจ้งปัญหา</Text>
-              </LinearGradient>
+              </View>
             </TouchableOpacity>
 
             {/* เบอร์ฉุกเฉิน */}
             <TouchableOpacity
-              style={[styles.menuCard, { opacity: 0.75 }]}
+              style={[styles.menuCard, { opacity: 0.75, borderColor: primaryColor || "#205248" }]}
               onPress={() => navigation.navigate("EmergencyContact")}
             >
-              <LinearGradient
-                colors={["#4DB59F", "#A8C957"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.menuGradient}
-              >
+              <View style={[styles.menuGradient, { backgroundColor: primaryColor || "#4DB59F" }]}>
                 <View style={styles.menuIconWrapper}>
                   <Ionicons name="call-outline" size={32} color="#fff" />
                 </View>
                 <Text style={styles.menuCardText}>เบอร์ฉุกเฉิน</Text>
-              </LinearGradient>
+              </View>
             </TouchableOpacity>
 
             {/* ขอความช่วยเหลือ */}
-            <TouchableOpacity
-              style={[styles.menuCard, { opacity: 0.75 }]}
+            {/* <TouchableOpacity
+              style={[styles.menuCard, { opacity: 0.75, borderColor: primaryColor || "#205248" }]}
               onPress={() => navigation.navigate("RequestHelp")}
             >
-              <LinearGradient
-                colors={["#4DB59F", "#A8C957"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.menuGradient}
-              >
+              <View style={[styles.menuGradient, { backgroundColor: primaryColor || "#4DB59F" }]}>
                 <View style={styles.menuIconWrapper}>
                   <Ionicons name="hand-right-outline" size={32} color="#fff" />
                 </View>
                 <Text style={styles.menuCardText}>ขอความช่วยเหลือ</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+              </View>
+            </TouchableOpacity> */}
 
             {/* รายงานประจำวัน */}
-            <TouchableOpacity
-              style={[styles.menuCard, styles.menuCardWide, { opacity: 0.75 }]}
+            {/* <TouchableOpacity
+              style={[styles.menuCard, styles.menuCardWide, { opacity: 0.75, borderColor: primaryColor || "#205248" }]}
               onPress={() => navigation.navigate("DailyReport")}
             >
-              <LinearGradient
-                colors={["#4DB59F", "#A8C957"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.menuGradient}
-              >
+              <View style={[styles.menuGradient, { backgroundColor: primaryColor || "#4DB59F" }]}>
                 <View style={styles.menuIconWrapper}>
                   <Ionicons name="document-text-outline" size={32} color="#fff" />
                 </View>
                 <Text style={styles.menuCardText}>รายงานประจำวัน</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+              </View>
+            </TouchableOpacity> */}
           </View>
         </View>
       </ScrollView>
@@ -216,102 +199,112 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F5F5F5",
   },
-  headerBackground: {
-    width: "100%",
-    paddingBottom: 20,
+  gradientCardHeader: {
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    paddingHorizontal: 18,
+    paddingTop: 20,
+    paddingBottom: 14,
+    marginTop: 0,
+    marginHorizontal: 0,
+    position: "relative",
+    minHeight: 144,
+    justifyContent: "flex-end"
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 10,
-  },
-  headerContent: {
+  headerRowTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  logoContainer: {
+  headerActions: {
     flexDirection: "row",
     alignItems: "center",
   },
   logoImage: {
-    width: 50, // กำหนดความกว้างของรูปภาพ
-    height: 50, // กำหนดความสูงของรูปภาพ
+    width: 42,
+    height: 42,
     resizeMode: "contain",
   },
   notificationButton: {
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    padding: 10,
+    marginRight: 9,
     position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 2,
   },
   notificationBadge: {
     position: "absolute",
-    top: -5,
-    right: -5,
-    backgroundColor: "#FF3B30",
-    borderRadius: 10,
-    width: 20,
-    height: 20,
+    top: 3,
+    right: 2,
+    backgroundColor: "#18545d",
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 3,
   },
   badgeText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: 11,
+    fontWeight: "bold",
     fontFamily: "Kanit_700Bold",
+    textAlign: "center",
   },
-  welcomeContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+  profileCircle: {
+    width: 47,
+    height: 47,
+    borderRadius: 25,
+    backgroundColor: "#fff",
     alignItems: "center",
-  },
-  welcomeText: {
-    fontSize: 16,
-    color: "#fff",
-    fontFamily: "Kanit_400Regular",
-    textAlign: "center",
-  },
-  welcomeSubtext: {
-    fontSize: 28,
-    color: "#fff",
-    fontFamily: "Kanit_700Bold",
-    textAlign: "center",
-    marginTop: 5,
-  },
-  guardInfoCard: {
-    marginHorizontal: 20,
-    marginTop: 15,
-    borderRadius: 15,
-    overflow: "hidden",
-    elevation: 3,
+    justifyContent: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  gradientCard: {
+  profileText: {
+    color: "#205248",
+    fontWeight: "bold",
+    fontSize: 16,
+    fontFamily: "Kanit_700Bold",
+  },
+  headerRowBottom: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 15,
-  },
-  guardIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    marginTop: 20,
     backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 15,
+    borderWidth: 1,
+    borderColor: "#fff",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  guardContent: {
-    flex: 1,
-  },
-  guardLabel: {
-    fontSize: 14,
-    fontFamily: "Kanit_400Regular",
+  headerHouseIcon: {
+    marginRight: 10,
     marginBottom: 2,
   },
-  guardText: {
-    fontSize: 18,
+  headerUserBox: {
+    justifyContent: "center",
+  },
+  headerUserName: {
+    color: "#fff",
+    fontSize: 16,
     fontFamily: "Kanit_700Bold",
+    marginBottom: 1,
+  },
+  headerUserAddress: {
+    color: "#fff",
+    fontSize: 13.5,
+    fontFamily: "Kanit_400Regular",
   },
   content: {
     flex: 1,

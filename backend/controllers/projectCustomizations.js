@@ -1,4 +1,12 @@
 const db = require("../config/db");
+const cloudinary = require('cloudinary').v2;
+
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 // ดึงข้อมูลการปรับแต่งทั้งหมด
 async function getProjectCustomizations(req, res) {
@@ -48,23 +56,43 @@ async function createProjectCustomization(req, res) {
       project_id,
       primary_color,
       secondary_color,
-      logo_url,
-      favicon_url,
     } = req.body;
+
+    let logo_url = null;
+
+    // Handle file upload for logo
+    if (req.files && req.files.logo && req.files.logo[0]) {
+      const logoFile = req.files.logo[0];
+      const logoUploadResult = await cloudinary.uploader.upload(logoFile.path, {
+        folder: 'LogoForProjectCustomization',
+        resource_type: 'auto'
+      });
+      logo_url = logoUploadResult.secure_url;
+    }
+
     const [result] = await db
       .promise()
       .query(
-        "INSERT INTO projectcustomizations (project_id, primary_color, secondary_color, logo_url, favicon_url) VALUES (?, ?, ?, ?, ?)",
-        [project_id, primary_color, secondary_color, logo_url, favicon_url]
+        "INSERT INTO projectcustomizations (project_id, primary_color, secondary_color, logo_url) VALUES (?, ?, ?, ?)",
+        [project_id, primary_color, secondary_color, logo_url]
       );
+
+    // Fetch the newly created customization
+    const [newCustomization] = await db
+      .promise()
+      .query("SELECT * FROM projectcustomizations WHERE id = ?", [result.insertId]);
 
     res.status(201).json({
       success: true,
       message: "Project customization created successfully",
-      id: result.insertId,
+      data: newCustomization[0],
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Error creating project customization:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
   }
 }
 
@@ -72,13 +100,47 @@ async function createProjectCustomization(req, res) {
 async function updateProjectCustomization(req, res) {
   try {
     const { projectId } = req.params;
-    const { primary_color, secondary_color, logo_url, favicon_url } = req.body;
+    const { primary_color, secondary_color } = req.body;
+
+    // Get existing customization to check for old logo
+    const [existingRows] = await db
+      .promise()
+      .query("SELECT logo_url FROM projectcustomizations WHERE project_id = ?", [projectId]);
+
+    if (existingRows.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Project customization not found" });
+    }
+
+    const existingCustomization = existingRows[0];
+    let logo_url = existingCustomization.logo_url;
+
+    // Handle file upload for logo
+    if (req.files && req.files.logo && req.files.logo[0]) {
+      const logoFile = req.files.logo[0];
+
+      // Delete old logo from Cloudinary if exists
+      if (existingCustomization.logo_url) {
+        const publicId = extractPublicIdFromUrl(existingCustomization.logo_url);
+        if (publicId) {
+          await cloudinary.uploader.destroy(publicId);
+        }
+      }
+
+      // Upload new logo
+      const logoUploadResult = await cloudinary.uploader.upload(logoFile.path, {
+        folder: 'LogoForProjectCustomization',
+        resource_type: 'auto'
+      });
+      logo_url = logoUploadResult.secure_url;
+    }
 
     const [result] = await db
       .promise()
       .query(
-        "UPDATE projectcustomizations SET primary_color = ?, secondary_color = ?, logo_url = ?, favicon_url = ? WHERE project_id = ?",
-        [primary_color, secondary_color, logo_url, favicon_url, projectId]
+        "UPDATE projectcustomizations SET primary_color = ?, secondary_color = ?, logo_url = ? WHERE project_id = ?",
+        [primary_color, secondary_color, logo_url, projectId]
       );
 
     if (result.affectedRows === 0) {
@@ -87,9 +149,40 @@ async function updateProjectCustomization(req, res) {
         .json({ message: "Project customization not found" });
     }
 
-    res.json({ message: "Project customization updated successfully" });
+    // Fetch the updated customization
+    const [updatedCustomization] = await db
+      .promise()
+      .query("SELECT * FROM projectcustomizations WHERE project_id = ?", [projectId]);
+
+    res.json({
+      success: true,
+      message: "Project customization updated successfully",
+      data: updatedCustomization[0]
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Error updating project customization:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+// Helper function to extract public_id from Cloudinary URL
+function extractPublicIdFromUrl(url) {
+  try {
+    const parts = url.split('/');
+    const filename = parts[parts.length - 1];
+    const folderIndex = parts.indexOf('LogoForProjectCustomization');
+    if (folderIndex !== -1) {
+      const pathParts = parts.slice(folderIndex);
+      const publicId = pathParts.join('/').replace(/\.[^/.]+$/, ''); // Remove file extension
+      return publicId;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error extracting public_id:', error);
+    return null;
   }
 }
 

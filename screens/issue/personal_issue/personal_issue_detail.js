@@ -217,7 +217,7 @@ export default function PersonalIssueDetailScreen({ route, navigation }) {
                         </View>
                     )}
 
-                    {issue.estimated_cost && (
+                    {/* {issue.estimated_cost && (
                         <View style={styles.infoRow}>
                             <Text style={styles.infoLabel}>ราคาประเมิน:</Text>
                             <Text style={styles.costValue}>{parseFloat(issue.estimated_cost).toFixed(2)} บาท</Text>
@@ -229,7 +229,7 @@ export default function PersonalIssueDetailScreen({ route, navigation }) {
                             <Text style={styles.infoLabel}>ค่าใช้จ่ายจริง:</Text>
                             <Text style={[styles.costValue, { color: primaryColor }]}>{parseFloat(issue.actual_cost).toFixed(2)} บาท</Text>
                         </View>
-                    )}
+                    )} */}
                 </View>
 
                 {/* Notes from Staff */}

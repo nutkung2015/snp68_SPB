@@ -50,6 +50,9 @@ import IssueMenuScreen from "./screens/issue/issue_menu";
 import PersonalIssueScreen from "./screens/issue/personal_issue/personal_issue";
 import AddIssueForm from "./screens/issue/personal_issue/AddIssueForm";
 import PersonalIssueDetailScreen from "./screens/issue/personal_issue/personal_issue_detail";
+import CommonIssueScreen from "./screens/issue/common_issue/common_issue";
+import AddCommonIssueForm from "./screens/issue/common_issue/AddCommonIssueForm";
+import CommonIssueDetailScreen from "./screens/issue/common_issue/common_issue_detail";
 
 // Security screens
 import SecurityServiceScreen from "./screens/security/SecurityServiceScreen";
@@ -359,6 +362,28 @@ export default function App() {
           <Stack.Screen
             name="IssueDetail"
             component={PersonalIssueDetailScreen}
+            options={{ headerShown: false }}
+          />
+
+          {/* Common Issues */}
+          <Stack.Screen
+            name="CommonIssue"
+            component={CommonIssueScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AddCommonIssue"
+            component={AddCommonIssueForm}
+            options={{
+              headerShown: false,
+              presentation: 'modal',
+              cardOverlayEnabled: true,
+              cardStyle: { backgroundColor: 'transparent' },
+            }}
+          />
+          <Stack.Screen
+            name="CommonIssueDetail"
+            component={CommonIssueDetailScreen}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>

@@ -121,7 +121,7 @@ const ProfileScreen = ({ recheckLoginStatus }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ImageBackground
-        source={require("../../assets/mockup_banner_header_2.svg")}
+        source={require("../../assets/banner_header_3.png")}
         style={styles.headerBackground}
         resizeMode="cover"
         imageStyle={{

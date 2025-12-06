@@ -49,6 +49,44 @@ class IssueService {
     }
   }
 
+  // Common Issues
+  static async createCommonIssue(formData) {
+    try {
+      const token = await ApiService.getToken();
+      console.log('Token:', token);
+      console.log('FormData being sent:', formData);
+
+      const response = await ApiService.post("/api/repairs/common-issues", formData, token);
+      console.log('Response from server:', response);
+      return response;
+    } catch (error) {
+      console.error("Error creating common issue:", error.response || error);
+      throw error;
+    }
+  }
+
+  static async getCommonIssues(projectId) {
+    try {
+      const token = await ApiService.getToken();
+      const response = await ApiService.get(`/api/repairs/common-issues/my-issues?project_id=${projectId}`, token);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching common issues:", error.response || error);
+      throw error;
+    }
+  }
+
+  static async getCommonIssueById(issueId) {
+    try {
+      const token = await ApiService.getToken();
+      const response = await ApiService.get(`/api/repairs/common-issues/${issueId}`, token);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching common issue details:", error.response || error);
+      throw error;
+    }
+  }
+
   static async convertImagesToBase64(images) {
     const imagePromises = images.map(async (uri) => {
       const response = await fetch(uri);

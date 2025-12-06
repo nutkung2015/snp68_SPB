@@ -9,8 +9,9 @@ class AnnouncementsService {
 
       if (params.limit) queryParams.append('limit', params.limit);
       if (params.status) queryParams.append('status', params.status);
-      if (params.category) queryParams.append('category', params.category);
-      if (params.timeFilter) queryParams.append('timeFilter', params.timeFilter);
+      if (params.type) queryParams.append('type', params.type);
+      if (params.days) queryParams.append('days', params.days);
+      if (params.latest) queryParams.append('latest', params.latest);
       if (params.projectId) queryParams.append('project_id', params.projectId);
 
       const queryString = queryParams.toString();

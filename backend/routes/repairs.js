@@ -43,6 +43,8 @@ router.post('/common', repairController.createCommonIssue);
 // ดึงรายการแจ้งปัญหาส่วนกลางทั้งหมด
 router.get('/common', repairController.getCommonIssues);
 
+router.get('/common-issues/my-issues', repairController.getCommonIssuesForResident);
+
 // ดึงรายการแจ้งปัญหาส่วนกลางตาม ID
 router.get('/common/:id', repairController.getCommonIssueById);
 

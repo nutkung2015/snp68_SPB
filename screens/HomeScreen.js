@@ -38,8 +38,9 @@ const HomeScreen = ({ navigation }) => {
   const [customizationData, setCustomizationData] = useState(null); // State for ProjectCustomizations
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true); // Loading state for announcements
 
-  const [secondaryColor, setSecondaryColor] = useState("#33FF57"); // Default color
-  const [primaryColor, setPrimaryColor] = useState("#4BB59F"); // Default color
+  const [secondaryColor, setSecondaryColor] = useState("#155B5B"); // Default color
+  const [primaryColor, setPrimaryColor] = useState("#14336B"); // Default color
+  const [logoUrl, setLogoUrl] = useState(null); // Logo URL from project customization
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -97,9 +98,10 @@ const HomeScreen = ({ navigation }) => {
       // นี่คือเจาะชั้น response ที่ถูกต้อง
       if (response) {
         setCustomizationData(response);
-        if (response.primary_color, response.secondary_color) {
+        if (response.primary_color, response.secondary_color, response.logo_url) {
           setPrimaryColor(response.primary_color);
           setSecondaryColor(response.secondary_color);
+          setLogoUrl(response.logo_url);
         }
 
       }
@@ -114,10 +116,24 @@ const HomeScreen = ({ navigation }) => {
   const fetchAnnouncements = async () => {
     try {
       setLoadingAnnouncements(true); // Separate loading state for announcements
-      const data = await AnnouncementsService.getAnnouncements({
+
+      // Get user data to find project_id
+      const userDataStr = await AsyncStorage.getItem('userData');
+      let projectId = null;
+      if (userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        if (userData.projectMemberships && userData.projectMemberships.length > 0) {
+          projectId = userData.projectMemberships[0].project_id;
+        }
+      }
+
+      const params = {
         limit: 5,
         status: "published",
-      });
+        projectId: projectId // Add projectId to params
+      };
+
+      const data = await AnnouncementsService.getAnnouncements(params);
 
       if (data.status === "success") {
         setAnnouncements(data.data);
@@ -173,8 +189,8 @@ const HomeScreen = ({ navigation }) => {
 
   const renderMenuItem = (icon, label, onPress) => (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-      <View style={[styles.menuIconContainer, { borderColor: secondaryColor }]}>
-        <Ionicons name={icon} size={28} color={secondaryColor} />
+      <View style={styles.menuIconContainer}>
+        <Ionicons name={icon} size={28} color={primaryColor || "#155B5B"} />
       </View>
       <Text style={styles.menuLabel}>{label}</Text>
     </TouchableOpacity>
@@ -224,27 +240,58 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const renderNewsItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.newsCard}
-      onPress={() =>
-        navigation.navigate("NewsDetail", { announcementId: item.id })
-      }
-    >
-      <Image
-        source={{ uri: getImageUrl(item.attachment_urls) }}
-        style={styles.newsImage}
-      />
-      <View style={styles.newsContent}>
-        <Text style={styles.newsTitle} numberOfLines={1}>
-          {item.title}
-        </Text>
-        <Text style={styles.newsDescription} numberOfLines={2}>
-          {formatDate(item.created_at)}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+  // Get type label and color
+  const getTypeInfo = (type) => {
+    const typeMap = {
+      'announcement': { label: 'ประกาศ', color: '#3B82F6', bgColor: '#EFF6FF' },
+      'event': { label: 'กิจกรรม', color: '#10B981', bgColor: '#ECFDF5' },
+      'maintenance': { label: 'การบำรุงรักษา', color: '#F59E0B', bgColor: '#FEF3C7' },
+      'emergency': { label: 'เหตุฉุกเฉิน', color: '#EF4444', bgColor: '#FEE2E2' },
+    };
+    return typeMap[type] || { label: 'ทั่วไป', color: '#6B7280', bgColor: '#F3F4F6' };
+  };
+
+  const renderNewsItem = ({ item }) => {
+    const typeInfo = getTypeInfo(item.type);
+
+    return (
+      <TouchableOpacity
+        style={styles.newsCard}
+        onPress={() =>
+          navigation.navigate("NewsDetail", { announcementId: item.id })
+        }
+        activeOpacity={0.7}
+      >
+        <View style={styles.newsImageContainer}>
+          <Image
+            source={{ uri: getImageUrl(item.attachment_urls) }}
+            style={styles.newsImage}
+          />
+          {/* Gradient Overlay */}
+          <View style={styles.imageGradient} />
+
+          {/* Type Badge on Image */}
+          <View style={[styles.typeBadge, { backgroundColor: typeInfo.color }]}>
+            <Text style={styles.typeBadgeText}>{typeInfo.label}</Text>
+          </View>
+        </View>
+
+        <View style={styles.newsContent}>
+          <Text style={styles.newsTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
+
+          <View style={styles.newsMetaRow}>
+            <View style={styles.dateContainer}>
+              <Ionicons name="time-outline" size={14} color="#9CA3AF" />
+              <Text style={styles.newsDate}>{formatDate(item.created_at)}</Text>
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -262,7 +309,7 @@ const HomeScreen = ({ navigation }) => {
       </ImageBackground> */}
       {/* Header */}
       <LinearGradient
-        colors={["#143D60", "#A0C878"]}
+        colors={[primaryColor || "#4BB59F", secondaryColor || "#155B5B"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.gradientCardHeader}
@@ -270,7 +317,7 @@ const HomeScreen = ({ navigation }) => {
         {/* Row 1: Logo (ซ้าย) - Actions (ขวา) */}
         <View style={styles.headerRowTop}>
           <Image
-            source={require("../assets/logo_3_white.png")}
+            source={logoUrl ? { uri: logoUrl } : require("../assets/logo_3_white.png")}
             style={styles.logoImage}
           />
           <View style={styles.headerActions}>
@@ -300,6 +347,26 @@ const HomeScreen = ({ navigation }) => {
               {userData?.projectMemberships?.[0]?.project_name}</Text>
           </View>
         </View>
+        {/* ข้อมูลหมู่บ้านและบ้าน */}
+        <View style={styles.sectionHome}>
+          <Text style={styles.sectionTitleHome}>ข้อมูลหมู่บ้านและบ้าน</Text>
+          <View style={styles.menuGrid}>
+            <TouchableOpacity
+              style={styles.menuButton} // ใช้ primaryColor
+              onPress={() => navigation.navigate("HomeOption")}
+            >
+              <Ionicons name="home" size={24} color={primaryColor || "#155B5B"} />
+              <Text style={[styles.menuText, { color: primaryColor || "#155B5B" }]}>บ้านของฉัน</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={() => navigation.navigate("VilageOption")}
+            >
+              <Ionicons name="people" size={24} color={primaryColor || "#155B5B"} />
+              <Text style={[styles.menuText, { color: primaryColor || "#155B5B" }]}>หมู่บ้านของฉัน</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </LinearGradient>
 
 
@@ -308,27 +375,6 @@ const HomeScreen = ({ navigation }) => {
 
 
       <ScrollView style={styles.content}>
-        {/* ข้อมูลหมู่บ้านและบ้าน */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ข้อมูลหมู่บ้านและบ้าน</Text>
-          <View style={styles.menuGrid}>
-            <TouchableOpacity
-              style={[styles.menuButton, { backgroundColor: primaryColor }]} // ใช้ primaryColor
-              onPress={() => navigation.navigate("HomeOption")}
-            >
-              <Ionicons name="home-outline" size={24} color="#fff" />
-              <Text style={styles.menuText}>บ้านของฉัน</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.menuButton, { backgroundColor: primaryColor }]}
-              onPress={() => navigation.navigate("VilageOption")}
-            >
-              <Ionicons name="people-outline" size={24} color="#fff" />
-              <Text style={styles.menuText}>หมู่บ้านของฉัน</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* รายการโปรด */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -338,19 +384,19 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity> */}
           </View>
           <View style={styles.favoriteGrid}>
-            {renderMenuItem("megaphone-outline", "ข่าวสาร", () =>
+            {renderMenuItem("megaphone", "ข่าวสาร", () =>
               navigation.navigate("News")
             )}
-            {renderMenuItem("warning-outline", "แจ้งปัญหา", () =>
+            {renderMenuItem("warning", "แจ้งปัญหา", () =>
               navigation.navigate("IssueMenu")
             )}
-            {renderMenuItem("car-outline", "ผู้มาเยี่ยม", () =>
+            {renderMenuItem("car", "ผู้มาเยี่ยม", () =>
               navigation.navigate("Visitors")
             )}
-            {renderMenuItem("chatbubble-outline", "ขอความช่วยเหลือ", () =>
+            {renderMenuItem("chatbubble", "ขอความช่วยเหลือ", () =>
               navigation.navigate("HelpRequest")
             )}
-            {renderMenuItem("call-outline", "เบอร์ฉุกเฉิน", () =>
+            {renderMenuItem("call", "เบอร์ฉุกเฉิน", () =>
               navigation.navigate("NumberEmergency")
             )}
           </View>
@@ -414,7 +460,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
     paddingHorizontal: 18,
     paddingTop: 20,
-    paddingBottom: 26,
+    paddingBottom: 14,
     marginTop: 0,
     marginHorizontal: 0,
     // marginBottom: 18,
@@ -491,6 +537,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderWidth: 1,
+    borderColor: "#fff",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   headerHouseIcon: {
     marginRight: 10,
@@ -516,6 +568,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     marginBottom: 10,
   },
+  sectionHome: {
+    // paddingHorizontal: 20,
+    paddingTop: 20,
+    // backgroundColor: "#fff",
+    // marginBottom: 10,
+  },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -525,7 +583,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontFamily: "Kanit_700Bold",
-    color: "#183D3D",
+    color: "#000000ff",
+  },
+  sectionTitleHome: {
+    fontSize: 20,
+    fontFamily: "Kanit_700Bold",
+    color: "#fff",
   },
   seeAllText: {
     color: "#666",
@@ -541,14 +604,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 22,
-    backgroundColor: "#4BB59F",
+    backgroundColor: "#ffffffff",
     borderRadius: 12,
     width: "48%",
   },
   menuText: {
     marginLeft: 8,
     color: "#fff",
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "Kanit_600SemiBold",
   },
   favoriteGrid: {
     flexDirection: "row",
@@ -562,8 +625,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   menuIconContainer: {
-    borderWidth: 2.2,
-    borderColor: "#4BB59F",
+    // borderWidth: 2.2, 
+    // borderColor: "#4BB59F",
+    backgroundColor: "#f5f5f5",
     padding: 14,
     borderRadius: 12,
     marginBottom: 8,
@@ -572,7 +636,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#205248",
     textAlign: "center",
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "Kanit_500Medium",
   },
   newsListContainer: {
     paddingHorizontal: 4,
@@ -583,29 +647,80 @@ const styles = StyleSheet.create({
   },
   newsCard: {
     width: 280,
-    backgroundColor: "#B2DAD2",
-    borderRadius: 12,
+    backgroundColor: "#fff",
+    borderColor: '#e0e0e0',
+    borderWidth: 1,
+    borderRadius: 16,
     marginHorizontal: 8,
+    overflow: 'hidden',
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 3,
+  },
+  newsImageContainer: {
+    height: 180,
+    backgroundColor: '#f5f5f5',
+    position: 'relative',
   },
   newsImage: {
     width: "100%",
-    height: 150,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    height: "100%",
+    resizeMode: 'cover',
+  },
+  imageGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  typeBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  typeBadgeText: {
+    fontSize: 12,
+    fontFamily: 'Kanit_700Bold',
+    color: '#fff',
   },
   newsContent: {
-    padding: 12,
+    padding: 16,
   },
   newsTitle: {
     fontSize: 16,
     fontFamily: "Kanit_700Bold",
-    marginBottom: 4,
-    color: "#205248",
+    marginBottom: 8,
+    color: "#1F2937",
+    lineHeight: 24,
+  },
+  newsMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  newsDate: {
+    fontSize: 13,
+    fontFamily: 'Kanit_400Regular',
+    color: '#6B7280',
   },
   newsDescription: {
     fontSize: 14,

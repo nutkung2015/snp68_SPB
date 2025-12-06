@@ -81,8 +81,9 @@ const NewsScreen = ({ navigation }) => {
             const categoryValue = categoryOption ? categoryOption.value : '';
 
             // Add category filter
+            // Add category filter
             if (categoryValue) {
-                params.category = categoryValue;
+                params.type = categoryValue;
             }
 
             // Find value from label for Time Filter
@@ -91,7 +92,17 @@ const NewsScreen = ({ navigation }) => {
 
             // Add time filter
             if (timeFilterValue) {
-                params.timeFilter = timeFilterValue;
+                if (timeFilterValue === 'latest') {
+                    params.latest = 'true';
+                } else if (timeFilterValue === '1day') {
+                    params.days = 1;
+                } else if (timeFilterValue === '7days') {
+                    params.days = 7;
+                } else if (timeFilterValue === '1month') {
+                    params.days = 30;
+                } else if (timeFilterValue === '3months') {
+                    params.days = 90;
+                }
             }
 
             const data = await AnnouncementsService.getAnnouncements(params);
@@ -158,33 +169,66 @@ const NewsScreen = ({ navigation }) => {
         return `${day} ${month} ${year}`;
     };
 
-    const renderNewsCard = ({ item }) => (
-        <TouchableOpacity
-            style={styles.newsCard}
-            onPress={() => navigation.navigate('NewsDetail', { announcementId: item.id })}
-        >
-            <View style={styles.newsImageContainer}>
-                <Image
-                    source={{ uri: getImageUrl(item.attachment_urls) }}
-                    style={styles.newsImage}
-                />
-            </View>
-            <View style={styles.newsContent}>
-                <Text style={styles.newsTitle} numberOfLines={2}>{item.title}</Text>
-                <Text style={styles.newsDate}>{formatDate(item.created_at)}</Text>
-                <View style={styles.newsStats}>
-                    <View style={styles.statItem}>
-                        <Ionicons name="chatbubble-outline" size={16} color="#666" />
-                        <Text style={styles.statText}>10</Text>
-                    </View>
-                    <View style={styles.statItem}>
-                        <Ionicons name="eye-outline" size={16} color="#666" />
-                        <Text style={styles.statText}>20</Text>
+    // Get type label and color
+    const getTypeInfo = (type) => {
+        const typeMap = {
+            'announcement': { label: 'ประกาศ', color: '#3B82F6', bgColor: '#EFF6FF' },
+            'event': { label: 'กิจกรรม', color: '#10B981', bgColor: '#ECFDF5' },
+            'maintenance': { label: 'การบำรุงรักษา', color: '#F59E0B', bgColor: '#FEF3C7' },
+            'emergency': { label: 'เหตุฉุกเฉิน', color: '#EF4444', bgColor: '#FEE2E2' },
+        };
+        return typeMap[type] || { label: 'ทั่วไป', color: '#6B7280', bgColor: '#F3F4F6' };
+    };
+
+    const renderNewsCard = ({ item }) => {
+        const typeInfo = getTypeInfo(item.type);
+
+        return (
+            <TouchableOpacity
+                style={styles.newsCard}
+                onPress={() => navigation.navigate('NewsDetail', { announcementId: item.id })}
+                activeOpacity={0.7}
+            >
+                <View style={styles.newsImageContainer}>
+                    <Image
+                        source={{ uri: getImageUrl(item.attachment_urls) }}
+                        style={styles.newsImage}
+                    />
+                    {/* Gradient Overlay */}
+                    <View style={styles.imageGradient} />
+
+                    {/* Type Badge on Image */}
+                    <View style={[styles.typeBadge, { backgroundColor: typeInfo.color }]}>
+                        <Text style={styles.typeBadgeText}>{typeInfo.label}</Text>
                     </View>
                 </View>
-            </View>
-        </TouchableOpacity>
-    );
+
+                <View style={styles.newsContent}>
+                    <Text style={styles.newsTitle} numberOfLines={2}>{item.title}</Text>
+
+                    <View style={styles.newsMetaRow}>
+                        <View style={styles.dateContainer}>
+                            <Ionicons name="time-outline" size={14} color="#9CA3AF" />
+                            <Text style={styles.newsDate}>{formatDate(item.created_at)}</Text>
+                        </View>
+                    </View>
+
+                    {/* Stats Row */}
+                    {/* <View style={styles.newsStats}>
+                        <View style={styles.statItem}>
+                            <Ionicons name="eye-outline" size={16} color="#9CA3AF" />
+                            <Text style={styles.statText}>125</Text>
+                        </View>
+                        <View style={styles.statDivider} />
+                        <View style={styles.statItem}>
+                            <Ionicons name="chatbubble-outline" size={16} color="#9CA3AF" />
+                            <Text style={styles.statText}>8</Text>
+                        </View>
+                    </View> */}
+                </View>
+            </TouchableOpacity>
+        );
+    };
 
     const renderSection = (title, data, emptyMessage) => (
         <View style={styles.section}>
@@ -427,50 +471,107 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     newsCard: {
-        backgroundColor: '#f8f8f8',
-        borderRadius: 8,
-        marginBottom: 12,
+        backgroundColor: '#fff',
+        borderColor: '#e0e0e0',
+        borderWidth: 1,
+        borderRadius: 16,
+        marginBottom: 16,
         overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 3,
     },
     newsImageContainer: {
-        height: 120,
+        height: 180,
         backgroundColor: '#e0e0e0',
+        position: 'relative',
     },
     newsImage: {
         width: '100%',
         height: '100%',
         resizeMode: 'cover',
     },
+    imageGradient: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 80,
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    },
+    typeBadge: {
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    typeBadgeText: {
+        fontSize: 12,
+        fontFamily: 'Kanit_700Bold',
+        color: '#fff',
+    },
     newsContent: {
-        padding: 12,
+        padding: 16,
     },
     newsTitle: {
-        fontSize: 14,
+        fontSize: 16,
         fontFamily: 'Kanit_700Bold',
-        color: '#333',
-        marginBottom: 4,
-        lineHeight: 20,
-    },
-    newsDate: {
-        fontSize: 12,
-        fontFamily: 'Kanit_400Regular',
-        color: '#666',
+        color: '#1F2937',
         marginBottom: 8,
+        lineHeight: 24,
     },
-    newsStats: {
+    newsMetaRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 16,
+        marginBottom: 12,
     },
-    statItem: {
+    dateContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
     },
-    statText: {
-        fontSize: 12,
+    newsDate: {
+        fontSize: 13,
         fontFamily: 'Kanit_400Regular',
-        color: '#666',
+        color: '#6B7280',
+    },
+    newsStats: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: '#F3F4F6',
+    },
+    statItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    statDivider: {
+        width: 1,
+        height: 16,
+        backgroundColor: '#E5E7EB',
+        marginHorizontal: 16,
+    },
+    statText: {
+        fontSize: 13,
+        fontFamily: 'Kanit_400Regular',
+        color: '#6B7280',
     },
     loadingContainer: {
         flex: 1,

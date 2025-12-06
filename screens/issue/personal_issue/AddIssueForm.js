@@ -79,6 +79,7 @@ export default function AddIssueForm({ route, navigation }) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showAreaPicker, setShowAreaPicker] = useState(false);
   const [selectedArea, setSelectedArea] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // ฟังก์ชันจัดการการเปลี่ยนแปลงข้อมูลในฟอร์ม
   const handleInputChange = (name, value) => {
@@ -187,6 +188,7 @@ export default function AddIssueForm({ route, navigation }) {
         description: formData.description,
         image_urls: base64Images,
         priority: "medium",
+        reporter_tel: userData?.phone || "",
       };
 
       console.log("Payload:", payload);
@@ -195,12 +197,9 @@ export default function AddIssueForm({ route, navigation }) {
       console.log("API Response:", response);
 
       if (response.status === "success") {
-        Alert.alert("สำเร็จ", "ส่งแบบฟอร์มแจ้งซ่อมเรียบร้อยแล้ว", [
-          {
-            text: "ตกลง",
-            onPress: () => navigation.goBack(),
-          },
-        ]);
+        setShowSuccessModal(true);
+      } else {
+        Alert.alert("แจ้งเตือน", response.message || "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
       }
     } catch (error) {
       console.error("Submit Error:", error);
@@ -441,6 +440,32 @@ export default function AddIssueForm({ route, navigation }) {
             </View>
           </View>
         </Modal>
+
+        {/* Success Modal */}
+        <Modal
+          visible={showSuccessModal}
+          transparent={true}
+          animationType="fade"
+        >
+          <View style={styles.successModalOverlay}>
+            <View style={styles.successModalContent}>
+              <Ionicons name="checkmark-circle" size={60} color="#205248" />
+              <Text style={styles.successTitle}>บันทึกสำเร็จ</Text>
+              <Text style={styles.successMessage}>
+                ส่งแบบฟอร์มแจ้งซ่อมเรียบร้อยแล้ว
+              </Text>
+              <TouchableOpacity
+                style={styles.successButton}
+                onPress={() => {
+                  setShowSuccessModal(false);
+                  navigation.goBack();
+                }}
+              >
+                <Text style={styles.successButtonText}>ตกลง</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     </TouchableWithoutFeedback>
   );
@@ -665,5 +690,55 @@ const styles = StyleSheet.create({
     width: "100px",
     // display: "none",
     opacity: 0,
+  },
+  successModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  successModalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 30,
+    alignItems: "center",
+    width: "80%",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  successTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#205248",
+    marginTop: 15,
+    marginBottom: 10,
+    fontFamily: "Kanit_600SemiBold",
+  },
+  successMessage: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+    fontFamily: "Kanit_400Regular",
+  },
+  successButton: {
+    backgroundColor: "#205248",
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+    width: "100%",
+    alignItems: "center",
+  },
+  successButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    fontFamily: "Kanit_600SemiBold",
   },
 });

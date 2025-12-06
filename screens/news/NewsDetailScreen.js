@@ -34,7 +34,7 @@ const NewsDetailScreen = ({ navigation, route }) => {
     const [announcement, setAnnouncement] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    
+
     // Fetch announcement detail from API
     useEffect(() => {
         fetchAnnouncementDetail();
@@ -119,7 +119,7 @@ const NewsDetailScreen = ({ navigation, route }) => {
     return (
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-            
+
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity
@@ -146,7 +146,7 @@ const NewsDetailScreen = ({ navigation, route }) => {
                     </TouchableOpacity>
                 </View>
             ) : announcement ? (
-                <ScrollView 
+                <ScrollView
                     style={styles.content}
                     contentContainerStyle={styles.contentContainer}
                     showsVerticalScrollIndicator={false}
@@ -183,12 +183,12 @@ const NewsDetailScreen = ({ navigation, route }) => {
                     <Text style={styles.contentText}>{announcement.content}</Text>
 
                     {/* Acknowledge Button */}
-                    <TouchableOpacity
+                    {/*<TouchableOpacity
                         style={styles.acknowledgeButton}
                         onPress={handleBack}
                     >
                         <Text style={styles.acknowledgeButtonText}>รับทราบ</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity>*/}
                 </ScrollView>
             ) : null}
         </View>

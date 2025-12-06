@@ -1,4 +1,6 @@
 const express = require("express");
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 const {
   getProjectCustomizations,
   getProjectCustomizationById,
@@ -15,11 +17,15 @@ router.get("/", getProjectCustomizations);
 // Route to get a specific project customization by project ID
 router.get("/:projectId", getProjectCustomizationById);
 
-// Route to create a new project customization
-router.post("/", createProjectCustomization);
+// Route to create a new project customization (with logo upload support)
+router.post("/", upload.fields([
+  { name: 'logo', maxCount: 1 }
+]), createProjectCustomization);
 
-// Route to update a project customization by project ID
-router.put("/:projectId", updateProjectCustomization);
+// Route to update a project customization by project ID (with logo upload support)
+router.put("/:projectId", upload.fields([
+  { name: 'logo', maxCount: 1 }
+]), updateProjectCustomization);
 
 // Route to delete a project customization by project ID
 router.delete("/:projectId", deleteProjectCustomization);

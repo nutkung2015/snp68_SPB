@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,10 +11,41 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import BottomNavigation from "../../components/BottomNavigation";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import ProjectCustomizationsService from "../../services/projectCustomizationsService";
 
 export default function ListNumberEmergencyScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedEmergency, setSelectedEmergency] = useState(null);
+  const [primaryColor, setPrimaryColor] = useState("#4BB59F");
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const storedUserData = await AsyncStorage.getItem("userData");
+        if (storedUserData) {
+          const parsedUserData = JSON.parse(storedUserData);
+          if (parsedUserData?.projectMemberships?.[0]?.project_id) {
+            fetchProjectCustomizations(parsedUserData.projectMemberships[0].project_id);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load user data from AsyncStorage", error);
+      }
+    };
+    loadUserData();
+  }, []);
+
+  const fetchProjectCustomizations = async (projectId) => {
+    try {
+      const response = await ProjectCustomizationsService.getProjectCustomizations(projectId);
+      if (response) {
+        if (response.primary_color) setPrimaryColor(response.primary_color);
+      }
+    } catch (err) {
+      console.error("Error fetching project customizations:", err);
+    }
+  };
 
   const handleGoBack = () => {
     navigation.goBack();
@@ -63,9 +94,9 @@ export default function ListNumberEmergencyScreen({ navigation }) {
   ];
 
   const Card = ({ iconName, title, subtitle, onPress }) => (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
+    <TouchableOpacity style={[styles.card, { backgroundColor: primaryColor }]} onPress={onPress}>
       <View style={styles.iconContainer}>
-        <Ionicons name={iconName} size={26} color="#205248" />
+        <Ionicons name={iconName} size={26} color={primaryColor} />
       </View>
       <View style={styles.cardContent}>
         <Text style={styles.cardTitle}>{title}</Text>
@@ -112,14 +143,14 @@ export default function ListNumberEmergencyScreen({ navigation }) {
             {selectedEmergency && (
               <>
                 <View style={styles.modalHeader}>
-                  <Ionicons name={selectedEmergency.iconName} size={40} color="#205248" />
-                  <Text style={styles.modalTitle}>{selectedEmergency.title}</Text>
+                  <Ionicons name={selectedEmergency.iconName} size={40} color={primaryColor} />
+                  <Text style={[styles.modalTitle, { color: primaryColor }]}>{selectedEmergency.title}</Text>
                 </View>
 
                 <View style={styles.phoneSection}>
                   <Text style={styles.phoneLabel}>เบอร์โทร</Text>
                   <TouchableOpacity
-                    style={styles.phoneButton}
+                    style={[styles.phoneButton, { backgroundColor: primaryColor }]}
                     onPress={() => handleCall(selectedEmergency.phoneNumber)}
                   >
                     <Text style={styles.phoneNumber}>{selectedEmergency.phoneNumber}</Text>
@@ -130,7 +161,7 @@ export default function ListNumberEmergencyScreen({ navigation }) {
                 <Text style={styles.description}>{selectedEmergency.description}</Text>
 
                 <TouchableOpacity
-                  style={styles.closeButton}
+                  style={[styles.closeButton, { backgroundColor: primaryColor }]}
                   onPress={() => setModalVisible(false)}
                 >
                   <Text style={styles.closeButtonText}>ปิด</Text>

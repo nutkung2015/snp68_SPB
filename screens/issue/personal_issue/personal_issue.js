@@ -174,7 +174,7 @@ export default function PersonalIssueScreen({ navigation }) {
                     <View style={[styles.statusDot, { backgroundColor: statusStyles.dotColor }]} />
                     <View>
                       <Text style={styles.issueTitle}>{RepairTypeName[issue.repair_category]}</Text>
-                      <Text style={styles.issueDescription}>{issue.description}</Text>
+                      <Text style={styles.issueDescription} numberOfLines={1}>{issue.description}</Text>
                       <Text style={styles.issueDate}>{new Date(issue.submitted_date).toLocaleDateString('th-TH')}</Text>
                     </View>
                   </View>
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
     borderRadius: 10,
-    padding: 16,
+    padding: 10,
     marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -281,19 +281,20 @@ const styles = StyleSheet.create({
   issueTitle: {
     fontSize: 18,
     color: "#333",
-    marginBottom: 4,
+    marginBottom: 2,
     fontFamily: "Kanit_400Regular",
   },
   issueDescription: {
     fontSize: 16,
     color: "#666",
-    marginBottom: 4,
+    marginBottom: 2,
+    maxWidth: 200,
     fontFamily: "Kanit_400Regular",
   },
   issueDate: {
     fontSize: 14,
     color: "#888",
-    fontFamily: "Kanit_300Light",
+    fontFamily: "Kanit_400Regular",
   },
   issueRight: {
     flexDirection: "row",
@@ -321,19 +322,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   loadingIndicator: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorText: {
-    flex: 1,
-    textAlign: 'center',
-    marginTop: 50,
-    fontSize: 16,
-    color: 'red',
-    fontFamily: "Kanit_400Regular",
-  },
-  noIssuesText: {
     textAlign: 'center',
     marginTop: 20,
     fontSize: 16,

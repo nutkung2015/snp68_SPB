@@ -17,6 +17,7 @@ exports.createPersonalRepair = async (req, res) => {
   try {
     const userId = req.user.id;
     const userFullName = req.user.full_name;
+    const userPhone = req.user.phone;
 
     const {
       project_id, // เพิ่ม project_id
@@ -31,6 +32,7 @@ exports.createPersonalRepair = async (req, res) => {
 
     const reporter_name = userFullName;
     const reporter_id = userId;
+    const reporter_tel = userPhone;
 
     // Upload images to Cloudinary
     let cloudinaryUrls = [];
@@ -64,6 +66,7 @@ exports.createPersonalRepair = async (req, res) => {
       !unit_id ||
       !zone ||
       !reporter_name ||
+      !reporter_tel ||
       !repair_category ||
       !description
     ) {
@@ -79,20 +82,21 @@ exports.createPersonalRepair = async (req, res) => {
 
     const query = `
             INSERT INTO personal_repairs 
-            (id, project_id, unit_id, zone, reporter_name, reporter_id, submitted_date, 
-             repair_category, repair_area, description, image_urls, priority, status)
-            VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, 'pending')
+            (id, unit_id, project_id, zone, reporter_name, reporter_id, submitted_date, reporter_tel,
+             repair_category, repair_area, description, image_urls, status, priority)
+            VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, 'pending', ?)
         `;
 
     const [result] = await db
       .promise()
       .query(query, [
         id,
-        project_id,
         unit_id,
+        project_id,
         zone,
         reporter_name,
         reporter_id,
+        reporter_tel,
         repair_category,
         repair_area,
         description,
@@ -113,6 +117,7 @@ exports.createPersonalRepair = async (req, res) => {
     });
   }
 };
+
 // ดึงรายการแจ้งซ่อมทรัพย์สินส่วนบุคคลทั้งหมด
 exports.getPersonalRepairs = async (req, res) => {
   try {
@@ -723,6 +728,79 @@ exports.getCommonIssues = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching common issues:", error);
+    res.status(500).json({
+      status: "error",
+      message: "เกิดข้อผิดพลาดในการดึงข้อมูล",
+    });
+  }
+};
+
+// ดึงรายการแจ้งปัญหาส่วนกลางสำหรับผู้พักอาศัย (ตาม reporter_id)
+exports.getCommonIssuesForResident = async (req, res) => {
+  try {
+    const {
+      project_id,
+      status,
+      issue_type,
+      limit = 50,
+      offset = 0,
+    } = req.query;
+
+    // ดึง reporter_id จาก req.user (ผู้ใช้ที่ login)
+    const reporter_id = req.user.id;
+
+    // Debug: Log ค่าที่ได้รับ
+    console.log('=== Debug getCommonIssuesForResident ===');
+    console.log('req.user:', req.user);
+    console.log('reporter_id:', reporter_id);
+    console.log('project_id:', project_id);
+
+    // ตรวจสอบ required fields
+    if (!project_id) {
+      return res.status(400).json({
+        status: "error",
+        message: "กรุณาระบุ project_id",
+      });
+    }
+
+    let query = "SELECT * FROM common_issues WHERE reporter_id = ? AND project_id = ?";
+    const params = [reporter_id, project_id];
+
+    console.log('SQL Query:', query);
+    console.log('Query Params:', params);
+
+    // เพิ่มเงื่อนไขเพิ่มเติม
+    if (status) {
+      query += " AND status = ?";
+      params.push(status);
+    }
+
+    if (issue_type) {
+      query += " AND issue_type = ?";
+      params.push(issue_type);
+    }
+
+    query += " ORDER BY reported_date DESC LIMIT ? OFFSET ?";
+    params.push(parseInt(limit), parseInt(offset));
+
+    const [rows] = await db.promise().query(query, params);
+
+    const issues = rows.map((row) => ({
+      ...row,
+      image_urls: row.image_urls ? JSON.parse(row.image_urls) : [],
+    }));
+
+    res.json({
+      status: "success",
+      data: issues,
+      count: issues.length,
+      pagination: {
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching common issues for resident:", error);
     res.status(500).json({
       status: "error",
       message: "เกิดข้อผิดพลาดในการดึงข้อมูล",

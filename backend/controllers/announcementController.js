@@ -14,15 +14,18 @@ cloudinary.config({
 exports.getAnnouncementsForResident = (req, res) => {
     const { type, audience, status, days, latest, page = 1, limit = 10, project_id } = req.query;
 
-    // Base query: Select announcements that are either global (project_id IS NULL) OR belong to the specific project
-    let query = 'SELECT * FROM announcements WHERE (project_id IS NULL';
+    // Base query: Select announcements based on project_id
+    let query = 'SELECT * FROM announcements WHERE ';
     const queryParams = [];
 
     if (project_id) {
-        query += ' OR project_id = ?';
+        // If project_id is provided, get ONLY project-specific announcements (exclude global)
+        query += 'project_id = ?';
         queryParams.push(project_id);
+    } else {
+        // If no project_id, only get global announcements
+        query += 'project_id IS NULL';
     }
-    query += ')';
 
     // Add filters
     if (type) {
@@ -67,14 +70,17 @@ exports.getAnnouncementsForResident = (req, res) => {
         }
 
         // Get total count for pagination
-        let countQuery = 'SELECT COUNT(*) as total FROM announcements WHERE (project_id IS NULL';
+        let countQuery = 'SELECT COUNT(*) as total FROM announcements WHERE ';
         const countParams = [];
 
         if (project_id) {
-            countQuery += ' OR project_id = ?';
+            // If project_id is provided, count ONLY project-specific announcements (exclude global)
+            countQuery += 'project_id = ?';
             countParams.push(project_id);
+        } else {
+            // If no project_id, only count global announcements
+            countQuery += 'project_id IS NULL';
         }
-        countQuery += ')';
 
         if (type) {
             countQuery += ' AND type = ?';

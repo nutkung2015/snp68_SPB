@@ -53,17 +53,16 @@ export default function RegisterScreen({ navigation }) {
       };
 
       const data = await register(userData);
-      
+
       console.log("Registration successful:", data);
+
+      // Navigate to Login screen immediately on success
+      navigation.replace("Login");
+
+      // Show success alert (optional)
       Alert.alert(
         "สำเร็จ",
-        "ลงทะเบียนสำเร็จ กรุณาเข้าสู่ระบบ",
-        [
-          {
-            text: "ตรวจสอบ",
-            onPress: () => navigation.replace("Login")
-          }
-        ]
+        "ลงทะเบียนสำเร็จ กรุณาเข้าสู่ระบบ"
       );
     } catch (error) {
       console.error("Error during registration:", error);
@@ -77,7 +76,7 @@ export default function RegisterScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground
-        source={require("../../assets/mockup_banner_header_2.png")}
+        source={require("../../assets/mockup_banner_header_4.png")}
         style={styles.headerBackground}
         resizeMode="cover"
         imageStyle={{
@@ -99,7 +98,7 @@ export default function RegisterScreen({ navigation }) {
           <TextInput
             style={styles.input}
             placeholder="กรอกชื่อเต็ม"
-            placeholderTextColor="#205248"
+            placeholderTextColor="#07354E"
             value={fullName}
             onChangeText={setFullName}
           />
@@ -107,7 +106,7 @@ export default function RegisterScreen({ navigation }) {
           <TextInput
             style={styles.input}
             placeholder="กรอกอีเมล"
-            placeholderTextColor="#205248"
+            placeholderTextColor="#07354E"
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -116,7 +115,7 @@ export default function RegisterScreen({ navigation }) {
           <TextInput
             style={styles.input}
             placeholder="กรอกรหัสผ่าน"
-            placeholderTextColor="#205248"
+            placeholderTextColor="#07354E"
             secureTextEntry
             value={password}
             onChangeText={setPassword}
@@ -125,7 +124,7 @@ export default function RegisterScreen({ navigation }) {
           <TextInput
             style={styles.input}
             placeholder="ยืนยันรหัสผ่าน"
-            placeholderTextColor="#205248"
+            placeholderTextColor="#07354E"
             secureTextEntry
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -134,7 +133,7 @@ export default function RegisterScreen({ navigation }) {
           <TextInput
             style={styles.input}
             placeholder="เบอร์โทรศัพท์"
-            placeholderTextColor="#205248"
+            placeholderTextColor="#07354E"
             value={phone}
             onChangeText={setPhone}
           />
@@ -157,7 +156,7 @@ export default function RegisterScreen({ navigation }) {
         >
           <Text style={styles.loginText}>
             ถ้าคุณมีรหัสอยู่แล้ว{" "}
-            <Text style={{ color: "#3ec6a8" }}>เข้าสู่ระบบที่นี่</Text>
+            <Text style={{ color: "#07354E" }}>เข้าสู่ระบบที่นี่</Text>
           </Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -223,7 +222,7 @@ const styles = StyleSheet.create({
   registerButton: {
     width: "100%",
     height: 48,
-    backgroundColor: "#3ec6a8",
+    backgroundColor: "#07354E",
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",

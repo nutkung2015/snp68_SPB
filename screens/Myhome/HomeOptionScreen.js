@@ -1,27 +1,82 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import BottomNavigation from "../../components/BottomNavigation";
+import ProjectCustomizationsService from "../../services/projectCustomizationsService";
 
 export default function HomeOptionScreen({ navigation }) {
+  const [primaryColor, setPrimaryColor] = useState("#4BB59F"); // Default color
+  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const storedUserData = await AsyncStorage.getItem("userData");
+        if (storedUserData) {
+          setUserData(JSON.parse(storedUserData));
+        }
+      } catch (error) {
+        console.error("Failed to load user data from AsyncStorage", error);
+      }
+    };
+    loadUserData();
+  }, []);
+
+  useEffect(() => {
+    const fetchProjectCustomizations = async () => {
+      if (userData?.projectMemberships?.[0]?.project_id) {
+        try {
+          setLoading(true);
+          const response = await ProjectCustomizationsService.getProjectCustomizations(
+            userData.projectMemberships[0].project_id
+          );
+          if (response?.primary_color) {
+            setPrimaryColor(response.primary_color);
+          }
+        } catch (error) {
+          console.error("Error fetching project customizations:", error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+    fetchProjectCustomizations();
+  }, [userData]);
+
   const handleGoBack = () => {
     navigation.goBack();
   };
 
   const Card = ({ iconName, title, onPress }) => (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
-      <View style={styles.iconContainer}>
-        <Ionicons name={iconName} size={26} color="#205248" />
-      </View>
-      <Text style={styles.cardText}>{title}</Text>
-    </TouchableOpacity>
+    <LinearGradient
+      colors={[primaryColor, primaryColor]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.cardGradient}
+    >
+      <TouchableOpacity
+        style={styles.card}
+        onPress={onPress}
+        activeOpacity={0.8}
+      >
+        <View style={styles.iconContainer}>
+          <Ionicons name={iconName} size={26} color={primaryColor} />
+        </View>
+        <Text style={styles.cardText}>{title}</Text>
+      </TouchableOpacity>
+    </LinearGradient>
   );
 
   return (
@@ -39,21 +94,30 @@ export default function HomeOptionScreen({ navigation }) {
 
       {/* Content Cards */}
       <View style={styles.content}>
-        <Card
-          iconName="build-outline"
-          title="รายละเอียดบ้าน"
-          onPress={() => console.log("รายละเอียดบ้าน pressed")}
-        />
-        <Card
-          iconName="home-outline"
-          title="การต่อเติมบ้าน"
-          onPress={() => console.log("การต่อเติมบ้าน pressed")}
-        />
-        <Card
-          iconName="people-outline"
-          title="ผู้อยู่อาศัย"
-          onPress={() => console.log("ผู้อยู่อาศัย pressed")}
-        />
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={primaryColor} />
+            <Text style={styles.loadingText}>กำลังโหลด...</Text>
+          </View>
+        ) : (
+          <>
+            <Card
+              iconName="build-outline"
+              title="รายละเอียดบ้าน"
+              onPress={() => console.log("รายละเอียดบ้าน pressed")}
+            />
+            {/* <Card
+              iconName="home-outline"
+              title="การต่อเติมบ้าน"
+              onPress={() => console.log("การต่อเติมบ้าน pressed")}
+            /> */}
+            <Card
+              iconName="people-outline"
+              title="ผู้อยู่อาศัย"
+              onPress={() => console.log("ผู้อยู่อาศัย pressed")}
+            />
+          </>
+        )}
       </View>
       {/* <BottomNavigation navigation={navigation} activeScreen="HomeOption" /> */}
     </SafeAreaView>
@@ -71,8 +135,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     backgroundColor: "#fff",
-    // borderBottomWidth: 1,
-    // borderBottomColor: "#eee",
   },
   headerSecond: {
     flexDirection: "row",
@@ -96,20 +158,26 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "start",
-    marginRight: 24, // Offset for back button
+    marginRight: 24,
+    fontFamily: "Kanit_600SemiBold",
   },
   content: {
     flex: 1,
     padding: 16,
   },
-  card: {
-    flexDirection: "row",
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#4BB59F",
-    // padding: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 24,
-    borderRadius: 8,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#666",
+    fontFamily: "Kanit_400Regular",
+  },
+  cardGradient: {
+    borderRadius: 12,
     marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -117,28 +185,33 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 24,
+  },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     backgroundColor: "rgba(255, 255, 255, 1)",
     justifyContent: "center",
     alignItems: "center",
   },
   cardText: {
-    fontSize: 16,
-    marginLeft: 12,
-    // color: "#205248",
+    flex: 1,
+    fontSize: 20,
+    marginLeft: 16,
     color: "white",
     fontFamily: "Kanit_600SemiBold",
-    fontSize: 20,
   },
   bottomNavigation: {
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
     height: 60,
-    paddingBottom: 5, // For SafeAreaView on iOS
+    paddingBottom: 5,
   },
   navButton: {
     alignItems: "center",

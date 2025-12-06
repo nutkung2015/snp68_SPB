@@ -54,7 +54,7 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground
-        source={require("../../assets/mockup_banner_header_2.png")}
+        source={require("../../assets/mockup_banner_header_4.png")}
         style={styles.headerBackground}
         resizeMode="cover"
         imageStyle={{
@@ -82,7 +82,7 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
           <TextInput
             style={styles.input}
             placeholder="email"
-            placeholderTextColor="#205248"
+            placeholderTextColor="#07354E"
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -90,7 +90,7 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
           <TextInput
             style={styles.input}
             placeholder="password"
-            placeholderTextColor="#205248"
+            placeholderTextColor="#07354E"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -106,7 +106,7 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
         >
           <Text style={styles.registerText}>
             ถ้าคุณไม่มีรหัส{" "}
-            <Text style={{ color: "#3ec6a8" }}>สมัครที่นี่</Text>
+            <Text style={{ color: "#07354E" }}>สมัครที่นี่</Text>
           </Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   loginButton: {
     width: "100%",
     height: 48,
-    backgroundColor: "#3ec6a8",
+    backgroundColor: "#07354E",
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
