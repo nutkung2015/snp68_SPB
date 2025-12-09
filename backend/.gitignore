@@ -29,3 +29,4 @@ uploads/
 # Build files
 dist/
 build/
+*.md
