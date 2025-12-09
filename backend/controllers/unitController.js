@@ -1,6 +1,6 @@
 const db = require("../config/db");
 const { v4: uuidv4 } = require("uuid");
-const xlsx = require('xlsx');
+const ExcelJS = require('exceljs');
 
 // Helper function to generate 6-character invite code (e.g., TCS2GSF)
 function generateInviteCode() {
@@ -393,11 +393,37 @@ exports.importUnits = async (req, res) => {
       });
     }
 
-    // 1. Read Excel File
-    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    const rawData = xlsx.utils.sheet_to_json(sheet);
+    // 1. Read Excel File using ExcelJS
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(req.file.buffer);
+
+    const worksheet = workbook.worksheets[0];
+    if (!worksheet) {
+      return res.status(400).json({ message: "Excel file has no worksheets" });
+    }
+
+    // Convert worksheet to JSON format (similar to xlsx.utils.sheet_to_json)
+    const rawData = [];
+    const headers = [];
+
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) {
+        // First row is headers
+        row.eachCell((cell) => {
+          headers.push(cell.value);
+        });
+      } else {
+        // Data rows
+        const rowData = {};
+        row.eachCell((cell, colNumber) => {
+          const header = headers[colNumber - 1];
+          if (header) {
+            rowData[header] = cell.value;
+          }
+        });
+        rawData.push(rowData);
+      }
+    });
 
     if (rawData.length === 0) {
       return res.status(400).json({ message: "Excel file is empty" });

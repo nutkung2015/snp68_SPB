@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "SiengPuenBan",
-    "slug": "sieng-puen-ban",
+    "name": "LIVLINK",
+    "slug": "my-app",
     "version": "1.0.0",
     "sdkVersion": "54.0.0",
     "platforms": [
@@ -14,7 +14,7 @@
         "projectId": "7c6d8598-fa21-4f26-ab88-eb019a0d52b7"
       },
       "APP_ENV": "development",
-      "DEBUG": true,
+      "DEBUG": false,
       "PROD_API_BASE_URL": "https://snp68-spb.onrender.com",
       "DEV_API_BASE_URL": "http://127.0.0.1:5000",
       "API_VERSION": "v1"
@@ -26,6 +26,7 @@
       }
     },
     "android": {
+      "package": "com.nutkung2015.livlink",
       "usesCleartextTraffic": true
     },
     "plugins": [
@@ -36,10 +37,10 @@
       "**/*"
     ],
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo_1.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/logo_1.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     }

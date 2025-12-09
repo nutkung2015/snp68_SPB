@@ -4,10 +4,12 @@ const authController = require("../controllers/authController");
 const { login } = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware"); // Import middleware
 
-router.post("/login", login);
+const { validateRegister, validateLogin } = require("../middleware/validationMiddleware");
+
+router.post("/login", validateLogin, login);
 
 // Route สำหรับการลงทะเบียน
-router.post("/register", authController.register);
+router.post("/register", validateRegister, authController.register);
 
 // Route สำหรับดึงข้อมูล Profile ของผู้ใช้
 router.get("/profile", authMiddleware, authController.getProfile);
