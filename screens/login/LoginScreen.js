@@ -19,6 +19,7 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false); // เพิ่ม state สำหรับ loading
+  const [showPassword, setShowPassword] = useState(false);
 
   // const handleLogin = async () => {
   //   // ใช้ token mockup ชั่วคราว
@@ -79,22 +80,36 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
       <SafeAreaView style={styles.formContainer}>
         <View style={styles.form}>
           <Text style={styles.loginTitle}>ล็อกอินเพื่อเข้าสู่ระบบ</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="email"
-            placeholderTextColor="#07354E"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="password"
-            placeholderTextColor="#07354E"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={styles.emailContainer}>
+            <TextInput
+              style={styles.emailInput}
+              placeholder="email"
+              placeholderTextColor="#07354E"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+            />
+          </View>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="password"
+              placeholderTextColor="#07354E"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={24}
+                color="#07354E"
+              />
+            </TouchableOpacity>
+          </View>
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
           <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
             <Text style={styles.loginButtonText}>เข้าสู่ระบบ</Text>
@@ -173,19 +188,6 @@ const styles = StyleSheet.create({
     fontFamily: "Kanit_600SemiBold",
     // fontWeight: "bold",
   },
-  input: {
-    width: "100%",
-    height: 48,
-    // backgroundColor: "#cde8e2",
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: "#205248",
-    paddingHorizontal: 16,
-    fontSize: 16,
-    marginBottom: 12,
-    color: "#205248",
-    fontFamily: "Kanit_400Regular", // ต้อง import font ก่อน
-  },
   loginButton: {
     width: "100%",
     height: 48,
@@ -200,6 +202,45 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "Kanit_600SemiBold",
     // fontWeight: "bold",
+  },
+  emailContainer: {
+    width: "100%",
+    position: "relative",
+    marginBottom: 12,
+  },
+  emailInput: {
+    width: "100%",
+    height: 48,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#205248",
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: "#205248",
+    fontFamily: "Kanit_400Regular",
+  },
+  passwordContainer: {
+    width: "100%",
+    position: "relative",
+    marginBottom: 12,
+  },
+  passwordInput: {
+    width: "100%",
+    height: 48,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#205248",
+    paddingHorizontal: 16,
+    paddingRight: 50, // เพิ่มพื้นที่สำหรับไอคอน
+    fontSize: 16,
+    color: "#205248",
+    fontFamily: "Kanit_400Regular",
+  },
+  eyeIcon: {
+    position: "absolute",
+    right: 12,
+    top: 8,
+    padding: 4,
   },
   errorText: {
     color: "red",

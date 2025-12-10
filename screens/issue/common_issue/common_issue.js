@@ -14,6 +14,11 @@ import {
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import IssueService from "../../../services/issueService";
 
+const ISSUE_TYPES = [
+    { id: "1", name: "ทรัพย์สินและสาธารณูปโภค", value: "AssetsFacilities" },
+    { id: "2", name: "การอยู่อาศัยและระเบียบข้อบังคับ", value: "LivingRegulations" },
+];
+
 export default function CommonIssueScreen({ navigation }) {
     const [userData, setUserData] = useState(null);
     const [issues, setIssues] = useState([]);
@@ -59,8 +64,20 @@ export default function CommonIssueScreen({ navigation }) {
 
                 const fetchedIssues = await IssueService.getCommonIssues(projectId);
 
-                console.log("Fetched common issues count:", fetchedIssues.data ? fetchedIssues.data.length : 0);
-                setIssues(fetchedIssues.data || []);
+                console.log("Fetched common issues response:", JSON.stringify(fetchedIssues, null, 2));
+
+                // Check if response is array or object with data property
+                const issuesArray = Array.isArray(fetchedIssues)
+                    ? fetchedIssues
+                    : (fetchedIssues.data || []);
+
+                console.log("Fetched common issues count:", issuesArray.length);
+
+                if (issuesArray.length > 0) {
+                    console.log("First issue:", JSON.stringify(issuesArray[0], null, 2));
+                }
+
+                setIssues(issuesArray);
             } catch (err) {
                 console.error("Failed to fetch common issues:", err);
                 setError("ไม่สามารถโหลดข้อมูลการแจ้งปัญหาได้");
@@ -82,6 +99,12 @@ export default function CommonIssueScreen({ navigation }) {
 
     const handleIssuePress = (issueId) => {
         navigation.navigate('CommonIssueDetail', { issueId });
+    };
+
+    // Helper to get display name for issue type
+    const getIssueTypeName = (value) => {
+        const type = ISSUE_TYPES.find(t => t.value === value);
+        return type ? type.name : (value || 'ไม่ระบุประเภท');
     };
 
     if (loading) {
@@ -128,11 +151,17 @@ export default function CommonIssueScreen({ navigation }) {
             </View>
 
             <View style={styles.headerSecond}>
-                <Text style={styles.headerTitle}>แจ้งปัญหาส่วนกลาง</Text>
+                <Text style={styles.headerTitle}>รายการแจ้งปัญหาส่วนกลาง</Text>
             </View>
 
             {/* Content */}
             <ScrollView style={styles.content}>
+                {/* Add New Issue Card (Button) */}
+                <TouchableOpacity style={styles.addNewCard} onPress={handleAddIssue}>
+                    <MaterialIcons name="add" size={24} color="#888" />
+                    <Text style={styles.addNewText}>แจ้งปัญหาส่วนกลาง</Text>
+                </TouchableOpacity>
+
                 {issues.length === 0 ? (
                     <Text style={styles.noIssuesText}>ไม่พบรายการแจ้งปัญหาส่วนกลาง</Text>
                 ) : (
@@ -148,7 +177,9 @@ export default function CommonIssueScreen({ navigation }) {
                                     <View style={styles.issueLeft}>
                                         <View style={[styles.statusDot, { backgroundColor: statusStyles.dotColor }]} />
                                         <View>
-                                            <Text style={styles.issueTitle}>{issue.issue_type}</Text>
+                                            <Text style={styles.issueTitle}>
+                                                {getIssueTypeName(issue.issue_type)}
+                                            </Text>
                                             <Text style={styles.issueDescription} numberOfLines={1}>{issue.description}</Text>
                                             <Text style={styles.issueDate}>{new Date(issue.reported_date).toLocaleDateString('th-TH')}</Text>
                                         </View>
@@ -165,14 +196,6 @@ export default function CommonIssueScreen({ navigation }) {
                     </>
                 )}
             </ScrollView>
-
-            {/* Floating Action Button */}
-            <TouchableOpacity
-                style={styles.fab}
-                onPress={handleAddIssue}
-            >
-                <MaterialIcons name="add" size={28} color="white" />
-            </TouchableOpacity>
         </SafeAreaView>
     );
 }
@@ -219,6 +242,25 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         padding: 16,
+    },
+    // New styles for the Add Button Card
+    addNewCard: {
+        height: 80,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 12,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: '#ccc',
+        borderStyle: 'dashed',
+    },
+    addNewText: {
+        fontSize: 16,
+        color: '#888',
+        marginLeft: 8,
+        fontFamily: "Kanit_600SemiBold",
     },
     issueCard: {
         flexDirection: "row",

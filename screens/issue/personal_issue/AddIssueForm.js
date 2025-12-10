@@ -132,9 +132,8 @@ export default function AddIssueForm({ route, navigation }) {
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
+        allowsEditing: false, // ปิดการแก้ไขเพื่อลดการใช้ RAM
+        quality: 0.5, // ลดคุณภาพรูปลงเพื่อป้องกัน Crash
       });
 
       if (!result.canceled && result.assets[0].uri) {
@@ -234,240 +233,234 @@ export default function AddIssueForm({ route, navigation }) {
     });
   };
 
-  const handleOutsideTap = (event) => {
-    // Allow TextInput to receive focus by skipping keyboard dismiss when tapping on input
-    if (!event.target.closest("input")) {
-      Keyboard.dismiss();
-    }
-  };
-
   // Modify the image upload section in your render
   return (
-    <TouchableWithoutFeedback onPress={handleOutsideTap}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <Ionicons name="chevron-back" size={24} color="black" />
-            <Text style={styles.backButtonText}>ย้อนกลับ</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>แจ้งซ่อมบ้าน</Text>
-          <Text style={styles.gap100px}>.</Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Ionicons name="chevron-back" size={24} color="black" />
+          <Text style={styles.backButtonText}>ย้อนกลับ</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>แจ้งซ่อมบ้าน</Text>
+        <Text style={styles.gap100px}>.</Text>
+      </View>
+
+      <ScrollView
+        style={styles.formContainer}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* บ้านเลขที่ */}
+        <View style={styles.inputGroup_normalText}>
+          <Text style={styles.label_normalText}>บ้านเลขที่</Text>
+          <Text style={styles.valueText_normalText}>{formData.houseNumber}</Text>
         </View>
 
-        <ScrollView style={styles.formContainer}>
-          {/* บ้านเลขที่ */}
-          <View style={styles.inputGroup_normalText}>
-            <Text style={styles.label_normalText}>บ้านเลขที่</Text>
-            <Text style={styles.valueText_normalText}>{formData.houseNumber}</Text>
-          </View>
+        {/* โซน */}
+        <View style={styles.inputGroup_normalText}>
+          <Text style={styles.label_normalText}>โซน</Text>
+          <Text style={styles.valueText_normalText}>{formData.zone}</Text>
+        </View>
 
-          {/* โซน */}
-          <View style={styles.inputGroup_normalText}>
-            <Text style={styles.label_normalText}>โซน</Text>
-            <Text style={styles.valueText_normalText}>{formData.zone}</Text>
-          </View>
+        {/* ชื่อผู้แจ้ง */}
+        <View style={styles.inputGroup_normalText}>
+          <Text style={styles.label_normalText}>ชื่อผู้แจ้ง</Text>
+          <Text style={styles.valueText_normalText}>{formData.reporterName}</Text>
+        </View>
 
-          {/* ชื่อผู้แจ้ง */}
-          <View style={styles.inputGroup_normalText}>
-            <Text style={styles.label_normalText}>ชื่อผู้แจ้ง</Text>
-            <Text style={styles.valueText_normalText}>{formData.reporterName}</Text>
-          </View>
+        {/* วันที่ยื่น */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>วันที่ยื่น</Text>
+          <TouchableOpacity
+            style={styles.inputContainer}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <TextInput
+              style={[styles.input, styles.disabledInput]}
+              value={formatDate(formData.reportDate)}
+              editable={false}
+            />
+            <MaterialIcons
+              name="calendar-today"
+              size={20}
+              color="#666"
+              style={styles.icon}
+            />
+          </TouchableOpacity>
+        </View>
 
-          {/* วันที่ยื่น */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>วันที่ยื่น</Text>
-            <TouchableOpacity
-              style={styles.inputContainer}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <TextInput
-                style={[styles.input, styles.disabledInput]}
-                value={formatDate(formData.reportDate)}
-                editable={false}
-              />
-              <MaterialIcons
-                name="calendar-today"
-                size={20}
-                color="#666"
-                style={styles.icon}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* พื้นที่แจ้งซ่อม */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>พื้นที่แจ้งซ่อม</Text>
-            <TouchableOpacity
+        {/* พื้นที่แจ้งซ่อม */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>พื้นที่แจ้งซ่อม</Text>
+          <TouchableOpacity
+            style={[
+              styles.inputContainer,
+              !formData.repairArea && styles.placeholderContainer,
+            ]}
+            onPress={() => setShowAreaPicker(true)}
+          >
+            <Text
               style={[
-                styles.inputContainer,
-                !formData.repairArea && styles.placeholderContainer,
+                styles.input,
+                !formData.repairArea && styles.placeholderText,
               ]}
-              onPress={() => setShowAreaPicker(true)}
             >
-              <Text
-                style={[
-                  styles.input,
-                  !formData.repairArea && styles.placeholderText,
-                ]}
-              >
-                {formData.repairArea || "เลือกพื้นที่แจ้งซ่อม"}
-              </Text>
-              <MaterialIcons
-                name="keyboard-arrow-down"
-                size={24}
-                color="#666"
-              />
-            </TouchableOpacity>
-          </View>
+              {formData.repairArea || "เลือกพื้นที่แจ้งซ่อม"}
+            </Text>
+            <MaterialIcons
+              name="keyboard-arrow-down"
+              size={24}
+              color="#666"
+            />
+          </TouchableOpacity>
+        </View>
 
-          {/* ประเภทงาน */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>ประเภทงาน</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={[styles.input, styles.disabledInput]}
-                value={formData.repairTypeName}
-                editable={false}
+        {/* ประเภทงาน */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>ประเภทงาน</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[styles.input, styles.disabledInput]}
+              value={formData.repairTypeName}
+              editable={false}
+            />
+          </View>
+        </View>
+
+        {/* รายละเอียดงาน */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>รายละเอียดงาน</Text>
+          <View style={[styles.inputContainer, styles.textAreaContainer]}>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="อธิบายรายละเอียดปัญหาหรือความต้องการซ่อมแซม"
+              placeholderTextColor="#999"
+              multiline
+              numberOfLines={4}
+              value={formData.description}
+              onChangeText={(text) => handleInputChange("description", text)}
+            />
+          </View>
+        </View>
+
+        {/* อัปโหลดรูปภาพ */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>รูปภาพประกอบ (ไม่บังคับ)</Text>
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={pickImage}
+            disabled={formData.images.length >= 5}
+          >
+            <MaterialIcons
+              name="add-photo-alternate"
+              size={24}
+              color="#205248"
+            />
+            <Text style={styles.uploadButtonText}>
+              อัปโหลดรูปภาพ {formData.images.length}/5
+            </Text>
+          </TouchableOpacity>
+
+          <ScrollView horizontal style={styles.imagePreviewScroll}>
+            {formData.images.map((uri, index) => (
+              <ImagePreview
+                key={index}
+                uri={uri}
+                onRemove={() => removeImage(index)}
               />
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* ปุ่มส่งแบบฟอร์ม */}
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            isSubmitting && styles.submitButtonDisabled,
+          ]}
+          onPress={handleSubmit}
+          disabled={isSubmitting}
+        >
+          <Text style={styles.submitButtonText}>
+            {isSubmitting ? "กำลังส่ง..." : "ส่งแบบฟอร์ม"}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* Date Picker Modal */}
+      {showDatePicker && (
+        <DateTimePicker
+          value={formData.reportDate}
+          mode="datetime"
+          display="default"
+          onChange={handleDateChange}
+        />
+      )}
+
+      {/* Area Picker Modal */}
+      <Modal
+        visible={showAreaPicker}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowAreaPicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>เลือกพื้นที่แจ้งซ่อม</Text>
+              <TouchableOpacity onPress={() => setShowAreaPicker(false)}>
+                <MaterialIcons name="close" size={24} color="#333" />
+              </TouchableOpacity>
             </View>
-          </View>
-
-          {/* รายละเอียดงาน */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>รายละเอียดงาน</Text>
-            <View style={[styles.inputContainer, styles.textAreaContainer]}>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="อธิบายรายละเอียดปัญหาหรือความต้องการซ่อมแซม"
-                placeholderTextColor="#999"
-                multiline
-                numberOfLines={4}
-                value={formData.description}
-                onChangeText={(text) => handleInputChange("description", text)}
-              />
-            </View>
-          </View>
-
-          {/* อัปโหลดรูปภาพ */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>รูปภาพประกอบ (ไม่บังคับ)</Text>
-            <TouchableOpacity
-              style={styles.uploadButton}
-              onPress={pickImage}
-              disabled={formData.images.length >= 5}
-            >
-              <MaterialIcons
-                name="add-photo-alternate"
-                size={24}
-                color="#205248"
-              />
-              <Text style={styles.uploadButtonText}>
-                อัปโหลดรูปภาพ {formData.images.length}/5
-              </Text>
-            </TouchableOpacity>
-
-            <ScrollView horizontal style={styles.imagePreviewScroll}>
-              {formData.images.map((uri, index) => (
-                <ImagePreview
-                  key={index}
-                  uri={uri}
-                  onRemove={() => removeImage(index)}
-                />
+            <ScrollView>
+              {AREAS.map((area) => (
+                <TouchableOpacity
+                  key={area.id}
+                  style={[
+                    styles.areaItem,
+                    selectedArea?.id === area.id && styles.selectedAreaItem,
+                  ]}
+                  onPress={() => handleSelectArea(area)}
+                >
+                  <Text style={styles.areaText}>{area.name}</Text>
+                  {selectedArea?.id === area.id && (
+                    <MaterialIcons name="check" size={20} color="#205248" />
+                  )}
+                </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
+        </View>
+      </Modal>
 
-          {/* ปุ่มส่งแบบฟอร์ม */}
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              isSubmitting && styles.submitButtonDisabled,
-            ]}
-            onPress={handleSubmit}
-            disabled={isSubmitting}
-          >
-            <Text style={styles.submitButtonText}>
-              {isSubmitting ? "กำลังส่ง..." : "ส่งแบบฟอร์ม"}
+      {/* Success Modal */}
+      <Modal
+        visible={showSuccessModal}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.successModalOverlay}>
+          <View style={styles.successModalContent}>
+            <Ionicons name="checkmark-circle" size={60} color="#205248" />
+            <Text style={styles.successTitle}>บันทึกสำเร็จ</Text>
+            <Text style={styles.successMessage}>
+              ส่งแบบฟอร์มแจ้งซ่อมเรียบร้อยแล้ว
             </Text>
-          </TouchableOpacity>
-        </ScrollView>
-
-        {/* Date Picker Modal */}
-        {showDatePicker && (
-          <DateTimePicker
-            value={formData.reportDate}
-            mode="datetime"
-            display="default"
-            onChange={handleDateChange}
-          />
-        )}
-
-        {/* Area Picker Modal */}
-        <Modal
-          visible={showAreaPicker}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowAreaPicker(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>เลือกพื้นที่แจ้งซ่อม</Text>
-                <TouchableOpacity onPress={() => setShowAreaPicker(false)}>
-                  <MaterialIcons name="close" size={24} color="#333" />
-                </TouchableOpacity>
-              </View>
-              <ScrollView>
-                {AREAS.map((area) => (
-                  <TouchableOpacity
-                    key={area.id}
-                    style={[
-                      styles.areaItem,
-                      selectedArea?.id === area.id && styles.selectedAreaItem,
-                    ]}
-                    onPress={() => handleSelectArea(area)}
-                  >
-                    <Text style={styles.areaText}>{area.name}</Text>
-                    {selectedArea?.id === area.id && (
-                      <MaterialIcons name="check" size={20} color="#205248" />
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
+            <TouchableOpacity
+              style={styles.successButton}
+              onPress={() => {
+                setShowSuccessModal(false);
+                navigation.goBack();
+              }}
+            >
+              <Text style={styles.successButtonText}>ตกลง</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-
-        {/* Success Modal */}
-        <Modal
-          visible={showSuccessModal}
-          transparent={true}
-          animationType="fade"
-        >
-          <View style={styles.successModalOverlay}>
-            <View style={styles.successModalContent}>
-              <Ionicons name="checkmark-circle" size={60} color="#205248" />
-              <Text style={styles.successTitle}>บันทึกสำเร็จ</Text>
-              <Text style={styles.successMessage}>
-                ส่งแบบฟอร์มแจ้งซ่อมเรียบร้อยแล้ว
-              </Text>
-              <TouchableOpacity
-                style={styles.successButton}
-                onPress={() => {
-                  setShowSuccessModal(false);
-                  navigation.goBack();
-                }}
-              >
-                <Text style={styles.successButtonText}>ตกลง</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      </View>
-    </TouchableWithoutFeedback>
+        </View>
+      </Modal>
+    </View>
   );
 }
 

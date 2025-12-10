@@ -10,7 +10,7 @@ cloudinary.config({
 });
 
 
-// Get announcements for resident (filtered by project_id)
+// Get announcements for resident (filte and optred by project_id)
 exports.getAnnouncementsForResident = (req, res) => {
     const { type, audience, status, days, latest, page = 1, limit = 10, project_id } = req.query;
 

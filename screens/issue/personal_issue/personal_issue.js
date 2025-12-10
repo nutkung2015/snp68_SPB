@@ -153,11 +153,17 @@ export default function PersonalIssueScreen({ navigation }) {
       </View>
 
       <View style={styles.headerSecond}>
-        <Text style={styles.headerTitle}>แจ้งซ่อมบ้าน</Text>
+        <Text style={styles.headerTitle}>รายการแจ้งซ่อมบ้าน</Text>
       </View>
 
       {/* Content */}
       <ScrollView style={styles.content}>
+        {/* Add New Issue Card (Button) */}
+        <TouchableOpacity style={styles.addNewCard} onPress={handleAddIssue}>
+          <MaterialIcons name="add" size={24} color="#888" />
+          <Text style={styles.addNewText}>แจ้งซ่อมบ้าน</Text>
+        </TouchableOpacity>
+
         {issues.length === 0 ? (
           <Text style={styles.noIssuesText}>ไม่พบรายการแจ้งซ่อมส่วนบุคคล</Text>
         ) : (
@@ -190,14 +196,6 @@ export default function PersonalIssueScreen({ navigation }) {
           </>
         )}
       </ScrollView>
-
-      {/* Floating Action Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={handleAddIssue}
-      >
-        <MaterialIcons name="add" size={28} color="white" />
-      </TouchableOpacity>
 
       <RepairTypeModal
         visible={isModalVisible}
@@ -253,6 +251,25 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  // New styles for the Add Button Card
+  addNewCard: {
+    height: 80,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    borderStyle: 'dashed',
+  },
+  addNewText: {
+    fontSize: 16,
+    color: '#888',
+    marginLeft: 8,
+    fontFamily: "Kanit_600SemiBold",
+  },
   issueCard: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -304,22 +321,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginRight: 8,
     fontFamily: "Kanit_500Medium",
-  },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 50,
-    backgroundColor: '#205248',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
   },
   loadingIndicator: {
     textAlign: 'center',

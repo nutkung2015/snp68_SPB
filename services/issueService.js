@@ -56,7 +56,7 @@ class IssueService {
       console.log('Token:', token);
       console.log('FormData being sent:', formData);
 
-      const response = await ApiService.post("/api/repairs/common-issues", formData, token);
+      const response = await ApiService.post("/api/repairs/common", formData, token);
       console.log('Response from server:', response);
       return response;
     } catch (error) {
@@ -79,7 +79,7 @@ class IssueService {
   static async getCommonIssueById(issueId) {
     try {
       const token = await ApiService.getToken();
-      const response = await ApiService.get(`/api/repairs/common-issues/${issueId}`, token);
+      const response = await ApiService.get(`/api/repairs/common/${issueId}`, token);
       return response.data;
     } catch (error) {
       console.error("Error fetching common issue details:", error.response || error);
