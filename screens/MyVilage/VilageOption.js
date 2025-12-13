@@ -104,12 +104,12 @@ export default function VilageOptionScreen({ navigation }) {
             <Card
               iconName="info-circle"
               title="รายละเอียดโครงการ"
-              onPress={() => console.log("รายละเอียดโครงการ pressed")}
+              onPress={() => navigation.navigate("VilageDetail")}
             />
             <Card
               iconName="file-pdf-o"
               title="กฏระเบียบและข้อบังคับ"
-              onPress={() => console.log("กฏระเบียบและข้อบังคับ pressed")}
+              onPress={() => navigation.navigate("VilageRule")}
             />
           </>
         )}

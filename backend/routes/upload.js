@@ -46,6 +46,59 @@ router.post('/announcements/single', upload.single('file'), async (req, res) => 
     }
 });
 
+// Upload house model plan/detail (PDF Only)
+// Requires project_id in request body
+router.post('/house-models/single', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'No file uploaded'
+            });
+        }
+
+        // Check if project_id is provided
+        const { project_id } = req.body;
+        if (!project_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'project_id is required'
+            });
+        }
+
+        // Check if file is PDF
+        if (req.file.mimetype !== 'application/pdf') {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Invalid file type. Only PDF files are allowed.'
+            });
+        }
+
+        // Upload to cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            folder: `house_models/${project_id}`,
+            resource_type: 'auto'
+        });
+
+        res.json({
+            status: 'success',
+            data: {
+                url: result.secure_url,
+                public_id: result.public_id,
+                resource_type: result.resource_type
+            }
+        });
+
+    } catch (error) {
+        console.error('Upload error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Error uploading file',
+            details: error.message
+        });
+    }
+});
+
 // Upload multiple files for announcements
 router.post('/announcements/multiple', upload.array('files', 5), async (req, res) => {
     try {
@@ -57,7 +110,7 @@ router.post('/announcements/multiple', upload.array('files', 5), async (req, res
         }
 
         // Upload all files to cloudinary
-        const uploadPromises = req.files.map(file => 
+        const uploadPromises = req.files.map(file =>
             cloudinary.uploader.upload(file.path, {
                 folder: 'announcements',
                 resource_type: 'auto'
@@ -89,7 +142,7 @@ router.post('/announcements/multiple', upload.array('files', 5), async (req, res
 router.delete('/announcements/:public_id', async (req, res) => {
     try {
         const result = await cloudinary.uploader.destroy(req.params.public_id);
-        
+
         res.json({
             status: 'success',
             data: result

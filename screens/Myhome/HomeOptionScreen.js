@@ -104,7 +104,7 @@ export default function HomeOptionScreen({ navigation }) {
             <Card
               iconName="build-outline"
               title="รายละเอียดบ้าน"
-              onPress={() => console.log("รายละเอียดบ้าน pressed")}
+              onPress={() => navigation.navigate("HomeInfoOption")}
             />
             {/* <Card
               iconName="home-outline"

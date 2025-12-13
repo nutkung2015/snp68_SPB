@@ -53,6 +53,11 @@ import PersonalIssueDetailScreen from "./screens/issue/personal_issue/personal_i
 import CommonIssueScreen from "./screens/issue/common_issue/common_issue";
 import AddCommonIssueForm from "./screens/issue/common_issue/AddCommonIssueForm";
 import CommonIssueDetailScreen from "./screens/issue/common_issue/common_issue_detail";
+import HouseDetailScreen from "./screens/Myhome/HouseDetailScreen";
+import HousePlanScreen from "./screens/Myhome/HousePlanScreen";
+import HomeInfoOptionScreen from "./screens/Myhome/HomeInfoOptionScreen";
+import VilageRuleScreen from "./screens/MyVilage/VilageRuleScreen";
+import VilageDetailScreen from "./screens/MyVilage/VilageDetailScreen";
 
 // Security screens
 import SecurityServiceScreen from "./screens/security/SecurityServiceScreen";
@@ -386,6 +391,12 @@ export default function App() {
             component={CommonIssueDetailScreen}
             options={{ headerShown: false }}
           />
+          <Stack.Screen name="HouseDetail" component={HouseDetailScreen} />
+          <Stack.Screen name="HousePlan" component={HousePlanScreen} />
+          <Stack.Screen name="HomeInfoOption" component={HomeInfoOptionScreen} />
+          <Stack.Screen name="VilageRule" component={VilageRuleScreen} />
+          <Stack.Screen name="VilageDetail" component={VilageDetailScreen} />
+
         </Stack.Navigator>
       );
     }

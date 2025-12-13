@@ -70,14 +70,14 @@ exports.getProjectMemberships = async (req, res) => {
     const offset = parseInt(req.query.offset) || 0;
 
     // Adjust table/column names to match your schema:
-    // - project_memberships (user_id, project_id, role, joined_date, metadata)
+    // - project_members (user_id, project_id, role, joined_at, created_at, updated_at)
     // - projects (id, name, description, created_at)
     const query = `
-			SELECT pm.project_id, p.name AS project_name, pm.role, pm.joined_date, pm.metadata
-			FROM project_memberships pm
+			SELECT pm.project_id, p.name AS project_name, pm.role, pm.joined_at, pm.created_at
+			FROM project_members pm
 			LEFT JOIN projects p ON p.id = pm.project_id
 			WHERE pm.user_id = ?
-			ORDER BY pm.joined_date DESC
+			ORDER BY pm.joined_at DESC
 			LIMIT ? OFFSET ?
 		`;
 
@@ -87,17 +87,13 @@ exports.getProjectMemberships = async (req, res) => {
       project_id: r.project_id,
       project_name: r.project_name,
       role: r.role,
-      joined_date: r.joined_date,
-      metadata: r.metadata
-        ? typeof r.metadata === "string"
-          ? JSON.parse(r.metadata)
-          : r.metadata
-        : null,
+      joined_at: r.joined_at,
+      created_at: r.created_at,
     }));
 
     // Optionally get total count for pagination
     const countQuery =
-      "SELECT COUNT(*) as total FROM project_memberships WHERE user_id = ?";
+      "SELECT COUNT(*) as total FROM project_members WHERE user_id = ?";
     const [countRows] = await db.promise().query(countQuery, [userId]);
     const total = countRows && countRows[0] ? countRows[0].total : memberships.length;
 

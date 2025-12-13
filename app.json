@@ -31,16 +31,17 @@
     },
     "plugins": [
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "assetBundlePatterns": [
       "**/*"
     ],
     "orientation": "portrait",
-    "icon": "./assets/logo_1.png",
+    "icon": "./assets/livlink_logo.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/logo_1.png",
+      "image": "./assets/livlink_logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     }

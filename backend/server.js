@@ -12,8 +12,149 @@ dotenv.config();
 
 const app = express();
 
-// Security Middleware
-app.use(helmet());
+// ===========================================
+// Security Middleware: Helmet Configuration
+// ===========================================
+// 
+// หลักการ:
+// 1. Development: ยืดหยุ่น, อนุญาต localhost
+// 2. Production: เข้มงวด, อนุญาตเฉพาะ Domain จริง
+//
+// ตัวแปร ENV ที่ต้องตั้ง:
+// - ALLOWED_FRAME_ORIGINS: Domain ที่สามารถ Embed (iframe) Backend ได้
+//   ตัวอย่าง: "http://localhost:8081,http://127.0.0.1:8081"
+//   Production: "https://your-app.com"
+// ===========================================
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+// อ่านค่า Allowed Frame Origins จาก ENV (ถ้าไม่มีใช้ค่า Default)
+const allowedFrameOrigins = process.env.ALLOWED_FRAME_ORIGINS
+  ? process.env.ALLOWED_FRAME_ORIGINS.split(',').map(origin => origin.trim())
+  : isProduction
+    ? ["'self'"] // Production: เข้มงวด - เฉพาะตัวเองเท่านั้น (ถ้าไม่ได้ตั้ง ENV)
+    : ["'self'", "http://localhost:8081", "http://127.0.0.1:8081"]; // Dev: อนุญาต Localhost
+
+// เพิ่ม 'self' เข้าไปด้วยเสมอ (ถ้ายังไม่มี)
+if (!allowedFrameOrigins.includes("'self'")) {
+  allowedFrameOrigins.unshift("'self'");
+}
+
+console.log(`🔒 Helmet CSP frameAncestors: [${allowedFrameOrigins.join(', ')}]`);
+
+app.use(helmet({
+  // -------------------------------------------
+  // 1. X-Frame-Options (Legacy Header)
+  // -------------------------------------------
+  // ปิดไว้เพราะเราใช้ CSP frameAncestors แทน (ทันสมัยกว่า, ยืดหยุ่นกว่า)
+  // X-Frame-Options รองรับแค่ DENY หรือ SAMEORIGIN ไม่สามารถระบุ Domain ได้
+  xFrameOptions: false,
+
+  // -------------------------------------------
+  // 2. Content Security Policy (CSP)
+  // -------------------------------------------
+  // ควบคุมว่า Browser ของ User จะโหลด Resource จากไหนได้บ้าง
+  // และใครสามารถ Embed (iframe) เว็บเราได้บ้าง
+  contentSecurityPolicy: {
+    directives: {
+      // defaultSrc: แหล่งที่มาเริ่มต้นของทุก Resource
+      // 'self' = โหลดจากโดเมนเดียวกันเท่านั้น
+      defaultSrc: ["'self'"],
+
+      // imgSrc: อนุญาตให้โหลดรูปภาพจากไหนบ้าง
+      // - 'self': โดเมนเดียวกัน
+      // - data:: รูป Base64 (data:image/png;base64,...)
+      // - blob:: รูปที่สร้างจาก JS (URL.createObjectURL)
+      // - Cloudinary: CDN ที่เก็บรูปของเรา
+      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://*.cloudinary.com"],
+
+      // scriptSrc: อนุญาตให้ Run JavaScript จากไหนบ้าง
+      // 'unsafe-inline': อนุญาต <script> ใน HTML (จำเป็นสำหรับบาง Library)
+      // ⚠️ Production: ควรใช้ nonce หรือ hash แทน 'unsafe-inline' ถ้าเป็นไปได้
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+
+      // styleSrc: อนุญาตให้โหลด CSS จากไหนบ้าง
+      styleSrc: ["'self'", "'unsafe-inline'"],
+
+      // connectSrc: อนุญาตให้ fetch/XHR/WebSocket ไปที่ไหนบ้าง
+      // Production: ควรระบุเฉพาะ API Endpoints ที่ใช้จริง
+      connectSrc: ["'self'", "https://res.cloudinary.com", "https://*.cloudinary.com"],
+
+      // -------------------------------------------
+      // ⭐ frameAncestors: สำคัญสำหรับ PDF Viewer
+      // -------------------------------------------
+      // ควบคุมว่า Domain ไหนสามารถ Embed เว็บเราใน <iframe> ได้
+      // ค่านี้มาจาก ENV Variable เพื่อให้ปรับได้ตาม Environment
+      // 
+      // Development: ["'self'", "http://localhost:8081", "http://127.0.0.1:8081"]
+      //   - อนุญาต Expo Dev Server (localhost:8081) Embed เราได้
+      //
+      // Production: ["'self'", "https://your-app.com"]
+      //   - อนุญาตเฉพาะ Domain จริงของ App
+      //   - ไม่มี * (wildcard) เพื่อความปลอดภัย
+      frameAncestors: allowedFrameOrigins,
+
+      // frameSrc: ควบคุมว่าเราจะโหลด iframe มาจากไหนได้บ้าง (ตรงข้ามกับ frameAncestors)
+      frameSrc: ["'self'", "https://docs.google.com"], // สำหรับ Google Docs Viewer บน Android
+
+      // mediaSrc: สำหรับ <video> และ <audio>
+      mediaSrc: ["'self'", "https://res.cloudinary.com"],
+
+      // fontSrc: สำหรับ Web Fonts
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://fonts.googleapis.com"],
+    },
+  },
+
+  // -------------------------------------------
+  // 3. Cross-Origin Resource Policy (CORP)
+  // -------------------------------------------
+  // ควบคุมว่าเว็บอื่นสามารถโหลด Resource ของเราได้หรือไม่
+  // 
+  // "same-origin": เฉพาะโดเมนเดียวกัน (เข้มงวดสุด)
+  // "same-site": เฉพาะ Site เดียวกัน (เช่น *.example.com)
+  // "cross-origin": อนุญาตข้ามโดเมน (จำเป็นสำหรับ PDF Proxy ของเรา)
+  //
+  // เราต้องใช้ "cross-origin" เพราะ:
+  // - Frontend (localhost:8081) โหลด PDF จาก Backend (localhost:5000)
+  // - ถ้าใช้ "same-origin" จะโดน Block
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+
+  // -------------------------------------------
+  // 4. HTTP Strict Transport Security (HSTS)
+  // -------------------------------------------
+  // บอก Browser ว่าให้ใช้ HTTPS เท่านั้นในการเข้าเว็บนี้
+  // 
+  // ⚠️ เปิดเฉพาะ Production เพราะ:
+  // - Development ใช้ HTTP (ไม่มี SSL Certificate)
+  // - ถ้าเปิดใน Dev จะทำให้ Browser บังคับ HTTPS ซึ่ง localhost ทำไม่ได้
+  strictTransportSecurity: isProduction ? {
+    maxAge: 31536000,           // 1 ปี (ในหน่วยวินาที)
+    includeSubDomains: true,    // รวมถึง Subdomain ทั้งหมด
+    preload: true               // ลงทะเบียนใน HSTS Preload List ได้
+  } : false,
+
+  // -------------------------------------------
+  // 5. Additional Security Headers
+  // -------------------------------------------
+
+  // Referrer-Policy: ควบคุมว่าจะส่ง Referer header ไปกับ Request หรือไม่
+  // "strict-origin-when-cross-origin": ส่งเฉพาะ Origin เมื่อข้ามโดเมน
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+
+  // X-Content-Type-Options: ป้องกัน MIME Type Sniffing
+  // Browser จะไม่พยายาม "เดา" ประเภทไฟล์ จะเชื่อ Content-Type ที่ Server ส่งมาเท่านั้น
+  xContentTypeOptions: true,
+
+  // X-DNS-Prefetch-Control: ปิดการ Prefetch DNS
+  // ป้องกันการรั่วไหลข้อมูลว่า User กำลังจะเข้าเว็บไหน
+  dnsPrefetchControl: { allow: false },
+
+  // X-Download-Options: สำหรับ IE เก่า (ป้องกันการเปิดไฟล์โดยตรงแทนที่จะ Download)
+  ieNoOpen: true,
+
+  // X-Permitted-Cross-Domain-Policies: สำหรับ Flash/PDF (ปิดไม่ให้โหลดจากข้ามโดเมน)
+  permittedCrossDomainPolicies: { permittedPolicies: "none" },
+}));
 
 // Logging Middleware
 app.use(morgan(':remote-addr - :method :url :status :res[content-length] - :response-time ms'));
@@ -72,6 +213,9 @@ app.use("/api/mock/news", require("./routes/mockNews"));
 // Announcements routes
 app.use("/api/announcements", require("./routes/announcements"));
 
+// Upload routes
+app.use("/api/upload", require("./routes/upload"));
+
 // Auth routes
 app.use("/api/auth", authRoutes);
 
@@ -79,7 +223,8 @@ const unitRoutes = require("./routes/units");
 app.use("/api/units", unitRoutes);
 
 // Project routes
-app.use("/api", projectRoutes); // Changed from "/api/projects" to "/api" to support /api/project-memberships
+app.use("/api/projects", projectRoutes);
+app.use("/api/project-memberships", projectRoutes); // For project memberships endpoint
 app.use("/api/project_invitations", require("./routes/project_invitations"));
 
 // Repairs routes
