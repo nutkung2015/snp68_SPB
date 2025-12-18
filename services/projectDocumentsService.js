@@ -24,6 +24,21 @@ class ProjectDocumentsService {
         }
     }
 
+    /**
+     * Get project info docs V2 - Returns raw Cloudinary URLs
+     * ใช้กับ getStreamPdfUrl() สำหรับ pdf-stream endpoint
+     */
+    static async getProjectInfoDocsV2(projectId) {
+        try {
+            const token = await ApiService.getToken();
+            return await ApiService.get(`/api/projects/${projectId}/member/info-docs-v2`, token);
+        } catch (error) {
+            console.error("Error fetching project info docs v2:", error);
+            throw error;
+        }
+    }
+
+
     // Get house models only
     static async getHouseModels(projectId) {
         try {
@@ -45,6 +60,21 @@ class ProjectDocumentsService {
             throw error;
         }
     }
+
+    /**
+     * Get my house model V2 - Returns raw Cloudinary URLs
+     * ใช้กับ getStreamPdfUrl() สำหรับ pdf-stream endpoint
+     */
+    static async getMyHouseModelV2(projectId) {
+        try {
+            const token = await ApiService.getToken();
+            return await ApiService.get(`/api/projects/${projectId}/member/my-house-model-v2`, token);
+        } catch (error) {
+            console.error("Error fetching my house model v2:", error);
+            throw error;
+        }
+    }
+
 
     // Helper to construct authenticated Proxy URL (BaseURL + Path + Token)
     static async getAuthenticatedProxyUrl(relativeUrl) {
@@ -75,6 +105,36 @@ class ProjectDocumentsService {
             return null;
         }
     }
+
+    /**
+     * NEW: Generate URL for pdf-stream endpoint (with caching support)
+     * ใช้ /pdf-stream แทน /download-pdf เพื่อ performance ที่ดีกว่า (Cache-Control, ETag, 304)
+     * 
+     * @param {string} projectId - Project ID
+     * @param {string} cloudinaryUrl - Raw Cloudinary URL
+     * @param {string} filename - Filename for download
+     * @param {string} disposition - 'inline' (view) or 'attachment' (download)
+     * @returns {Promise<string|null>} - Full URL with authentication token
+     */
+    static async getStreamPdfUrl(projectId, cloudinaryUrl, filename = 'document.pdf', disposition = 'inline') {
+        try {
+            if (!cloudinaryUrl || !projectId) return null;
+
+            const token = await ApiService.getToken();
+            const { getApiBaseUrl } = require('../utils/config');
+            const baseUrl = getApiBaseUrl();
+
+            // สร้าง URL สำหรับ pdf-stream endpoint
+            const encodedUrl = encodeURIComponent(cloudinaryUrl);
+            const encodedFilename = encodeURIComponent(filename);
+
+            return `${baseUrl}/api/projects/${projectId}/member/pdf-stream?url=${encodedUrl}&filename=${encodedFilename}&disposition=${disposition}&token=${token}`;
+        } catch (error) {
+            console.error("Error generating stream pdf url:", error);
+            return null;
+        }
+    }
 }
 
 export default ProjectDocumentsService;
+

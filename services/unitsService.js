@@ -2,7 +2,7 @@ import ApiService from "./apiService";
 
 // Units and Invitations API Service
 class UnitsService {
-  // Join unit with invitation code
+  // Join unit with invitation code (for resident users)
   static async joinUnit(invitationCode) {
     try {
       const token = await ApiService.getToken();
@@ -11,6 +11,19 @@ class UnitsService {
       }, token);
     } catch (error) {
       console.error("Error joining unit:", error);
+      throw error;
+    }
+  }
+
+  // Join project with invitation code (for security/juristic users)
+  static async joinProject(invitationCode) {
+    try {
+      const token = await ApiService.getToken();
+      return await ApiService.post("/api/project_invitations/join", {
+        invitation_code: invitationCode
+      }, token);
+    } catch (error) {
+      console.error("Error joining project:", error);
       throw error;
     }
   }

@@ -56,6 +56,12 @@ router.delete('/house-models/:id', authMiddleware, houseModelController.deleteHo
 // ดึงเอกสารโครงการ (project_detail, rules) สำหรับลูกบ้าน
 router.get('/:project_id/member/info-docs', authMiddleware, projectModelController.getProjectInfoDocsForResident);
 
+// GET /api/projects/:project_id/member/info-docs-v2
+// Version 2: Returns raw Cloudinary URLs (project_detail_file_url, rules_file_url)
+// สำหรับใช้กับ getStreamPdfUrl() และ pdf-stream endpoint
+router.get('/:project_id/member/info-docs-v2', authMiddleware, projectModelController.getProjectInfoDocsForResidentV2);
+
+
 // GET /api/projects/:project_id/member/house-models
 // ดึงแบบบ้านทั้งหมดของโครงการสำหรับลูกบ้าน
 router.get('/:project_id/member/house-models', authMiddleware, projectModelController.getHouseModelsForResident);
@@ -68,7 +74,16 @@ router.get('/:project_id/member/documents', authMiddleware, projectModelControll
 // ดึงแบบบ้านของ user ตาม unit ที่อยู่ (match building -> model_name)
 router.get('/:project_id/member/my-house-model', authMiddleware, houseModelController.getMyHouseModel);
 
+// GET /api/projects/:project_id/member/my-house-model-v2
+// Version 2: Returns raw Cloudinary URLs (plan_file_url, detail_file_url)
+// สำหรับใช้กับ getStreamPdfUrl() และ pdf-stream endpoint
+router.get('/:project_id/member/my-house-model-v2', authMiddleware, houseModelController.getMyHouseModelV2);
+
 // Route สำหรับดาวน์โหลด PDF ผ่าน Proxy (แก้ 401 Untrusted) - Verify token ใน controller
 router.get("/:project_id/member/download-pdf", houseModelController.proxyPdfDownload);
+
+// NEW: Optimized PDF streaming with Cache support - ดีกว่า download-pdf
+// มี Cache-Control, ETag, 304 support สำหรับ performance ที่ดีขึ้น
+router.get("/:project_id/member/pdf-stream", houseModelController.streamPdfProxy);
 
 module.exports = router;

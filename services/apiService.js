@@ -32,18 +32,23 @@ class ApiService {
   }
 
   // Generic POST request
-  static async post(endpoint, body, token = null) {
+  static async post(endpoint, body, token = null, isMultipart = false) {
     try {
       console.log('API Request:', {
         url: `${API_BASE_URL}${endpoint}`,
-        body,
-        headers: getApiHeaders(token)
+        // Don't log multipart body object in detail to avoid clutter
+        body: isMultipart ? 'FormData' : body,
+        headers: isMultipart ? 'Multipart Headers' : getApiHeaders(token)
       });
+
+      const headers = isMultipart
+        ? { Authorization: `Bearer ${token}` } // Content-Type is auto-set by boundary for FormData
+        : getApiHeaders(token);
 
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
-        headers: getApiHeaders(token),
-        body: JSON.stringify(body),
+        headers: headers,
+        body: isMultipart ? body : JSON.stringify(body),
       });
 
       console.log('API Response:', {

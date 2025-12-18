@@ -47,24 +47,30 @@ export const login = async (email, password) => {
 
     // Check user role
     const userRole = data.data.role || data.data.roles?.[0];
-    
+
     console.log("Login successful. User role:", userRole);
-    
+
+    // Check project and unit memberships for all users
+    const hasProjectMembership =
+      data.data.projectMemberships && data.data.projectMemberships.length > 0;
+    const hasUnitMembership =
+      data.data.unitMemberships && data.data.unitMemberships.length > 0;
+
+    console.log("Checking memberships:");
+    console.log("hasProjectMembership:", hasProjectMembership);
+    console.log("hasUnitMembership:", hasUnitMembership);
+
     if (userRole === "security") {
-      // Security users go directly to GuardHome
-      console.log("Navigating to GuardHome");
-      navigateTo("GuardHome");
+      // Security users - only need projectMembership (not unitMembership)
+      if (hasProjectMembership) {
+        console.log("Security user has project membership. Navigating to GuardHome");
+        navigateTo("GuardHome");
+      } else {
+        console.log("Security user missing project membership. Navigating to JoinUnitScreen");
+        navigateTo("JoinUnitScreen");
+      }
     } else {
       // Regular users - check project and unit memberships
-      const hasProjectMembership =
-        data.data.projectMemberships && data.data.projectMemberships.length > 0;
-      const hasUnitMembership =
-        data.data.unitMemberships && data.data.unitMemberships.length > 0;
-
-      console.log("Checking memberships:");
-      console.log("hasProjectMembership:", hasProjectMembership);
-      console.log("hasUnitMembership:", hasUnitMembership);
-
       if (hasProjectMembership && hasUnitMembership) {
         console.log("Navigating to Home");
         navigateTo("Home"); // Navigate to Home if both exist

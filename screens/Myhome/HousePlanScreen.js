@@ -69,21 +69,26 @@ export default function HousePlanScreen({ navigation }) {
                     console.log("Could not load project customizations");
                 }
 
-                // ดึงข้อมูลแบบบ้านของ user ตาม unit ที่อยู่
-                const response = await ProjectDocumentsService.getMyHouseModel(projectId);
+                // ดึงข้อมูลแบบบ้านของ user - ใช้ V2 API ที่ส่ง raw Cloudinary URLs
+                const response = await ProjectDocumentsService.getMyHouseModelV2(projectId);
 
-                console.log("=== HousePlanScreen Debug ===");
+                console.log("=== HousePlanScreen Debug (V2) ===");
                 console.log("Full response:", JSON.stringify(response.data, null, 2));
                 console.log("plan_file_url:", response.data?.house_model?.plan_file_url);
 
                 if (response?.status === "success" && response.data?.house_model) {
                     setHouseModelData(response.data);
 
-                    // Prepare Viewer URL immediately (ใช้ plan_view_url สำหรับแปลนบ้าน)
-                    if (response.data.house_model.plan_view_url) {
+                    // Prepare Viewer URL immediately (ใช้ getStreamPdfUrl สำหรับ pdf-stream endpoint)
+                    if (response.data.house_model.plan_file_url) {
                         try {
-                            const rawUrl = response.data.house_model.plan_view_url;
-                            const authUrl = await ProjectDocumentsService.getAuthenticatedProxyUrl(rawUrl);
+                            const filename = `${response.data.house_model.model_name} - แปลนบ้าน.pdf`;
+                            const authUrl = await ProjectDocumentsService.getStreamPdfUrl(
+                                projectId,
+                                response.data.house_model.plan_file_url,
+                                filename,
+                                'inline'
+                            );
 
                             if (Platform.OS === 'android') {
                                 // Android WebView workaround using Google Docs Viewer
@@ -116,14 +121,14 @@ export default function HousePlanScreen({ navigation }) {
         }
     }, [userData]);
 
-    // ดึง URL สำหรับ View (แปลนบ้าน)
-    const getPlanViewUrl = () => {
-        return houseModelData?.house_model?.plan_view_url || null;
+    // ดึง raw Cloudinary URL สำหรับแปลนบ้าน (จาก V2 API)
+    const getPlanFileUrl = () => {
+        return houseModelData?.house_model?.plan_file_url || null;
     };
 
-    // ดึง URL สำหรับ Download (แปลนบ้าน)
-    const getPlanDownloadUrl = () => {
-        return houseModelData?.house_model?.plan_download_url || null;
+    // กำหนด projectId
+    const getProjectId = () => {
+        return userData?.projectMemberships?.[0]?.project_id || null;
     };
 
     // กำหนดชื่อไฟล์
@@ -134,29 +139,36 @@ export default function HousePlanScreen({ navigation }) {
 
     // เปิด PDF (ดูแปลนบ้าน)
     const handleViewPdf = async () => {
-        const viewPath = getPlanViewUrl();
+        const planFileUrl = getPlanFileUrl();
+        const projectId = getProjectId();
 
-        if (!viewPath) {
+        if (!planFileUrl || !projectId) {
             Alert.alert("ไม่พบไฟล์", "ยังไม่มีไฟล์แปลนบ้านสำหรับดู");
             return;
         }
 
         try {
-            const finalViewUrl = await ProjectDocumentsService.getAuthenticatedProxyUrl(viewPath);
+            // ใช้ getStreamPdfUrl สำหรับ /pdf-stream endpoint (มี Cache support)
+            const finalViewUrl = await ProjectDocumentsService.getStreamPdfUrl(
+                projectId,
+                planFileUrl,
+                `${getPlanTitle()}.pdf`,
+                'inline'
+            );
             await WebBrowser.openBrowserAsync(finalViewUrl);
         } catch (err) {
             console.error("Error opening PDF view:", err);
-            const finalViewUrl = await ProjectDocumentsService.getAuthenticatedProxyUrl(viewPath);
-            if (finalViewUrl) await Linking.openURL(finalViewUrl);
+            Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถเปิดดูไฟล์ได้");
         }
     };
 
     // ดาวน์โหลด PDF (แปลนบ้าน)
     const handleDownloadPdf = async () => {
-        const downloadPath = getPlanDownloadUrl();
+        const planFileUrl = getPlanFileUrl();
+        const projectId = getProjectId();
         const fileName = `${getPlanTitle()}.pdf`;
 
-        if (!downloadPath) {
+        if (!planFileUrl || !projectId) {
             Alert.alert("ไม่พบไฟล์", "ยังไม่มีไฟล์ PDF สำหรับดาวน์โหลด");
             return;
         }
@@ -164,14 +176,20 @@ export default function HousePlanScreen({ navigation }) {
         try {
             setDownloading(true);
 
-            const finalUrl = await ProjectDocumentsService.getAuthenticatedProxyUrl(downloadPath);
+            // ใช้ getStreamPdfUrl สำหรับ /pdf-stream endpoint (มี Cache support)
+            const finalUrl = await ProjectDocumentsService.getStreamPdfUrl(
+                projectId,
+                planFileUrl,
+                fileName,
+                'attachment'
+            );
 
             if (!finalUrl) {
                 Alert.alert("ผิดพลาด", "ไม่สามารถสร้างลิงก์ดาวน์โหลดได้");
                 return;
             }
 
-            console.log("Downloading from:", finalUrl);
+            console.log("Downloading from (pdf-stream):", finalUrl);
 
             const isAvailable = await Sharing.isAvailableAsync();
 
@@ -204,7 +222,7 @@ export default function HousePlanScreen({ navigation }) {
         navigation.goBack();
     };
 
-    const planViewUrl = getPlanViewUrl();
+    const planFileUrl = getPlanFileUrl();
 
     // สถานะ Loading
     if (loading) {
@@ -254,8 +272,8 @@ export default function HousePlanScreen({ navigation }) {
         );
     }
 
-    // ไม่มีไฟล์ (ตรวจสอบจาก plan view url)
-    if (!planViewUrl) {
+    // ไม่มีไฟล์ (ตรวจสอบจาก plan file url)
+    if (!planFileUrl) {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={[styles.header, { backgroundColor: primaryColor }]}>

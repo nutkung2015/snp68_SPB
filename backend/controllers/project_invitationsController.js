@@ -83,7 +83,7 @@ exports.getInvitations = async (req, res) => {
       console.log('Looking for project membership for project_id:', project_id);
       const projectMembership = req.user.projectMemberships.find(
         membership => membership.project_id === project_id &&
-        (membership.role === 'juristicLeader' || membership.role === 'juristicMember')
+          (membership.role === 'juristicLeader' || membership.role === 'juristicMember')
       );
 
       console.log('Found project membership:', projectMembership);
@@ -154,7 +154,22 @@ exports.joinProject = async (req, res) => {
 
     const invitation = invitations[0];
     const project_id = invitation.project_id;
-    const memberRole = invitation.role; // Get role from the invitation
+
+    // Get role from invitation, or fallback to user's role from users table
+    let memberRole = invitation.role;
+    if (!memberRole || memberRole === '') {
+      // Get user's role from users table as fallback
+      const [userRows] = await db.promise().execute(
+        "SELECT role FROM users WHERE id = ?",
+        [user_id]
+      );
+      if (userRows.length > 0 && userRows[0].role) {
+        memberRole = userRows[0].role;
+        console.log("Using user's role from users table:", memberRole);
+      } else {
+        memberRole = 'member'; // Default fallback
+      }
+    }
 
     // 2. Check if user is already a member of the project
     const [existingMembers] = await db.promise().execute(

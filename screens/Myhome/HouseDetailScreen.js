@@ -70,25 +70,29 @@ export default function HouseDetailScreen({ navigation }) {
                     console.log("Could not load project customizations");
                 }
 
-                // ดึงข้อมูลแบบบ้านของ user ตาม unit ที่อยู่
-                const response = await ProjectDocumentsService.getMyHouseModel(projectId);
+                // ดึงข้อมูลแบบบ้านของ user - ใช้ V2 API ที่ส่ง raw Cloudinary URLs
+                const response = await ProjectDocumentsService.getMyHouseModelV2(projectId);
 
-                console.log("=== HouseDetailScreen Debug ===");
+                console.log("=== HouseDetailScreen Debug (V2) ===");
                 console.log("Full response:", JSON.stringify(response.data, null, 2));
-                console.log("plan_file_url:", response.data?.house_model?.plan_file_url);
+                console.log("detail_file_url:", response.data?.house_model?.detail_file_url);
 
                 if (response?.status === "success" && response.data?.house_model) {
                     setHouseModelData(response.data);
 
-                    // Prepare Viewer URL immediately
-                    if (response.data.house_model.detail_view_url) {
+                    // Prepare Viewer URL immediately (ใช้ getStreamPdfUrl สำหรับ pdf-stream endpoint)
+                    if (response.data.house_model.detail_file_url) {
                         try {
-                            const rawUrl = response.data.house_model.detail_view_url;
-                            const authUrl = await ProjectDocumentsService.getAuthenticatedProxyUrl(rawUrl);
+                            const filename = `${response.data.house_model.model_name} - รายละเอียด.pdf`;
+                            const authUrl = await ProjectDocumentsService.getStreamPdfUrl(
+                                projectId,
+                                response.data.house_model.detail_file_url,
+                                filename,
+                                'inline'
+                            );
 
                             if (Platform.OS === 'android') {
                                 // Android WebView workaround using Google Docs Viewer
-                                // Note: This requires a PUBLIC URL. Localhost will fail.
                                 setViewerUrl(`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(authUrl)}`);
                             } else {
                                 setViewerUrl(authUrl);
@@ -118,14 +122,14 @@ export default function HouseDetailScreen({ navigation }) {
         }
     }, [userData]);
 
-    // ดึง URL สำหรับ View (รายละเอียดบ้าน)
-    const getDetailViewUrl = () => {
-        return houseModelData?.house_model?.detail_view_url || null;
+    // ดึง raw Cloudinary URL สำหรับรายละเอียดบ้าน (จาก V2 API)
+    const getDetailFileUrl = () => {
+        return houseModelData?.house_model?.detail_file_url || null;
     };
 
-    // ดึง URL สำหรับ Download (รายละเอียดบ้าน)
-    const getDetailDownloadUrl = () => {
-        return houseModelData?.house_model?.detail_download_url || null;
+    // กำหนด projectId
+    const getProjectId = () => {
+        return userData?.projectMemberships?.[0]?.project_id || null;
     };
 
     // กำหนดชื่อไฟล์
@@ -136,33 +140,36 @@ export default function HouseDetailScreen({ navigation }) {
 
     // เปิด PDF (ดูรายละเอียดบ้าน)
     const handleViewPdf = async () => {
-        const viewPath = getDetailViewUrl();
+        const detailFileUrl = getDetailFileUrl();
+        const projectId = getProjectId();
 
-        if (!viewPath) {
+        if (!detailFileUrl || !projectId) {
             Alert.alert("ไม่พบไฟล์", "ยังไม่มีไฟล์รายละเอียดบ้านสำหรับดู");
             return;
         }
 
         try {
-            // สร้าง URL ที่สมบูรณ์ (ถ้าเป็น Proxy จะเติม token, ถ้าเป็น Cloudinary จะใช้ค่าเดิม)
-            const finalViewUrl = await ProjectDocumentsService.getAuthenticatedProxyUrl(viewPath);
-
-            // ใช้ expo-web-browser เปิด (รองรับทั้ง JPG และ PDF Inline)
+            // ใช้ getStreamPdfUrl สำหรับ /pdf-stream endpoint (มี Cache support)
+            const finalViewUrl = await ProjectDocumentsService.getStreamPdfUrl(
+                projectId,
+                detailFileUrl,
+                `${getDetailTitle()}.pdf`,
+                'inline'
+            );
             await WebBrowser.openBrowserAsync(finalViewUrl);
         } catch (err) {
             console.error("Error opening PDF view:", err);
-            // Fallback: เปิดใน external browser (เผื่อ WebBrowser มีปัญหา)
-            const finalViewUrl = await ProjectDocumentsService.getAuthenticatedProxyUrl(viewPath);
-            if (finalViewUrl) await Linking.openURL(finalViewUrl);
+            Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถเปิดดูไฟล์ได้");
         }
     };
 
     // ดาวน์โหลด PDF (รายละเอียดบ้าน)
     const handleDownloadPdf = async () => {
-        const downloadPath = getDetailDownloadUrl();
+        const detailFileUrl = getDetailFileUrl();
+        const projectId = getProjectId();
         const fileName = `${getDetailTitle()}.pdf`;
 
-        if (!downloadPath) {
+        if (!detailFileUrl || !projectId) {
             Alert.alert("ไม่พบไฟล์", "ยังไม่มีไฟล์ PDF สำหรับดาวน์โหลด");
             return;
         }
@@ -170,26 +177,27 @@ export default function HouseDetailScreen({ navigation }) {
         try {
             setDownloading(true);
 
-            // ใช้ Service สร้าง Signed Full URL
-            const finalUrl = await ProjectDocumentsService.getAuthenticatedProxyUrl(downloadPath);
+            // ใช้ getStreamPdfUrl สำหรับ /pdf-stream endpoint (มี Cache support)
+            const finalUrl = await ProjectDocumentsService.getStreamPdfUrl(
+                projectId,
+                detailFileUrl,
+                fileName,
+                'attachment'
+            );
 
             if (!finalUrl) {
                 Alert.alert("ผิดพลาด", "ไม่สามารถสร้างลิงก์ดาวน์โหลดได้");
                 return;
             }
 
-            console.log("Downloading from:", finalUrl);
+            console.log("Downloading from (pdf-stream):", finalUrl);
 
             const isAvailable = await Sharing.isAvailableAsync();
 
             if (Platform.OS === "web" || !isAvailable) {
-                // สำหรับ web หรือเมื่อ sharing ไม่พร้อมใช้งาน
                 await Linking.openURL(finalUrl);
             } else {
-                // สำหรับ mobile - ดาวน์โหลดและแชร์
                 const fileUri = FileSystem.documentDirectory + fileName.replace(/\s/g, "_");
-
-                // ไม่ต้องใส่ Header Auth แล้ว เพราะมี token ใน URL
                 const downloadResult = await FileSystem.downloadAsync(finalUrl, fileUri);
 
                 if (downloadResult.status === 200) {
@@ -215,7 +223,7 @@ export default function HouseDetailScreen({ navigation }) {
         navigation.goBack();
     };
 
-    const detailViewUrl = getDetailViewUrl();
+    const detailFileUrl = getDetailFileUrl();
 
     // สถานะ Loading
     if (loading) {
@@ -265,8 +273,8 @@ export default function HouseDetailScreen({ navigation }) {
         );
     }
 
-    // ไม่มีไฟล์ (ตรวจสอบจาก detail view url)
-    if (!detailViewUrl) {
+    // ไม่มีไฟล์ (ตรวจสอบจาก detail file url)
+    if (!detailFileUrl) {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={[styles.header, { backgroundColor: primaryColor }]}>

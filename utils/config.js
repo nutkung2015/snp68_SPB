@@ -18,27 +18,27 @@ export const API_CONFIG = {
 // http://localhost:5000
 
 // Authentication Configuration
+// NOTE: JWT_SECRET should NEVER be in frontend code - it's only used in backend
 export const AUTH_CONFIG = {
-  JWT_SECRET: ENV.JWT_SECRET || "96820937f7b0918d2a562bf080cdb2c2",
+  // These are not actually used in frontend, kept for reference only
   JWT_EXPIRES_IN: ENV.JWT_EXPIRES_IN || "7d",
 };
 
 // External Services สำหรับ Expo
+// NOTE: API_SECRET should NEVER be in frontend code - uploads go through backend
 export const EXTERNAL_SERVICES = {
   CLOUDINARY: {
     CLOUD_NAME: ENV.CLOUDINARY_CLOUD_NAME || "dwsl5h6a7",
-    API_KEY: ENV.CLOUDINARY_API_KEY || "645229893171672",
-    API_SECRET: ENV.CLOUDINARY_API_SECRET || "uHv5zGR6t6LHCx2X0m8Rri7QOBE",
+    // API_KEY and API_SECRET removed - all uploads go through backend
   },
   FIREBASE: {
-    API_KEY: ENV.FIREBASE_API_KEY || "AIzaSyCASlOXSaGEnZJFsL3eXwX6PV11SH1DTbY",
-    AUTH_DOMAIN: ENV.FIREBASE_AUTH_DOMAIN || "snp68spb.firebaseapp.com",
-    PROJECT_ID: ENV.FIREBASE_PROJECT_ID || "snp68spb",
-    STORAGE_BUCKET:
-      ENV.FIREBASE_STORAGE_BUCKET || "snp68spb.firebasestorage.app",
-    MESSAGING_SENDER_ID: ENV.FIREBASE_MESSAGING_SENDER_ID || "58142314237",
-    APP_ID: ENV.FIREBASE_APP_ID || "1:58142314237:web:3330e67fd38c87147db894",
-    MEASUREMENT_ID: ENV.FIREBASE_MEASUREMENT_ID || "G-B12DN0C3YQ",
+    // Public Firebase config (these are meant to be public)
+    API_KEY: ENV.FIREBASE_API_KEY,
+    AUTH_DOMAIN: ENV.FIREBASE_AUTH_DOMAIN,
+    PROJECT_ID: ENV.FIREBASE_PROJECT_ID,
+    STORAGE_BUCKET: ENV.FIREBASE_STORAGE_BUCKET,
+    MESSAGING_SENDER_ID: ENV.FIREBASE_MESSAGING_SENDER_ID,
+    APP_ID: ENV.FIREBASE_APP_ID,
   },
 };
 
@@ -52,7 +52,7 @@ export const APP_CONFIG = {
 
 // Push Notifications สำหรับ Expo
 export const PUSH_CONFIG = {
-  PROJECT_ID: ENV.EXPO_PROJECT_ID || "7c6d8598-fa21-4f26-ab88-eb019a0d52b7",
+  PROJECT_ID: ENV.EXPO_PROJECT_ID,
 };
 
 // Social Authentication (ถ้าต้องการ)

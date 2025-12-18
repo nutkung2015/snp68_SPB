@@ -361,6 +361,135 @@ exports.getMyHouseModel = async (req, res) => {
     }
 };
 
+/**
+ * GET /api/projects/:project_id/member/my-house-model-v2
+ * Version 2: Returns raw Cloudinary URLs for use with pdf-stream endpoint
+ * 
+ * Same as getMyHouseModel but includes:
+ * - plan_file_url (raw Cloudinary URL)
+ * - detail_file_url (raw Cloudinary URL)
+ * 
+ * Frontend can use these with getStreamPdfUrl() for better caching
+ */
+exports.getMyHouseModelV2 = async (req, res) => {
+    try {
+        const { project_id } = req.params;
+        const userId = req.user?.id;
+
+        if (!project_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'project_id is required'
+            });
+        }
+
+        if (!userId) {
+            return res.status(401).json({
+                status: 'error',
+                message: 'Unauthorized: User not authenticated'
+            });
+        }
+
+        // Check if user is a member of this project
+        const [memberCheck] = await db.promise().query(
+            "SELECT role FROM project_members WHERE user_id = ? AND project_id = ?",
+            [userId, project_id]
+        );
+
+        if (memberCheck.length === 0) {
+            return res.status(403).json({
+                status: 'error',
+                message: 'You are not a member of this project'
+            });
+        }
+
+        // Find user's unit from unit_members and get building from units
+        const [unitResult] = await db.promise().query(
+            `SELECT u.id as unit_id, u.unit_number, u.building, u.zone
+             FROM unit_members um
+             JOIN units u ON um.unit_id = u.id
+             WHERE um.user_id = ? AND u.project_id = ?
+             LIMIT 1`,
+            [userId, project_id]
+        );
+
+        if (unitResult.length === 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'You are not assigned to any unit in this project',
+                data: null
+            });
+        }
+
+        const userUnit = unitResult[0];
+        const building = userUnit.building;
+
+        if (!building) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Your unit does not have a building type assigned',
+                data: {
+                    unit_id: userUnit.unit_id,
+                    unit_number: userUnit.unit_number,
+                    building: null,
+                    house_model: null
+                }
+            });
+        }
+
+        // Find house_model where model_name matches building
+        const [houseModelResult] = await db.promise().query(
+            `SELECT id, project_id, model_name, plan_file_url, detail_file_url, updated_at
+             FROM house_models
+             WHERE project_id = ? AND model_name = ?`,
+            [project_id, building]
+        );
+
+        if (houseModelResult.length === 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: `No house model found for building type: ${building}`,
+                data: {
+                    unit_id: userUnit.unit_id,
+                    unit_number: userUnit.unit_number,
+                    building: building,
+                    house_model: null
+                }
+            });
+        }
+
+        const houseModel = houseModelResult[0];
+
+        res.json({
+            status: 'success',
+            data: {
+                unit_id: userUnit.unit_id,
+                unit_number: userUnit.unit_number,
+                zone: userUnit.zone,
+                building: building,
+                house_model: {
+                    id: houseModel.id,
+                    model_name: houseModel.model_name,
+
+                    // Raw Cloudinary URLs (สำหรับใช้กับ getStreamPdfUrl)
+                    plan_file_url: houseModel.plan_file_url,
+                    detail_file_url: houseModel.detail_file_url,
+
+                    updated_at: houseModel.updated_at
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error("Error in getMyHouseModelV2:", error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Server error'
+        });
+    }
+};
+
+
 // Proxy สำหรับดาวน์โหลดไฟล์ PDF ผ่าน Backend (แก้ปัญหา Untrusted Account ของ Cloudinary)
 exports.proxyPdfDownload = async (req, res) => {
     try {
@@ -538,6 +667,233 @@ exports.proxyPdfDownload = async (req, res) => {
         res.status(500).json({
             status: 'error',
             message: 'Download failed: ' + (error.message || 'Unknown error')
+        });
+    }
+};
+
+// ============================================================================
+// NEW: Optimized PDF Streaming with Cache Support
+// ============================================================================
+/**
+ * GET /api/projects/:project_id/member/pdf-stream
+ * 
+ * Optimized PDF streaming proxy with:
+ * - Cache-Control headers (1 hour)
+ * - Direct stream piping (no memory buffering)
+ * - Cloudinary Signed URL generation
+ * - Graceful error handling
+ * 
+ * Query params:
+ * - url: Raw Cloudinary URL
+ * - filename: Filename for Content-Disposition (default: document.pdf)
+ * - disposition: 'inline' (view) or 'attachment' (download), default: 'inline'
+ * - token: JWT token for authentication
+ */
+exports.streamPdfProxy = async (req, res) => {
+    const axios = require('axios');
+    const jwt = require('jsonwebtoken');
+
+    try {
+        const { url, filename = 'document.pdf', disposition = 'inline', token } = req.query;
+        const { project_id } = req.params;
+
+        // ============ Validation ============
+        if (!url) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Missing required parameter: url'
+            });
+        }
+
+        if (!token) {
+            return res.status(401).json({
+                status: 'error',
+                message: 'Missing authentication token'
+            });
+        }
+
+        // ============ Token Verification ============
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (jwtError) {
+            console.error('JWT verification failed:', jwtError.message);
+            return res.status(401).json({
+                status: 'error',
+                message: 'Invalid or expired token'
+            });
+        }
+
+        const userId = decoded.id;
+
+        // ============ Authorization Check ============
+        // Check unit_members first (for residents)
+        const [memberCheck] = await db.promise().execute(
+            `SELECT um.id FROM unit_members um
+             JOIN units u ON um.unit_id = u.id
+             WHERE u.project_id = ? AND um.user_id = ?`,
+            [project_id, userId]
+        );
+
+        if (memberCheck.length === 0) {
+            // Fallback: check project_members (for juristic staff)
+            const [staffCheck] = await db.promise().execute(
+                'SELECT id FROM project_members WHERE project_id = ? AND user_id = ?',
+                [project_id, userId]
+            );
+
+            if (staffCheck.length === 0) {
+                return res.status(403).json({
+                    status: 'error',
+                    message: 'Access denied: Not a member of this project'
+                });
+            }
+        }
+
+        // ============ Generate Cloudinary Signed URL ============
+        let targetUrl = url;
+
+        if (url.includes('cloudinary.com')) {
+            try {
+                const urlParts = url.split('/upload/');
+
+                if (urlParts.length === 2) {
+                    // Clean path: remove version and signature prefixes
+                    let pathPart = urlParts[1]
+                        .replace(/^v\d+\//, '')      // Remove version (v1234567890/)
+                        .replace(/^s--[^\/]+--\//, ''); // Remove signature (s--xxx--/)
+
+                    // Determine resource type
+                    const isRaw = url.includes('/raw/upload/');
+                    const resourceType = isRaw ? 'raw' : 'image';
+
+                    // Extract public_id and format
+                    const lastDotIndex = pathPart.lastIndexOf('.');
+                    const publicId = lastDotIndex !== -1
+                        ? pathPart.substring(0, lastDotIndex)
+                        : pathPart;
+                    const format = lastDotIndex !== -1
+                        ? pathPart.substring(lastDotIndex + 1)
+                        : 'pdf';
+
+                    // Generate signed URL using Admin API (bypasses Untrusted Account)
+                    targetUrl = cloudinary.utils.private_download_url(publicId, format, {
+                        resource_type: resourceType,
+                        type: 'upload',
+                        expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiry
+                        attachment: disposition === 'attachment'
+                    });
+
+                    console.log('[streamPdfProxy] Generated signed URL for:', publicId);
+                }
+            } catch (signError) {
+                console.error('[streamPdfProxy] Signing error:', signError.message);
+                // Continue with original URL as fallback
+            }
+        }
+
+        // ============ Fetch from Cloudinary ============
+        const response = await axios({
+            method: 'GET',
+            url: targetUrl,
+            responseType: 'stream',
+            timeout: 60000, // 60 seconds timeout
+            headers: {
+                'User-Agent': 'SPB-Backend/2.0',
+                'Accept': 'application/pdf, */*'
+            },
+            validateStatus: (status) => status < 500
+        });
+
+        // ============ Handle Non-200 Responses ============
+        if (response.status === 404) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'File not found on storage'
+            });
+        }
+
+        if (response.status === 401 || response.status === 403) {
+            return res.status(response.status).json({
+                status: 'error',
+                message: 'Storage access denied'
+            });
+        }
+
+        if (response.status !== 200) {
+            return res.status(response.status).json({
+                status: 'error',
+                message: `Storage returned status ${response.status}`
+            });
+        }
+
+        // ============ Set Response Headers ============
+        const contentType = response.headers['content-type'] || 'application/pdf';
+        const contentLength = response.headers['content-length'];
+        const encodedFilename = encodeURIComponent(filename);
+
+        // Content headers
+        res.setHeader('Content-Type', contentType.includes('pdf') ? 'application/pdf' : contentType);
+        res.setHeader('Content-Disposition', `${disposition}; filename*=UTF-8''${encodedFilename}`);
+
+        if (contentLength) {
+            res.setHeader('Content-Length', contentLength);
+        }
+
+        // Cache headers (1 hour cache for performance)
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.setHeader('Vary', 'Authorization');
+
+        // Generate ETag from URL for browser caching
+        const crypto = require('crypto');
+        const etag = crypto.createHash('md5').update(url).digest('hex');
+        res.setHeader('ETag', `"${etag}"`);
+
+        // Check If-None-Match for 304 response
+        const ifNoneMatch = req.headers['if-none-match'];
+        if (ifNoneMatch === `"${etag}"`) {
+            return res.status(304).end();
+        }
+
+        // CORS headers
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length, ETag');
+
+        // ============ Stream Response ============
+        response.data.pipe(res);
+
+        // Handle stream errors
+        response.data.on('error', (streamError) => {
+            console.error('[streamPdfProxy] Stream error:', streamError.message);
+            if (!res.headersSent) {
+                res.status(500).json({
+                    status: 'error',
+                    message: 'Stream interrupted'
+                });
+            }
+        });
+
+    } catch (error) {
+        console.error('[streamPdfProxy] Error:', error.message);
+
+        // Handle axios errors
+        if (error.code === 'ECONNABORTED') {
+            return res.status(504).json({
+                status: 'error',
+                message: 'Storage request timeout'
+            });
+        }
+
+        if (error.response) {
+            return res.status(error.response.status || 500).json({
+                status: 'error',
+                message: `Storage error: ${error.response.statusText || 'Unknown'}`
+            });
+        }
+
+        res.status(500).json({
+            status: 'error',
+            message: 'Internal server error'
         });
     }
 };

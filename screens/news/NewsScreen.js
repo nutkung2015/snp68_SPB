@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         height: 80,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        // backgroundColor: 'rgba(0, 0, 0, 0.3)',
     },
     typeBadge: {
         position: 'absolute',

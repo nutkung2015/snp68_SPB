@@ -104,19 +104,19 @@ exports.login = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    // ดึงข้อมูลการเป็นสมาชิกโครงการสำหรับบทบาท Backoffice
-    const [projectMemberships] = await db
+    // ดึงข้อมูลการเป็นสมาชิกโครงการ - รวม role ว่างด้วยเพื่อรองรับ record เก่า
+    const [projectMembershipsRaw] = await db
       .promise()
       .query(
-        "SELECT pm.project_id, pm.role, p.name AS project_name FROM project_members pm JOIN projects p ON pm.project_id = p.id WHERE pm.user_id = ? AND pm.role IN (?, ?, ?, ?)",
-        [
-          existingUser.id,
-          "juristicLeader",
-          "juristicMember",
-          "member",
-          "security",
-        ]
+        "SELECT pm.project_id, pm.role, p.name AS project_name FROM project_members pm JOIN projects p ON pm.project_id = p.id WHERE pm.user_id = ?",
+        [existingUser.id]
       );
+
+    // ถ้า role ใน project_members เป็นค่าว่าง ให้ใช้ role จาก users table แทน
+    const projectMemberships = projectMembershipsRaw.map(pm => ({
+      ...pm,
+      role: pm.role || existingUser.role // ใช้ role จาก users table ถ้า pm.role ว่าง
+    }));
 
     // ดึงข้อมูลการเป็นสมาชิกยูนิต
     const [unitMemberships] = await db
@@ -175,6 +175,33 @@ exports.getProfile = async (req, res) => {
     res.status(200).json({ user });
   } catch (error) {
     console.error("Error fetching user profile:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Update User Push Token
+// @route   PUT /api/auth/push-token
+// @access  Private
+exports.updatePushToken = async (req, res) => {
+  try {
+    const { push_token } = req.body;
+    const user_id = req.user.id;
+
+    if (!push_token) {
+      return res.status(400).json({ message: "Push token is required" });
+    }
+
+    await db.promise().execute(
+      "UPDATE users SET push_token = ? WHERE id = ?",
+      [push_token, user_id]
+    );
+
+    res.status(200).json({
+      status: "success",
+      message: "Push token updated successfully"
+    });
+  } catch (error) {
+    console.error("Error in updatePushToken:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

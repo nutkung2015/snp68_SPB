@@ -14,4 +14,7 @@ router.post("/register", validateRegister, authController.register);
 // Route สำหรับดึงข้อมูล Profile ของผู้ใช้
 router.get("/profile", authMiddleware, authController.getProfile);
 
+// Route สำหรับ update push token
+router.put("/push-token", authMiddleware, authController.updatePushToken);
+
 module.exports = router;

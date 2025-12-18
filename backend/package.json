@@ -7,7 +7,9 @@
     "dev": "nodemon server.js",
     "local": "nodemon --exec \"node -r dotenv/config server.js dotenv_config_path=.env.local\"",
     "prod": "node -r dotenv/config server.js dotenv_config_path=.env.production",
-    "production": "node server.js"
+    "production": "node server.js",
+    "audit": "npm audit --audit-level=moderate",
+    "audit:fix": "npm audit fix"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +23,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "exceljs": "^4.4.0",
+    "expo-server-sdk": "^4.0.0",
     "express": "^5.1.0",
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",

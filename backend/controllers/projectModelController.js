@@ -295,6 +295,87 @@ exports.getProjectInfoDocsForResident = async (req, res) => {
 };
 
 /**
+ * GET /api/projects/:project_id/member/info-docs-v2
+ * Version 2: Returns raw Cloudinary URLs for use with pdf-stream endpoint
+ * 
+ * Same as getProjectInfoDocsForResident but returns raw URLs instead of proxy URLs
+ * Frontend can use these with getStreamPdfUrl() for better caching
+ */
+exports.getProjectInfoDocsForResidentV2 = async (req, res) => {
+    try {
+        const { project_id } = req.params;
+        const userId = req.user?.id;
+
+        if (!project_id) {
+            return res.status(400).json({
+                status: "error",
+                message: "project_id is required"
+            });
+        }
+
+        // Check if user is a member of this project
+        const [memberCheck] = await db.promise().query(
+            "SELECT role FROM project_members WHERE user_id = ? AND project_id = ?",
+            [userId, project_id]
+        );
+
+        if (memberCheck.length === 0) {
+            return res.status(403).json({
+                status: "error",
+                message: "You are not a member of this project"
+            });
+        }
+
+        const query = `
+            SELECT 
+                project_detail_file_url,
+                rules_file_url,
+                updated_at
+            FROM projects
+            WHERE id = ?
+        `;
+
+        const [rows] = await db.promise().query(query, [project_id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                status: "error",
+                message: "Project not found"
+            });
+        }
+
+        const data = rows[0];
+
+        // If no files uploaded yet, return null data
+        if (!data.project_detail_file_url && !data.rules_file_url) {
+            return res.json({
+                status: "success",
+                data: null
+            });
+        }
+
+        // Return raw Cloudinary URLs (for use with getStreamPdfUrl)
+        res.json({
+            status: "success",
+            data: {
+                // Raw Cloudinary URLs (สำหรับใช้กับ getStreamPdfUrl)
+                project_detail_file_url: data.project_detail_file_url,
+                rules_file_url: data.rules_file_url,
+
+                updated_at: data.updated_at
+            }
+        });
+    } catch (error) {
+        console.error("Error in getProjectInfoDocsForResidentV2:", error);
+        res.status(500).json({
+            status: "error",
+            message: "Server error"
+        });
+    }
+};
+
+
+/**
  * GET /api/resident/projects/:project_id/house-models
  * Get house models for residents
  * Only members of the project can view this

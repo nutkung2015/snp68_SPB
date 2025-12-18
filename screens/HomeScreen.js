@@ -391,7 +391,7 @@ const HomeScreen = ({ navigation }) => {
               navigation.navigate("IssueMenu")
             )}
             {renderMenuItem("car", "ผู้มาเยี่ยม", () =>
-              navigation.navigate("Visitors")
+              navigation.navigate("Estamp")
             )}
             {renderMenuItem("chatbubble", "ขอความช่วยเหลือ", () =>
               navigation.navigate("HelpRequest")
@@ -675,7 +675,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 80,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    // backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   typeBadge: {
     position: 'absolute',

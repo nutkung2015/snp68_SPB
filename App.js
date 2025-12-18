@@ -63,6 +63,13 @@ import VilageDetailScreen from "./screens/MyVilage/VilageDetailScreen";
 import SecurityServiceScreen from "./screens/security/SecurityServiceScreen";
 import SecurityProfileScreen from "./screens/security/SecurityProfileScreen";
 
+// Visitor Management
+import EstampScreen from "./screens/visitors/EstampScreen";
+import GuardDashboardScreen from "./screens/guard/GuardDashboardScreen";
+import GuardCheckInScreen from "./screens/guard/GuardCheckInScreen";
+
+
+
 // เพิ่ม defaultProps สำหรับ Text component
 Text.defaultProps = {
   ...Text.defaultProps,
@@ -235,17 +242,26 @@ export default function App() {
             const role = parsedUserData.role || parsedUserData.roles?.[0];
             setUserRole(role); // Store user role
 
+            // Check memberships for all users
+            const hasProjectMembership =
+              parsedUserData.projectMemberships &&
+              parsedUserData.projectMemberships.length > 0;
+            const hasUnitMembership =
+              parsedUserData.unitMemberships &&
+              parsedUserData.unitMemberships.length > 0;
+
             if (role === "security") {
-              // Security users go to GuardHome
-              setInitialRoute("GuardHome");
+              // Security users - only need projectMembership (not unitMembership)
+              if (hasProjectMembership) {
+                console.log("Security user has project membership. Setting route to GuardHome");
+                setInitialRoute("GuardHome");
+              } else {
+                console.log("Security user missing project membership. Setting route to JoinUnitScreen");
+                setInitialRoute("JoinUnitScreen");
+              }
             } else {
               // Regular users - check project and unit memberships
-              if (
-                parsedUserData.projectMemberships &&
-                parsedUserData.projectMemberships.length > 0 &&
-                parsedUserData.unitMemberships &&
-                parsedUserData.unitMemberships.length > 0
-              ) {
+              if (hasProjectMembership && hasUnitMembership) {
                 setInitialRoute("Home");
               } else {
                 setInitialRoute("JoinUnitScreen");
@@ -297,6 +313,7 @@ export default function App() {
           screenOptions={{ headerShown: false }}
           initialRouteName={initialRoute}
         >
+          <Stack.Screen name="JoinUnitScreen" component={JoinUnitScreen} />
           <Stack.Screen name="GuardHome" component={GuardHomeScreen} />
           <Stack.Screen name="SecurityServices" component={SecurityServiceScreen} />
           <Stack.Screen name="Profile">
@@ -310,7 +327,14 @@ export default function App() {
               <LoginScreen {...props} recheckLoginStatus={recheckLoginStatus} />
             )}
           </Stack.Screen>
-          {/* Add security-specific screens here */}
+
+          {/* Visitor Management (Guard) */}
+          <Stack.Screen name="GuardDashboard" component={GuardDashboardScreen} />
+          <Stack.Screen
+            name="GuardCheckIn"
+            component={GuardCheckInScreen}
+            options={{ presentation: 'transparentModal', headerShown: false }}
+          />
         </Stack.Navigator>
       );
     } else {
@@ -396,6 +420,9 @@ export default function App() {
           <Stack.Screen name="HomeInfoOption" component={HomeInfoOptionScreen} />
           <Stack.Screen name="VilageRule" component={VilageRuleScreen} />
           <Stack.Screen name="VilageDetail" component={VilageDetailScreen} />
+
+          {/* Visitor Management (Resident) */}
+          <Stack.Screen name="Estamp" component={EstampScreen} />
 
         </Stack.Navigator>
       );

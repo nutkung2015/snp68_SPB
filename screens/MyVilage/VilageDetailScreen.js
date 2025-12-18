@@ -69,20 +69,26 @@ export default function VilageDetailScreen({ navigation }) {
                     console.log("Could not load project customizations");
                 }
 
-                // ดึงข้อมูล project info docs
-                const response = await ProjectDocumentsService.getProjectInfoDocs(projectId);
+                // ดึงข้อมูล project info docs - ใช้ V2 API ที่ส่ง raw Cloudinary URLs
+                const response = await ProjectDocumentsService.getProjectInfoDocsV2(projectId);
 
-                console.log("=== VilageDetailScreen Debug ===");
+                console.log("=== VilageDetailScreen Debug (V2) ===");
                 console.log("Full response:", JSON.stringify(response.data, null, 2));
+                console.log("project_detail_file_url:", response.data?.project_detail_file_url);
 
                 if (response?.status === "success" && response.data) {
                     setProjectData(response.data);
 
-                    // Prepare Viewer URL สำหรับ project_detail (ใช้ proxy URL จาก backend)
-                    if (response.data.project_detail_view_url) {
+                    // Prepare Viewer URL (ใช้ getStreamPdfUrl สำหรับ pdf-stream endpoint)
+                    if (response.data.project_detail_file_url) {
                         try {
-                            // ใช้ proxy URL ที่ backend สร้างให้แล้ว
-                            const authUrl = await ProjectDocumentsService.getAuthenticatedProxyUrl(response.data.project_detail_view_url);
+                            const filename = 'รายละเอียดโครงการ.pdf';
+                            const authUrl = await ProjectDocumentsService.getStreamPdfUrl(
+                                projectId,
+                                response.data.project_detail_file_url,
+                                filename,
+                                'inline'
+                            );
 
                             if (Platform.OS === 'android') {
                                 setViewerUrl(`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(authUrl)}`);
@@ -113,14 +119,14 @@ export default function VilageDetailScreen({ navigation }) {
         }
     }, [userData]);
 
-    // ดึง URL สำหรับ View (ใช้ proxy URL จาก backend)
-    const getViewUrl = () => {
-        return projectData?.project_detail_view_url || null;
+    // ดึง raw Cloudinary URL สำหรับ project_detail (จาก V2 API)
+    const getProjectDetailFileUrl = () => {
+        return projectData?.project_detail_file_url || null;
     };
 
-    // ดึง URL สำหรับ Download (ใช้ proxy URL จาก backend)
-    const getDownloadUrl = () => {
-        return projectData?.project_detail_download_url || null;
+    // กำหนด projectId
+    const getProjectId = () => {
+        return userData?.projectMemberships?.[0]?.project_id || null;
     };
 
     // กำหนดชื่อไฟล์
@@ -130,16 +136,22 @@ export default function VilageDetailScreen({ navigation }) {
 
     // เปิด PDF เต็มจอ
     const handleViewPdf = async () => {
-        const viewPath = getViewUrl();
+        const detailFileUrl = getProjectDetailFileUrl();
+        const projectId = getProjectId();
 
-        if (!viewPath) {
+        if (!detailFileUrl || !projectId) {
             Alert.alert("ไม่พบไฟล์", "ยังไม่มีไฟล์รายละเอียดโครงการ");
             return;
         }
 
         try {
-            // ใช้ proxy URL ที่ backend สร้างให้แล้ว
-            const finalViewUrl = await ProjectDocumentsService.getAuthenticatedProxyUrl(viewPath);
+            // ใช้ getStreamPdfUrl สำหรับ /pdf-stream endpoint (มี Cache support)
+            const finalViewUrl = await ProjectDocumentsService.getStreamPdfUrl(
+                projectId,
+                detailFileUrl,
+                `${getTitle()}.pdf`,
+                'inline'
+            );
             await WebBrowser.openBrowserAsync(finalViewUrl);
         } catch (err) {
             console.error("Error opening PDF view:", err);
@@ -149,10 +161,11 @@ export default function VilageDetailScreen({ navigation }) {
 
     // ดาวน์โหลด PDF
     const handleDownloadPdf = async () => {
-        const downloadPath = getDownloadUrl();
+        const detailFileUrl = getProjectDetailFileUrl();
+        const projectId = getProjectId();
         const fileName = `${getTitle()}.pdf`;
 
-        if (!downloadPath) {
+        if (!detailFileUrl || !projectId) {
             Alert.alert("ไม่พบไฟล์", "ยังไม่มีไฟล์ PDF สำหรับดาวน์โหลด");
             return;
         }
@@ -160,13 +173,20 @@ export default function VilageDetailScreen({ navigation }) {
         try {
             setDownloading(true);
 
-            // ใช้ proxy URL ที่ backend สร้างให้แล้ว
-            const finalUrl = await ProjectDocumentsService.getAuthenticatedProxyUrl(downloadPath);
+            // ใช้ getStreamPdfUrl สำหรับ /pdf-stream endpoint (มี Cache support)
+            const finalUrl = await ProjectDocumentsService.getStreamPdfUrl(
+                projectId,
+                detailFileUrl,
+                fileName,
+                'attachment'
+            );
 
             if (!finalUrl) {
                 Alert.alert("ผิดพลาด", "ไม่สามารถสร้างลิงก์ดาวน์โหลดได้");
                 return;
             }
+
+            console.log("Downloading from (pdf-stream):", finalUrl);
 
             const isAvailable = await Sharing.isAvailableAsync();
 
@@ -199,7 +219,7 @@ export default function VilageDetailScreen({ navigation }) {
         navigation.goBack();
     };
 
-    const fileUrl = getViewUrl();
+    const fileUrl = getProjectDetailFileUrl();
 
     // สถานะ Loading
     if (loading) {

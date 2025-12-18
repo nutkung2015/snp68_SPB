@@ -56,22 +56,61 @@ const JoinUnitScreen = () => {
 
   const handleJoinProject = async () => {
     if (!invitationCode) {
-      Alert.alert("Error", "Please enter an invitation code.");
+      Alert.alert("Error", "กรุณากรอกรหัสคำเชิญ");
       return;
     }
 
     try {
-      const data = await UnitsService.joinUnit(invitationCode);
+      // Get user role from stored userData
+      const userRole = userData?.role || userData?.roles?.[0];
+      console.log("User role:", userRole);
 
-      Alert.alert(
-        "Success",
-        data.message || "Successfully joined the project!"
-      );
-      // Navigate to Home after successful join
-      navigation.navigate("Home");
+      let data;
+
+      if (userRole === "security" || userRole === "juristic") {
+        // Security and Juristic users join project directly
+        console.log("Joining project (security/juristic)...");
+        data = await UnitsService.joinProject(invitationCode);
+
+        // Update AsyncStorage with new projectMembership
+        const updatedUserData = { ...userData };
+        if (!updatedUserData.projectMemberships) {
+          updatedUserData.projectMemberships = [];
+        }
+        updatedUserData.projectMemberships.push({
+          project_id: data.project_id,
+          project_name: data.project_name,
+          role: data.role || userRole
+        });
+        await AsyncStorage.setItem("userData", JSON.stringify(updatedUserData));
+        console.log("Updated userData with new projectMembership:", updatedUserData.projectMemberships);
+
+        Alert.alert(
+          "สำเร็จ",
+          data.message || "เข้าร่วมโครงการสำเร็จ!"
+        );
+
+        // Navigate based on role
+        if (userRole === "security") {
+          navigation.navigate("GuardHome");
+        } else {
+          navigation.navigate("Home");
+        }
+      } else {
+        // Resident users join unit (which also adds them to project)
+        console.log("Joining unit (resident)...");
+        data = await UnitsService.joinUnit(invitationCode);
+
+        Alert.alert(
+          "สำเร็จ",
+          data.message || "เข้าร่วมโครงการสำเร็จ!"
+        );
+
+        navigation.navigate("Home");
+      }
     } catch (error) {
-      console.error("Error joining project:", error);
-      Alert.alert("Error", error.message || "An unexpected error occurred. Please try again.");
+      console.error("Error joining:", error);
+      Alert.alert("เกิดข้อผิดพลาด", error.message || "กรุณาลองใหม่อีกครั้ง");
     }
   };
 

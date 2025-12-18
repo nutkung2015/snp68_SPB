@@ -239,6 +239,10 @@ app.use(
   require("./routes/projectCustomizations")
 );
 
+// New: Security & Visitor Management Routes
+app.use("/api/security", require("./routes/security"));
+app.use("/api/visitors", require("./routes/visitors"));
+
 // Error handling middleware
 app.use(require("./middleware/errorMiddleware"));
 

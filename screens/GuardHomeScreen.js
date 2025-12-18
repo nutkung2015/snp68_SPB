@@ -123,7 +123,7 @@ const GuardHomeScreen = ({ navigation }) => {
             {/* รถเข้าโครงการ */}
             <TouchableOpacity
               style={[styles.menuCard, { opacity: 0.75, borderColor: primaryColor || "#205248" }]}
-              onPress={() => navigation.navigate("VehicleEntry")}
+              onPress={() => navigation.navigate("GuardDashboard")}
             >
               <View style={[styles.menuGradient, { backgroundColor: primaryColor || "#4DB59F" }]}>
                 <View style={styles.menuIconWrapper}>
