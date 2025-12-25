@@ -512,3 +512,70 @@ exports.importUnits = async (req, res) => {
     res.status(500).json({ message: "Server error during import", error: error.message });
   }
 };
+
+// @desc    Get all residents (members of any unit) in a project
+// @route   GET /api/residents?project_id=xxx
+// @access  Private (Juristic or Project Admin)
+exports.getProjectResidents = async (req, res) => {
+  try {
+    const { project_id } = req.query;
+
+    if (!project_id) {
+      return res.status(400).json({ message: "Project ID is required." });
+    }
+
+    const user_id = req.user.id;
+
+    // Check if user has permission (is juristic or admin of this project)
+    const [projectMembership] = await db.promise().execute(
+      "SELECT role FROM project_members WHERE user_id = ? AND project_id = ?",
+      [user_id, project_id]
+    );
+
+    if (projectMembership.length === 0) {
+      return res.status(403).json({
+        message: "You don't have permission to view residents for this project"
+      });
+    }
+
+    const userRole = projectMembership[0].role;
+    const allowedRoles = ['admin', 'juristicMember', 'juristicLeader', 'security'];
+
+    if (!allowedRoles.includes(userRole)) {
+      return res.status(403).json({
+        message: "Only juristic or admins can view all project residents"
+      });
+    }
+
+    // Query to get all residents across all units in the project
+    const query = `
+      SELECT 
+        um.id as membership_id,
+        um.unit_id,
+        um.user_id,
+        um.role as unit_role,
+        um.joined_at,
+        u.full_name,
+        u.email,
+        u.phone,
+        un.unit_number
+      FROM unit_members um
+      JOIN users u ON um.user_id = u.id
+      JOIN units un ON um.unit_id = un.id
+      WHERE un.project_id = ? AND um.left_at IS NULL
+      ORDER BY un.unit_number ASC, u.full_name ASC
+    `;
+
+    const [residents] = await db.promise().execute(query, [project_id]);
+
+    res.status(200).json({
+      status: "success",
+      message: "Project residents fetched successfully",
+      data: residents,
+      count: residents.length
+    });
+  } catch (error) {
+    console.error("Error in getProjectResidents:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

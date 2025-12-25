@@ -38,8 +38,8 @@ const HomeScreen = ({ navigation }) => {
   const [customizationData, setCustomizationData] = useState(null); // State for ProjectCustomizations
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true); // Loading state for announcements
 
-  const [secondaryColor, setSecondaryColor] = useState("#155B5B"); // Default color
-  const [primaryColor, setPrimaryColor] = useState("#14336B"); // Default color
+  const [secondaryColor, setSecondaryColor] = useState("#2A405E"); // Default color
+  const [primaryColor, setPrimaryColor] = useState("#1F7EFF"); // Default color
   const [logoUrl, setLogoUrl] = useState(null); // Logo URL from project customization
 
   const formatDate = (dateString) => {
@@ -92,24 +92,22 @@ const HomeScreen = ({ navigation }) => {
 
   const fetchProjectCustomizations = async (projectId) => {
     try {
-      setLoading(true);
       const response = await ProjectCustomizationsService.getProjectCustomizations(projectId);
       console.log("RESPONSE FROM API:", response); // แทรก debug
       // นี่คือเจาะชั้น response ที่ถูกต้อง
       if (response) {
         setCustomizationData(response);
-        if (response.primary_color, response.secondary_color, response.logo_url) {
+        if (response.primary_color && response.secondary_color) {
           setPrimaryColor(response.primary_color);
           setSecondaryColor(response.secondary_color);
+        }
+        if (response.logo_url) {
           setLogoUrl(response.logo_url);
         }
-
       }
     } catch (err) {
+      // ไม่แสดง error - ใช้สีเริ่มต้นแทน
       console.error("Error fetching project customizations:", err);
-      setError("Failed to fetch project customizations");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -307,67 +305,129 @@ const HomeScreen = ({ navigation }) => {
         }}
       >
       </ImageBackground> */}
-      {/* Header */}
-      <LinearGradient
-        colors={[primaryColor || "#4BB59F", secondaryColor || "#155B5B"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.gradientCardHeader}
-      >
-        {/* Row 1: Logo (ซ้าย) - Actions (ขวา) */}
-        <View style={styles.headerRowTop}>
-          <Image
-            source={logoUrl ? { uri: logoUrl } : require("../assets/logo_3_white.png")}
-            style={styles.logoImage}
-          />
-          <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.notificationButton}>
-              <Ionicons name="notifications-outline" size={24} color="#18545d" />
-              <View style={styles.notificationBadge}>
-                <Text style={styles.badgeText}>5</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.profileCircle} onPress={() => navigation.navigate("Profile")}>
-              <Text style={styles.profileText}>NC</Text>
-            </TouchableOpacity>
+      {/* Header - เช็คว่ามี customizationData หรือไม่ */}
+      {customizationData ? (
+        // Header with Custom Color (when projectCustomization exists)
+        <View
+          style={[styles.gradientCardHeader, { backgroundColor: primaryColor || "#1F7EFF" }]}
+        >
+          {/* Row 1: Logo (ซ้าย) - Actions (ขวา) */}
+          <View style={styles.headerRowTop}>
+            <Image
+              source={logoUrl ? { uri: logoUrl } : require("../assets/logo_3_white.png")}
+              style={styles.logoImage}
+            />
+            <View style={styles.headerActions}>
+              <TouchableOpacity style={styles.notificationButton}>
+                <Ionicons name="notifications-outline" size={24} color="#18545d" />
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.badgeText}>5</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.profileCircle} onPress={() => navigation.navigate("Profile")}>
+                <Text style={styles.profileText}>NC</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          {/* Row 2: ไอคอนบ้าน + user info */}
+          <View style={styles.headerRowBottom}>
+            <Ionicons
+              name="home"
+              size={32}
+              color="#fff"
+              style={styles.headerHouseIcon}
+            />
+            <View style={styles.headerUserBox}>
+              <Text style={styles.headerUserName}>สวัสดีคุณ {userData?.full_name}</Text>
+              <Text style={styles.headerUserAddress}>{" "}
+                {userData?.unitMemberships?.[0]?.unit_number}{" "}
+                {userData?.projectMemberships?.[0]?.project_name}</Text>
+            </View>
+          </View>
+          {/* ข้อมูลหมู่บ้านและบ้าน */}
+          <View style={styles.sectionHome}>
+            <Text style={styles.sectionTitleHome}>ข้อมูลหมู่บ้านและบ้าน</Text>
+            <View style={styles.menuGrid}>
+              <TouchableOpacity
+                style={styles.menuButton}
+                onPress={() => navigation.navigate("HomeOption")}
+              >
+                <Ionicons name="home" size={24} color={primaryColor || "#155B5B"} />
+                <Text style={[styles.menuText, { color: primaryColor || "#155B5B" }]}>บ้านของฉัน</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuButton}
+                onPress={() => navigation.navigate("VilageOption")}
+              >
+                <Ionicons name="people" size={24} color={primaryColor || "#155B5B"} />
+                <Text style={[styles.menuText, { color: primaryColor || "#155B5B" }]}>หมู่บ้านของฉัน</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-        {/* Row 2: ไอคอนบ้าน + user info */}
-        <View style={styles.headerRowBottom}>
-          <Ionicons
-            name="home"
-            size={32}
-            color="#fff"
-            style={styles.headerHouseIcon}
-          />
-          <View style={styles.headerUserBox}>
-            <Text style={styles.headerUserName}>สวัสดีคุณ {userData?.full_name}</Text>
-            <Text style={styles.headerUserAddress}>{" "}
-              {userData?.unitMemberships?.[0]?.unit_number}{" "}
-              {userData?.projectMemberships?.[0]?.project_name}</Text>
+      ) : (
+        // HeaderOriginal - ใช้รูป header_bg_new.png แทน primaryColor
+        <ImageBackground
+          // source={require("../assets/webp/header_bg_new_1.webp")}
+          style={styles.headerOriginalBackground}
+          resizeMode="stretch"
+          imageStyle={styles.headerOriginalImage}
+        >
+          {/* Row 1: Logo (ซ้าย) - Actions (ขวา) */}
+          <View style={styles.headerRowTop}>
+            <Image
+              source={require("../assets/logo_3_white.png")}
+              style={styles.logoImage}
+            />
+            <View style={styles.headerActions}>
+              <TouchableOpacity style={styles.notificationButton}>
+                <Ionicons name="notifications-outline" size={24} color="#18545d" />
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.badgeText}>5</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.profileCircle} onPress={() => navigation.navigate("Profile")}>
+                <Text style={styles.profileText}>NC</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-        {/* ข้อมูลหมู่บ้านและบ้าน */}
-        <View style={styles.sectionHome}>
-          <Text style={styles.sectionTitleHome}>ข้อมูลหมู่บ้านและบ้าน</Text>
-          <View style={styles.menuGrid}>
-            <TouchableOpacity
-              style={styles.menuButton} // ใช้ primaryColor
-              onPress={() => navigation.navigate("HomeOption")}
-            >
-              <Ionicons name="home" size={24} color={primaryColor || "#155B5B"} />
-              <Text style={[styles.menuText, { color: primaryColor || "#155B5B" }]}>บ้านของฉัน</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuButton}
-              onPress={() => navigation.navigate("VilageOption")}
-            >
-              <Ionicons name="people" size={24} color={primaryColor || "#155B5B"} />
-              <Text style={[styles.menuText, { color: primaryColor || "#155B5B" }]}>หมู่บ้านของฉัน</Text>
-            </TouchableOpacity>
+          {/* Row 2: ไอคอนบ้าน + user info */}
+          <View style={styles.headerRowBottom}>
+            <Ionicons
+              name="home"
+              size={32}
+              color="#fff"
+              style={styles.headerHouseIcon}
+            />
+            <View style={styles.headerUserBox}>
+              <Text style={styles.headerUserName}>สวัสดีคุณ {userData?.full_name}</Text>
+              <Text style={styles.headerUserAddress}>{" "}
+                {userData?.unitMemberships?.[0]?.unit_number}{" "}
+                {userData?.projectMemberships?.[0]?.project_name}</Text>
+            </View>
           </View>
-        </View>
-      </LinearGradient>
+          {/* ข้อมูลหมู่บ้านและบ้าน */}
+          <View style={styles.sectionHome}>
+            <Text style={styles.sectionTitleHome}>ข้อมูลหมู่บ้านและบ้าน</Text>
+            <View style={styles.menuGrid}>
+              <TouchableOpacity
+                style={styles.menuButton}
+                onPress={() => navigation.navigate("HomeOption")}
+              >
+                <Ionicons name="home" size={24} color="#1F7EFF" />
+                <Text style={[styles.menuText, { color: "#1F7EFF" }]}>บ้านของฉัน</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuButton}
+                onPress={() => navigation.navigate("VilageOption")}
+              >
+                <Ionicons name="people" size={24} color="#1F7EFF" />
+                <Text style={[styles.menuText, { color: "#1F7EFF" }]}>หมู่บ้านของฉัน</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ImageBackground>
+      )}
 
 
       {/* บ้านของฉัน */}
@@ -411,7 +471,7 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          {loading ? (
+          {loadingAnnouncements ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color="#666" />
               <Text style={styles.loadingText}>กำลังโหลด...</Text>
@@ -467,6 +527,27 @@ const styles = StyleSheet.create({
     position: "relative",
     minHeight: 144,
     justifyContent: "flex-end"
+  },
+  // Styles for HeaderOriginal with background image
+  headerOriginalBackground: {
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    paddingHorizontal: 18,
+    paddingTop: 20,
+    paddingBottom: 14,
+    marginTop: 0,
+    marginHorizontal: 0,
+    position: "relative",
+    minHeight: 280,
+    justifyContent: "flex-end",
+    overflow: "hidden",
+    backgroundColor: "#014cb4ff",
+  },
+  headerOriginalImage: {
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    width: "100%",
+    height: "100%",
   },
   headerRowTop: {
     flexDirection: "row",
@@ -540,7 +621,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderWidth: 1,
     borderColor: "#fff",
-    borderRadius: 20,
+    borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },

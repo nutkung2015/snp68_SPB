@@ -80,7 +80,7 @@ async function createProjectCustomization(req, res) {
     // Fetch the newly created customization
     const [newCustomization] = await db
       .promise()
-      .query("SELECT * FROM projectcustomizations WHERE id = ?", [result.insertId]);
+      .query("SELECT * FROM projectcustomizations WHERE customization_id = ?", [result.insertId]);
 
     res.status(201).json({
       success: true,

@@ -58,6 +58,7 @@ import HousePlanScreen from "./screens/Myhome/HousePlanScreen";
 import HomeInfoOptionScreen from "./screens/Myhome/HomeInfoOptionScreen";
 import VilageRuleScreen from "./screens/MyVilage/VilageRuleScreen";
 import VilageDetailScreen from "./screens/MyVilage/VilageDetailScreen";
+import ResidentManageScreen from "./screens/residentManageUser/residentManageScreen";
 
 // Security screens
 import SecurityServiceScreen from "./screens/security/SecurityServiceScreen";
@@ -423,6 +424,10 @@ export default function App() {
 
           {/* Visitor Management (Resident) */}
           <Stack.Screen name="Estamp" component={EstampScreen} />
+
+          <Stack.Screen name="ResidentManage" component={ResidentManageScreen} />
+
+
 
         </Stack.Navigator>
       );

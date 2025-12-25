@@ -17,6 +17,7 @@ import BottomNavigation from "../../components/BottomNavigation";
 import { useNavigation } from "@react-navigation/native";
 import { onLogoutCallback, setNavigation } from "../../services/authService";
 import { LinearGradient } from "expo-linear-gradient";
+import ProjectCustomizationsService from "../../services/projectCustomizationsService";
 import {
   useFonts,
   Kanit_400Regular,
@@ -29,6 +30,7 @@ const ProfileScreen = ({ recheckLoginStatus }) => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
+  const [primaryColor, setPrimaryColor] = useState("#1F7EFF"); // Default color
 
   const [fontsLoaded] = useFonts({
     Kanit_400Regular,
@@ -51,12 +53,32 @@ const ProfileScreen = ({ recheckLoginStatus }) => {
     }
   };
 
+  const fetchProjectCustomizations = async (projectId) => {
+    try {
+      const response = await ProjectCustomizationsService.getProjectCustomizations(projectId);
+      if (response && response.primary_color) {
+        setPrimaryColor(response.primary_color);
+      }
+    } catch (err) {
+      console.error("Error fetching project customizations:", err);
+    }
+  };
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         const data = await UserService.getUserProfile();
         console.log("ProfileScreen: Fetched user data:", data);
         setUserData(data.user);
+
+        // Fetch project customizations
+        const storedUserData = await AsyncStorage.getItem("userData");
+        if (storedUserData) {
+          const parsedUserData = JSON.parse(storedUserData);
+          if (parsedUserData?.projectMemberships?.[0]?.project_id) {
+            await fetchProjectCustomizations(parsedUserData.projectMemberships[0].project_id);
+          }
+        }
       } catch (error) {
         console.error("ProfileScreen: Error fetching user profile:", error);
         Alert.alert(
@@ -129,6 +151,14 @@ const ProfileScreen = ({ recheckLoginStatus }) => {
           height: "100%",
         }}
       >
+        {/* Color Overlay from primaryColor */}
+        <View
+          style={[
+            styles.colorOverlay,
+            { backgroundColor: primaryColor }
+          ]}
+        />
+
         <View style={styles.headerContent}>
           <TouchableOpacity
             style={styles.backButton}
@@ -253,6 +283,11 @@ const styles = StyleSheet.create({
   headerBackground: {
     width: "100%",
     paddingBottom: 30,
+    position: "relative",
+  },
+  colorOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.5,
   },
   headerContent: {
     flexDirection: "row",

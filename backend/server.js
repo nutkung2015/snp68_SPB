@@ -243,6 +243,21 @@ app.use(
 app.use("/api/security", require("./routes/security"));
 app.use("/api/visitors", require("./routes/visitors"));
 
+// Resident Management Routes (for residents)
+app.use("/api/resident-management", require("./routes/manageResidentForResident"));
+
+// Vehicle Management Routes (for residents)
+app.use("/api/vehicle-management", require("./routes/manageVehicleForResident"));
+
+// Residents Route (All residents of a project)
+app.use("/api/residents", require("./routes/residents"));
+
+// Zone Management Routes
+app.use("/api/zones", require("./routes/zones"));
+
+// Guard Phone Routes
+app.use("/api/guards", require("./routes/guards"));
+
 // Error handling middleware
 app.use(require("./middleware/errorMiddleware"));
 

@@ -114,7 +114,7 @@ export default function HomeOptionScreen({ navigation }) {
             <Card
               iconName="people-outline"
               title="ผู้อยู่อาศัย"
-              onPress={() => console.log("ผู้อยู่อาศัย pressed")}
+              onPress={() => navigation.navigate("ResidentManage")}
             />
           </>
         )}
