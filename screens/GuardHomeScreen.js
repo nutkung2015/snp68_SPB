@@ -71,7 +71,7 @@ const GuardHomeScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <LinearGradient
-        colors={[primaryColor || "#4BB59F", secondaryColor || "#155B5B"]}
+        colors={[primaryColor || "#2A405E", secondaryColor || "#155B5B"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.gradientCardHeader}

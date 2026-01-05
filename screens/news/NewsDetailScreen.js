@@ -135,7 +135,7 @@ const NewsDetailScreen = ({ navigation, route }) => {
 
             {loading ? (
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#4bb59f" />
+                    <ActivityIndicator size="large" color="#2A405E" />
                     <Text style={styles.loadingText}>กำลังโหลด...</Text>
                 </View>
             ) : error ? (
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#4bb59f',
+        backgroundColor: '#2A405E',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Kanit_400Regular',
     },
     retryButton: {
-        backgroundColor: '#4bb59f',
+        backgroundColor: '#2A405E',
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 8,

@@ -13,6 +13,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import BottomNavigation from "../components/BottomNavigation";
+import Footer from "../components/Footer";
+import CallGuardModal from "../components/CallGuardModal";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { HomeOptionScreen } from "./Myhome/HomeOptionScreen";
@@ -25,6 +27,8 @@ import {
 } from "@expo-google-fonts/kanit";
 import { AnnouncementsService } from "../services";
 import ProjectCustomizationsService from "../services/projectCustomizationsService";
+import NotificationService from "../services/notificationService";
+import { useFocusEffect } from "@react-navigation/native";
 
 const HomeScreen = ({ navigation }) => {
   const [fontsLoaded] = useFonts({
@@ -39,8 +43,21 @@ const HomeScreen = ({ navigation }) => {
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true); // Loading state for announcements
 
   const [secondaryColor, setSecondaryColor] = useState("#2A405E"); // Default color
-  const [primaryColor, setPrimaryColor] = useState("#1F7EFF"); // Default color
+  const [primaryColor, setPrimaryColor] = useState("#2A405E"); // Default color
   const [logoUrl, setLogoUrl] = useState(null); // Logo URL from project customization
+  const [callGuardModalVisible, setCallGuardModalVisible] = useState(false); // State for CallGuardModal
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0); // Unread notification count
+
+  // Fetch unread count when screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchUnreadCount = async () => {
+        const count = await NotificationService.getUnreadCount();
+        setUnreadNotificationCount(count);
+      };
+      fetchUnreadCount();
+    }, [])
+  );
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -62,6 +79,16 @@ const HomeScreen = ({ navigation }) => {
     const month = thaiMonths[date.getMonth()];
     const year = date.getFullYear() + 543; // Convert to Buddhist year
     return `${day} ${month} ${year}`;
+  };
+
+  // Get initials from user name
+  const getInitials = (name) => {
+    if (!name) return "??";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   };
 
   const [userData, setUserData] = useState(null);
@@ -318,14 +345,23 @@ const HomeScreen = ({ navigation }) => {
               style={styles.logoImage}
             />
             <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.notificationButton}>
+              <TouchableOpacity
+                style={styles.notificationButton}
+                onPress={() => navigation.navigate("Notifications")}
+              >
                 <Ionicons name="notifications-outline" size={24} color="#18545d" />
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.badgeText}>5</Text>
-                </View>
+                {unreadNotificationCount > 0 && (
+                  <View style={[styles.notificationBadge, { backgroundColor: secondaryColor || "#1F7EFF" }]}>
+                    <Text style={[styles.badgeText, { color: primaryColor || "#1F7EFF" }]}>
+                      {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                    </Text>
+                  </View>
+                )}
               </TouchableOpacity>
               <TouchableOpacity style={styles.profileCircle} onPress={() => navigation.navigate("Profile")}>
-                <Text style={styles.profileText}>NC</Text>
+                <Text style={[styles.profileText, { color: primaryColor || "#1F7EFF" }]}>
+                  {getInitials(userData?.full_name)}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -376,18 +412,25 @@ const HomeScreen = ({ navigation }) => {
           {/* Row 1: Logo (ซ้าย) - Actions (ขวา) */}
           <View style={styles.headerRowTop}>
             <Image
-              source={require("../assets/logo_3_white.png")}
+              source={require("../assets/livlink_logo.png")}
               style={styles.logoImage}
             />
             <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.notificationButton}>
+              <TouchableOpacity
+                style={styles.notificationButton}
+                onPress={() => navigation.navigate("Notifications")}
+              >
                 <Ionicons name="notifications-outline" size={24} color="#18545d" />
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.badgeText}>5</Text>
-                </View>
+                {unreadNotificationCount > 0 && (
+                  <View style={styles.notificationBadge}>
+                    <Text style={styles.badgeText}>
+                      {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                    </Text>
+                  </View>
+                )}
               </TouchableOpacity>
               <TouchableOpacity style={styles.profileCircle} onPress={() => navigation.navigate("Profile")}>
-                <Text style={styles.profileText}>NC</Text>
+                <Text style={styles.profileText}>{getInitials(userData?.full_name)}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -414,20 +457,21 @@ const HomeScreen = ({ navigation }) => {
                 style={styles.menuButton}
                 onPress={() => navigation.navigate("HomeOption")}
               >
-                <Ionicons name="home" size={24} color="#1F7EFF" />
-                <Text style={[styles.menuText, { color: "#1F7EFF" }]}>บ้านของฉัน</Text>
+                <Ionicons name="home" size={24} color="#2A405E" />
+                <Text style={[styles.menuText, { color: "#2A405E" }]}>บ้านของฉัน</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.menuButton}
                 onPress={() => navigation.navigate("VilageOption")}
               >
-                <Ionicons name="people" size={24} color="#1F7EFF" />
-                <Text style={[styles.menuText, { color: "#1F7EFF" }]}>หมู่บ้านของฉัน</Text>
+                <Ionicons name="people" size={24} color="#2A405E" />
+                <Text style={[styles.menuText, { color: "#2A405E" }]}>หมู่บ้านของฉัน</Text>
               </TouchableOpacity>
             </View>
           </View>
         </ImageBackground>
-      )}
+      )
+      }
 
 
       {/* บ้านของฉัน */}
@@ -453,8 +497,8 @@ const HomeScreen = ({ navigation }) => {
             {renderMenuItem("car", "ผู้มาเยี่ยม", () =>
               navigation.navigate("Estamp")
             )}
-            {renderMenuItem("chatbubble", "ขอความช่วยเหลือ", () =>
-              navigation.navigate("HelpRequest")
+            {renderMenuItem("chatbubble", "เรียกรปภ.", () =>
+              setCallGuardModalVisible(true)
             )}
             {renderMenuItem("call", "เบอร์ฉุกเฉิน", () =>
               navigation.navigate("NumberEmergency")
@@ -501,9 +545,20 @@ const HomeScreen = ({ navigation }) => {
             />
           )}
         </View>
+
+        {/* Footer Section */}
+        <Footer />
       </ScrollView>
+
+      {/* Call Guard Modal */}
+      <CallGuardModal
+        visible={callGuardModalVisible}
+        onClose={() => setCallGuardModalVisible(false)}
+        primaryColor={primaryColor}
+        secondaryColor={secondaryColor}
+      />
       {/* <BottomNavigation navigation={navigation} activeScreen="Home" /> */}
-    </SafeAreaView>
+    </SafeAreaView >
   );
 };
 
@@ -541,7 +596,7 @@ const styles = StyleSheet.create({
     minHeight: 280,
     justifyContent: "flex-end",
     overflow: "hidden",
-    backgroundColor: "#014cb4ff",
+    backgroundColor: "#2A405E",
   },
   headerOriginalImage: {
     borderBottomLeftRadius: 20,
@@ -579,12 +634,12 @@ const styles = StyleSheet.create({
   },
   notificationBadge: {
     position: "absolute",
-    top: 3,
-    right: 2,
-    backgroundColor: "#18545d",
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
+    top: -7,
+    right: 0,
+    backgroundColor: "#217FFF",
+    borderRadius: 15,
+    minWidth: 18,
+    height: 18,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 3,
@@ -707,7 +762,7 @@ const styles = StyleSheet.create({
   },
   menuIconContainer: {
     // borderWidth: 2.2, 
-    // borderColor: "#4BB59F",
+    // borderColor: "#2A405E",
     backgroundColor: "#f5f5f5",
     padding: 14,
     borderRadius: 12,

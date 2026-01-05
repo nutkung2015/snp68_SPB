@@ -18,7 +18,25 @@ class ApiService {
         throw new Error("Unauthorized");
       }
 
-      const data = await response.json();
+      // Handle rate limiting (429)
+      if (response.status === 429) {
+        throw new Error("คำขอมากเกินไป กรุณารอสักครู่แล้วลองใหม่");
+      }
+
+      // Try to parse JSON, but handle non-JSON responses
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        // Response is not JSON (possibly plain text error)
+        const text = await response.text();
+        if (!response.ok) {
+          throw new Error(text || "Request failed");
+        }
+        // Return wrapped text as data
+        data = { message: text };
+      }
 
       if (!response.ok) {
         throw new Error(data.message || "Request failed");
@@ -136,7 +154,10 @@ class ApiService {
     if (this.onLogoutCallback) {
       this.onLogoutCallback();
     }
-    if (this.navigate) {
+    // Navigate to Login screen
+    if (this.navigate && typeof this.navigate.navigate === 'function') {
+      this.navigate.navigate("Login");
+    } else if (typeof this.navigate === 'function') {
       this.navigate("Login");
     }
   }

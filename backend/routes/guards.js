@@ -20,4 +20,7 @@ router.put("/zone/:zoneId", authMiddleware, guardController.updateGuardPhone);
 // GET /api/guards/unit/:unitId - ดึงเบอร์ป้อมยามตาม unit ID
 router.get("/unit/:unitId", authMiddleware, guardController.getGuardPhoneByUnit);
 
+// GET /api/guards/post/:guardPostId - ดึงข้อมูลป้อมยามตาม ID พร้อมรายการโซน
+router.get("/post/:guardPostId", authMiddleware, guardController.getGuardPostDetail);
+
 module.exports = router;

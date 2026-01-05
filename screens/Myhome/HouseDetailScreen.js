@@ -24,7 +24,7 @@ export default function HouseDetailScreen({ navigation }) {
     const [loading, setLoading] = useState(true);
     const [downloading, setDownloading] = useState(false);
     const [houseModelData, setHouseModelData] = useState(null);
-    const [primaryColor, setPrimaryColor] = useState("#4BB59F");
+    const [primaryColor, setPrimaryColor] = useState("#2A405E");
     const [error, setError] = useState(null);
     const [userData, setUserData] = useState(null);
     const [viewerUrl, setViewerUrl] = useState(null);

@@ -7,9 +7,9 @@ const BottomNavigation = ({ navigation, activeScreen }) => {
   return (
     <View style={styles.bottomNav}>
       <LinearGradient
-        colors={Platform.OS === 'web' 
+        colors={Platform.OS === 'web'
           ? ["rgba(75, 181, 159, 0.9)", "rgba(255, 216, 64, 0.9)"]
-          : ["#4bb59f", "#ffd840"]}
+          : ["#2A405E", "#ffd840"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.gradientCard}
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#4bb59f',
+    backgroundColor: '#2A405E',
     borderTopWidth: 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   solidBackground: {
-    backgroundColor: '#4bb59f',
+    backgroundColor: '#2A405E',
   },
   navContainer: {
     flexDirection: 'row',

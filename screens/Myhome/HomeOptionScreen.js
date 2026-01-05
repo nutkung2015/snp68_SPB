@@ -14,7 +14,7 @@ import BottomNavigation from "../../components/BottomNavigation";
 import ProjectCustomizationsService from "../../services/projectCustomizationsService";
 
 export default function HomeOptionScreen({ navigation }) {
-  const [primaryColor, setPrimaryColor] = useState("#4BB59F"); // Default color
+  const [primaryColor, setPrimaryColor] = useState("#2A405E"); // Default color
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
 

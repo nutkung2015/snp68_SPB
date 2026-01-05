@@ -73,7 +73,7 @@ export default function CommonIssueDetailScreen({ route, navigation }) {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#4BB59F" />
+                <ActivityIndicator size="large" color="#2A405E" />
             </View>
         );
     }
@@ -124,8 +124,8 @@ export default function CommonIssueDetailScreen({ route, navigation }) {
                 {/* Main Info Card */}
                 <View style={styles.card}>
                     <View style={styles.row}>
-                        <View style={[styles.iconContainer, { backgroundColor: '#4BB59F20' }]}>
-                            <MaterialIcons name="report-problem" size={24} color="#4BB59F" />
+                        <View style={[styles.iconContainer, { backgroundColor: '#2A405E20' }]}>
+                            <MaterialIcons name="report-problem" size={24} color="#2A405E" />
                         </View>
                         <View style={styles.infoTextContainer}>
                             <Text style={styles.label}>ประเภทปัญหา</Text>
@@ -138,8 +138,8 @@ export default function CommonIssueDetailScreen({ route, navigation }) {
                     <View style={styles.divider} />
 
                     <View style={styles.row}>
-                        <View style={[styles.iconContainer, { backgroundColor: '#4BB59F20' }]}>
-                            <MaterialIcons name="place" size={24} color="#4BB59F" />
+                        <View style={[styles.iconContainer, { backgroundColor: '#2A405E20' }]}>
+                            <MaterialIcons name="place" size={24} color="#2A405E" />
                         </View>
                         <View style={styles.infoTextContainer}>
                             <Text style={styles.label}>สถานที่พบปัญหา</Text>
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 8,
-        backgroundColor: '#4BB59F',
+        backgroundColor: '#2A405E',
     },
     retryButtonText: {
         color: '#fff',

@@ -179,16 +179,16 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Rate Limiting
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  windowMs: 3 * 60 * 1000, // 3 minutes
+  max: 50, // Limit each IP to 50 requests per 3 minutes (~250 req/15 min equivalent)
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5, // Limit each IP to 5 login requests per `window`
+  windowMs: 3 * 60 * 1000, // 3 minutes
+  max: 5, // Limit each IP to 5 login requests per 3 minutes (prevents brute force)
   message: 'Too many login attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -257,6 +257,12 @@ app.use("/api/zones", require("./routes/zones"));
 
 // Guard Phone Routes
 app.use("/api/guards", require("./routes/guards"));
+
+// Guard Post (ป้อมยาม) Routes
+app.use("/api/guard-posts", require("./routes/guardPosts"));
+
+// Notification Routes
+app.use("/api/notifications", require("./routes/notifications"));
 
 // Error handling middleware
 app.use(require("./middleware/errorMiddleware"));

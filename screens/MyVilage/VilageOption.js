@@ -14,7 +14,7 @@ import BottomNavigation from "../../components/BottomNavigation";
 import ProjectCustomizationsService from "../../services/projectCustomizationsService";
 
 export default function VilageOptionScreen({ navigation }) {
-  const [primaryColor, setPrimaryColor] = useState("#4BB59F"); // Default color
+  const [primaryColor, setPrimaryColor] = useState("#2A405E"); // Default color
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
 
@@ -89,7 +89,7 @@ export default function VilageOptionScreen({ navigation }) {
         </TouchableOpacity>
       </View>
       <View style={styles.headerSecond}>
-        <Text style={styles.headerTitle}>ข้อมูลพื้นฐาน</Text>
+        <Text style={styles.headerTitle}>หมู่บ้านของฉัน</Text>
       </View>
 
       {/* Content Cards */}

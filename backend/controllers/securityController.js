@@ -1,6 +1,6 @@
 const db = require("../config/db");
 const { v4: uuidv4 } = require("uuid");
-const notificationService = require("../services/notificationService");
+const pushNotificationService = require("../services/pushNotificationService");
 
 // @desc    Security Check-in (Entry)
 // @route   POST /api/security/entry/check-in
@@ -124,20 +124,25 @@ exports.checkIn = async (req, res) => {
 
         // 4. Send Notification if needed (Walk-in Visitor)
         if (shouldNotify && entryData.target_unit_id) {
-            // Find users in that unit to notify
-            const [unitMembers] = await db.promise().query(
-                "SELECT user_id FROM unit_members WHERE unit_id = ?",
-                [entryData.target_unit_id]
-            );
-
-            const userIds = unitMembers.map(m => m.user_id);
-            if (userIds.length > 0) {
-                await notificationService.sendNotificationToUsers(
-                    userIds,
-                    "มีผู้มาติดต่อขอเข้าพบ",
-                    `รถทะเบียน ${plate_number} ขอเข้าพบท่าน กรุณากด E-stamp เพื่ออนุมัติ`,
-                    { screen: 'EstampRequest', log_id: entryData.id, plate_number }
+            try {
+                // Get unit info
+                const [unitInfo] = await db.promise().query(
+                    "SELECT u.id, u.unit_number, u.project_id FROM units u WHERE u.id = ?",
+                    [entryData.target_unit_id]
                 );
+
+                if (unitInfo.length > 0) {
+                    await pushNotificationService.notifyVisitorExitStamp(
+                        entryData.id,                    // visitorId (entry_log id)
+                        entryData.target_unit_id,        // unitId
+                        unitInfo[0].project_id,          // projectId
+                        entryData.visitor_name || 'ผู้มาติดต่อ',  // visitorName
+                        plate_number                     // licensePlate
+                    );
+                    console.log(`[Notification] Sent visitor stamp request for ${plate_number}`);
+                }
+            } catch (notifyError) {
+                console.error("[Notification] Error sending visitor notification:", notifyError);
             }
         }
 
@@ -377,30 +382,30 @@ exports.getStats = async (req, res) => {
     try {
         const { project_id } = req.query;
 
-        // Today's date
-        const today = new Date().toISOString().split('T')[0];
+        // ใช้ CURDATE() ของ MySQL แทน JavaScript Date เพื่อให้ timezone ถูกต้อง
+        // (MySQL จะใช้ timezone ที่ตั้งไว้ใน server)
 
         // Total entry today
         const [totalEntry] = await db.promise().query(
             `SELECT COUNT(*) as count FROM entry_logs 
-             WHERE project_id = ? AND DATE(check_in_time) = ?`,
-            [project_id, today]
+             WHERE project_id = ? AND DATE(check_in_time) = CURDATE()`,
+            [project_id]
         );
 
         // Walk-in count (visitor_type = 'visitor' AND from guard check-in)
         const [walkIn] = await db.promise().query(
             `SELECT COUNT(*) as count FROM entry_logs 
-             WHERE project_id = ? AND DATE(check_in_time) = ? 
+             WHERE project_id = ? AND DATE(check_in_time) = CURDATE() 
              AND visitor_type = 'visitor'`,
-            [project_id, today]
+            [project_id]
         );
 
         // Stamped count
         const [stamped] = await db.promise().query(
             `SELECT COUNT(*) as count FROM entry_logs 
-             WHERE project_id = ? AND DATE(check_in_time) = ? 
+             WHERE project_id = ? AND DATE(check_in_time) = CURDATE() 
              AND estamp_status = 'approved'`,
-            [project_id, today]
+            [project_id]
         );
 
         // Inside count

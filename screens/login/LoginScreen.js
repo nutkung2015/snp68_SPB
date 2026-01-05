@@ -13,6 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { login } from "../../services/authService";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import NotificationService from "../../services/notificationService";
 
 export default function LoginScreen({ navigation, recheckLoginStatus }) {
   const [email, setEmail] = useState("");
@@ -40,6 +41,17 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
     try {
       const response = await login(email, password);
       if (response.status === "success") {
+        // Register for push notifications after successful login
+        try {
+          const pushToken = await NotificationService.registerForPushNotifications();
+          if (pushToken) {
+            console.log("[Login] Push token registered:", pushToken);
+          }
+        } catch (pushError) {
+          // Don't block login if push registration fails
+          console.error("[Login] Push notification registration error:", pushError);
+        }
+
         await recheckLoginStatus(); // Trigger recheck to navigate to Home
       } else {
         setError(response.message || "Login failed");

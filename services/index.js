@@ -6,6 +6,8 @@ import AnnouncementsService from "./announcementsService";
 import UserService from "./userService";
 import UnitsService from "./unitsService";
 import ResidentService from "./residentService";
+import GuardService from "./guardService";
+import NotificationService from "./notificationService";
 
 // Export ทั้งหมดเพื่อให้ใช้งานง่าย
 export {
@@ -14,6 +16,8 @@ export {
   UserService,
   UnitsService,
   ResidentService,
+  GuardService,
+  NotificationService,
 };
 
 // Export default object สำหรับการ import แบบ default
@@ -23,4 +27,7 @@ export default {
   UserService,
   UnitsService,
   ResidentService,
+  GuardService,
+  NotificationService,
 };
+

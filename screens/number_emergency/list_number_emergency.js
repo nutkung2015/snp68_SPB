@@ -17,7 +17,7 @@ import ProjectCustomizationsService from "../../services/projectCustomizationsSe
 export default function ListNumberEmergencyScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedEmergency, setSelectedEmergency] = useState(null);
-  const [primaryColor, setPrimaryColor] = useState("#4BB59F");
+  const [primaryColor, setPrimaryColor] = useState("#2A405E");
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#4BB59F",
+    backgroundColor: "#2A405E",
     // padding: 16,
     paddingHorizontal: 16,
     paddingVertical: 24,
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   phoneButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#4BB59F",
+    backgroundColor: "#2A405E",
     paddingHorizontal: 30,
     paddingVertical: 15,
     borderRadius: 25,

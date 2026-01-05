@@ -31,7 +31,7 @@ const OptionCard = ({ iconName, title, subtitle, onPress, primaryColor }) => (
 
 export default function HomeInfoOptionScreen({ navigation }) {
     const [loading, setLoading] = useState(true);
-    const [primaryColor, setPrimaryColor] = useState("#4BB59F");
+    const [primaryColor, setPrimaryColor] = useState("#2A405E");
     const [userData, setUserData] = useState(null);
 
     // โหลดข้อมูล user จาก AsyncStorage

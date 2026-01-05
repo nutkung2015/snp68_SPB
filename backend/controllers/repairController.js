@@ -2,7 +2,8 @@
 const db = require("../config/db");
 const { v4: uuidv4 } = require("uuid");
 const { uploadImages } = require("../utils/imageUpload");
-const cloudinary = require("cloudinary").v2; // เพิ่มบรรทัดนี้
+const cloudinary = require("cloudinary").v2;
+const pushNotificationService = require("../services/pushNotificationService");
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -360,6 +361,32 @@ exports.updatePersonalRepairStatus = async (req, res) => {
         status: "error",
         message: "ไม่พบข้อมูลการแจ้งซ่อม",
       });
+    }
+
+    // ✅ Send push notification to reporter
+    try {
+      // Get repair details for notification
+      const [repairDetails] = await db.promise().query(
+        "SELECT reporter_id, project_id, repair_category, description FROM personal_repairs WHERE id = ?",
+        [id]
+      );
+
+      if (repairDetails.length > 0) {
+        const repair = repairDetails[0];
+        const repairTitle = repair.repair_category || repair.description?.substring(0, 50) || 'แจ้งซ่อม';
+
+        await pushNotificationService.notifyRepairStatusUpdate(
+          id,                       // repairId
+          repair.reporter_id,       // userId
+          repair.project_id,        // projectId
+          status,                   // newStatus
+          repairTitle               // repairTitle
+        );
+        console.log(`[Notification] Sent repair status update for ${id}`);
+      }
+    } catch (notifyError) {
+      // Don't fail the request if notification fails
+      console.error("[Notification] Error sending repair notification:", notifyError);
     }
 
     res.json({
@@ -874,6 +901,32 @@ exports.updateCommonIssueStatus = async (req, res) => {
         status: "error",
         message: "ไม่พบข้อมูลการแจ้งปัญหา",
       });
+    }
+
+    // ✅ Send push notification to reporter
+    try {
+      // Get issue details for notification
+      const [issueDetails] = await db.promise().query(
+        "SELECT reporter_id, project_id, issue_type, description FROM common_issues WHERE id = ?",
+        [id]
+      );
+
+      if (issueDetails.length > 0) {
+        const issue = issueDetails[0];
+        const issueTitle = issue.issue_type || issue.description?.substring(0, 50) || 'รายงานปัญหา';
+
+        await pushNotificationService.notifyIssueStatusUpdate(
+          id,                     // issueId
+          issue.reporter_id,      // userId
+          issue.project_id,       // projectId
+          status,                 // newStatus
+          issueTitle              // issueTitle
+        );
+        console.log(`[Notification] Sent issue status update for ${id}`);
+      }
+    } catch (notifyError) {
+      // Don't fail the request if notification fails
+      console.error("[Notification] Error sending issue notification:", notifyError);
     }
 
     res.json({

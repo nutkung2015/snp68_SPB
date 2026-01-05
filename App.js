@@ -41,7 +41,9 @@ import NewsDetailScreen from "./screens/news/NewsDetailScreen";
 import LoginScreen from "./screens/login/LoginScreen";
 import RegisterScreen from "./screens/register/RegisterScreen";
 import ProfileScreen from "./screens/profile/ProfileScreen";
-import JoinUnitScreen from "./screens/JoinUnitScreen";
+import JoinUnitScreen from "./screens/่joint-unit/JoinUnitScreen";
+import JointByCode from "./screens/่joint-unit/jointByCode";
+import JointByQRcode from "./screens/่joint-unit/jointByQRcode";
 import HomeOptionScreen from "./screens/Myhome/HomeOptionScreen";
 import VilageOptionScreen from "./screens/MyVilage/VilageOption";
 import NumberEmergencyScreen from "./screens/number_emergency/list_number_emergency";
@@ -68,6 +70,9 @@ import SecurityProfileScreen from "./screens/security/SecurityProfileScreen";
 import EstampScreen from "./screens/visitors/EstampScreen";
 import GuardDashboardScreen from "./screens/guard/GuardDashboardScreen";
 import GuardCheckInScreen from "./screens/guard/GuardCheckInScreen";
+
+// Notifications
+import NotificationScreen from "./screens/NotificationScreen";
 
 
 
@@ -315,6 +320,8 @@ export default function App() {
           initialRouteName={initialRoute}
         >
           <Stack.Screen name="JoinUnitScreen" component={JoinUnitScreen} />
+          <Stack.Screen name="JointByCode" component={JointByCode} />
+          <Stack.Screen name="JointByQRcode" component={JointByQRcode} />
           <Stack.Screen name="GuardHome" component={GuardHomeScreen} />
           <Stack.Screen name="SecurityServices" component={SecurityServiceScreen} />
           <Stack.Screen name="Profile">
@@ -336,6 +343,9 @@ export default function App() {
             component={GuardCheckInScreen}
             options={{ presentation: 'transparentModal', headerShown: false }}
           />
+
+          {/* Notifications */}
+          <Stack.Screen name="Notifications" component={NotificationScreen} />
         </Stack.Navigator>
       );
     } else {
@@ -346,6 +356,8 @@ export default function App() {
           initialRouteName={initialRoute}
         >
           <Stack.Screen name="JoinUnitScreen" component={JoinUnitScreen} />
+          <Stack.Screen name="JointByCode" component={JointByCode} />
+          <Stack.Screen name="JointByQRcode" component={JointByQRcode} />
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Services" component={ServiceScreen} />
           <Stack.Screen
@@ -427,6 +439,8 @@ export default function App() {
 
           <Stack.Screen name="ResidentManage" component={ResidentManageScreen} />
 
+          {/* Notifications */}
+          <Stack.Screen name="Notifications" component={NotificationScreen} />
 
 
         </Stack.Navigator>

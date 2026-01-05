@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const zoneController = require("../controllers/zoneController");
+const guardPostController = require("../controllers/guardPostController");
 const authMiddleware = require("../middleware/authMiddleware");
 
 /**
@@ -31,5 +32,8 @@ router.put("/:id/units", authMiddleware, zoneController.assignUnitsToZone);
 
 // GET /api/zones/:id/units - ดึงรายการบ้านในโซน
 router.get("/:id/units", authMiddleware, zoneController.getUnitsInZone);
+
+// PUT /api/zones/:zoneId/guard-post - ผูกป้อมยามเข้ากับโซน
+router.put("/:zoneId/guard-post", authMiddleware, guardPostController.assignGuardPostToZone);
 
 module.exports = router;

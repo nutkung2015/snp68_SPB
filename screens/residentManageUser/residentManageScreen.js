@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     View,
     Text,
@@ -10,7 +10,14 @@ import {
     Alert,
     Platform,
     Image,
+    Modal,
+    Dimensions,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
+import QRCode from "react-native-qrcode-svg";
+import * as FileSystem from "expo-file-system";
+import * as MediaLibrary from "expo-media-library";
+import ViewShot from "react-native-view-shot";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -33,7 +40,21 @@ const ResidentManageScreen = ({ navigation }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [unitId, setUnitId] = useState(null);
-    const [primaryColor, setPrimaryColor] = useState("#1F7EFF");
+    const [primaryColor, setPrimaryColor] = useState("#2A405E");
+
+    // QR Modal States
+    const [qrModalVisible, setQrModalVisible] = useState(false);
+    const [invitationCode, setInvitationCode] = useState("");
+    const [qrLoading, setQrLoading] = useState(false);
+    const qrRef = useRef(null);
+    const viewShotRef = useRef(null);
+
+    // Resident Detail Modal States
+    const [selectedResident, setSelectedResident] = useState(null);
+    const [residentModalVisible, setResidentModalVisible] = useState(false);
+    const [confirmRemoveVisible, setConfirmRemoveVisible] = useState(false);
+    const [currentUserRole, setCurrentUserRole] = useState(null);
+    const [removeLoading, setRemoveLoading] = useState(false);
 
     // Fetch project customizations
     const fetchProjectCustomizations = async (projectId) => {
@@ -76,10 +97,12 @@ const ResidentManageScreen = ({ navigation }) => {
                 if (storedUserData) {
                     const userData = JSON.parse(storedUserData);
 
-                    // Get unit_id from unitMemberships
+                    // Get unit_id and role from unitMemberships
                     if (userData?.unitMemberships?.[0]?.unit_id) {
                         const currentUnitId = userData.unitMemberships[0].unit_id;
+                        const userRole = userData.unitMemberships[0].role;
                         setUnitId(currentUnitId);
+                        setCurrentUserRole(userRole);
                         await fetchResidents(currentUnitId);
                     }
 
@@ -123,7 +146,7 @@ const ResidentManageScreen = ({ navigation }) => {
         );
     };
 
-    // Handle QR Code generation
+    // Handle QR Code generation - Show Modal
     const handleCreateQRCode = async () => {
         if (!unitId) {
             Alert.alert("ผิดพลาด", "ไม่พบข้อมูลบ้าน");
@@ -131,18 +154,52 @@ const ResidentManageScreen = ({ navigation }) => {
         }
 
         try {
+            setQrLoading(true);
             const response = await ResidentService.generateInvitationQR(unitId);
             if (response && response.invitation_code) {
-                // Navigate to QR Code screen or show QR
-                navigation.navigate("InvitationQR", {
-                    invitationCode: response.invitation_code,
-                    unitId: unitId
-                });
+                setInvitationCode(response.invitation_code);
+                setQrModalVisible(true);
             } else {
-                Alert.alert("สำเร็จ", "สร้าง QR Code เรียบร้อยแล้ว");
+                Alert.alert("ผิดพลาด", "ไม่สามารถสร้าง QR Code ได้");
             }
         } catch (err) {
+            console.error("Error generating QR:", err);
             Alert.alert("ผิดพลาด", "ไม่สามารถสร้าง QR Code ได้");
+        } finally {
+            setQrLoading(false);
+        }
+    };
+
+    // Copy invitation code to clipboard
+    const handleCopyCode = async () => {
+        try {
+            await Clipboard.setStringAsync(invitationCode);
+            Alert.alert("สำเร็จ", "คัดลอกรหัสเรียบร้อยแล้ว");
+        } catch (err) {
+            console.error("Error copying:", err);
+            Alert.alert("ผิดพลาด", "ไม่สามารถคัดลอกรหัสได้");
+        }
+    };
+
+    // Download QR Code
+    const handleDownloadQR = async () => {
+        try {
+            // Request media library permissions
+            const { status } = await MediaLibrary.requestPermissionsAsync();
+            if (status !== "granted") {
+                Alert.alert("ผิดพลาด", "กรุณาอนุญาตการเข้าถึงแกลเลอรี่");
+                return;
+            }
+
+            // Capture QR Code using ViewShot
+            if (viewShotRef.current) {
+                const uri = await viewShotRef.current.capture();
+                await MediaLibrary.saveToLibraryAsync(uri);
+                Alert.alert("สำเร็จ", "บันทึก QR Code ลงแกลเลอรี่เรียบร้อยแล้ว");
+            }
+        } catch (err) {
+            console.error("Error downloading QR:", err);
+            Alert.alert("ผิดพลาด", "ไม่สามารถบันทึก QR Code ได้");
         }
     };
 
@@ -164,6 +221,64 @@ const ResidentManageScreen = ({ navigation }) => {
         }
         return name.substring(0, 2).toUpperCase();
     };
+
+    // Handle view resident profile - Show Modal
+    const handleViewResident = (resident) => {
+        setSelectedResident(resident);
+        setResidentModalVisible(true);
+    };
+
+    // Handle close resident modal
+    const handleCloseResidentModal = () => {
+        setResidentModalVisible(false);
+        setSelectedResident(null);
+    };
+
+    // Handle show remove confirmation
+    const handleShowRemoveConfirmation = () => {
+        setConfirmRemoveVisible(true);
+    };
+
+    // Handle cancel remove
+    const handleCancelRemove = () => {
+        setConfirmRemoveVisible(false);
+    };
+
+    // Handle confirm remove resident
+    const handleConfirmRemove = async () => {
+        if (!selectedResident) return;
+
+        try {
+            setRemoveLoading(true);
+            await ResidentService.removeResident(unitId, selectedResident.user_id || selectedResident.id);
+
+            // Close modals
+            setConfirmRemoveVisible(false);
+            setResidentModalVisible(false);
+            setSelectedResident(null);
+
+            // Refresh list
+            await fetchResidents(unitId);
+            Alert.alert("สำเร็จ", "เชิญผู้อยู่อาศัยออกเรียบร้อยแล้ว");
+        } catch (err) {
+            console.error("Error removing resident:", err);
+            Alert.alert("ผิดพลาด", "ไม่สามารถเชิญผู้อยู่อาศัยออกได้");
+        } finally {
+            setRemoveLoading(false);
+        }
+    };
+
+    // Handle edit resident (placeholder)
+    const handleEditResident = () => {
+        // TODO: Implement edit functionality
+        Alert.alert("แจ้งเตือน", "ฟีเจอร์นี้กำลังพัฒนา");
+    };
+
+    // Check if current user can remove residents (only owner can remove)
+    const canRemoveResident = () => {
+        return currentUserRole === "owner";
+    };
+
 
     // Render resident item
     const renderResidentItem = (resident, index) => {
@@ -193,12 +308,14 @@ const ResidentManageScreen = ({ navigation }) => {
                     <Text style={styles.residentName}>{resident.full_name}</Text>
                 </View>
 
-                {/* Remove Button */}
+                {/* View Profile Button */}
                 <TouchableOpacity
-                    style={styles.removeButton}
-                    onPress={() => handleRemoveResident(resident)}
+                    style={[styles.viewProfileButton, { backgroundColor: primaryColor }]}
+                    onPress={() => handleViewResident(resident)}
                 >
-                    <Ionicons name="person-remove" size={20} color="#FF6B6B" />
+                    {/* <Ionicons name="person" size={18} color="#fff" />
+                     */}
+                    <Text style={styles.viewProfileButtonText}>ดู</Text>
                 </TouchableOpacity>
             </View>
         );
@@ -281,6 +398,214 @@ const ResidentManageScreen = ({ navigation }) => {
                         {residents.map((resident, index) => renderResidentItem(resident, index))}
                     </View>
                 </ScrollView>
+            )}
+
+            {/* QR Code Modal */}
+            <Modal
+                visible={qrModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setQrModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        {/* Modal Header */}
+                        <View style={styles.modalHeader}>
+                            <TouchableOpacity onPress={() => setQrModalVisible(false)}>
+                                <Text style={styles.modalCancelText}>ยกเลิก</Text>
+                            </TouchableOpacity>
+                            <Text style={styles.modalTitle}>เพิ่มผู้อยู่อาศัย</Text>
+                            <View style={{ width: 50 }} />
+                        </View>
+
+                        <ScrollView
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={styles.modalScrollContent}
+                        >
+                            {/* QR Code Section */}
+                            <Text style={[styles.qrSectionTitle, { color: primaryColor }]}>
+                                QR CODE คำเชิญเข้าโครงการ
+                            </Text>
+                            <Text style={styles.qrSubtext}>สแกน QR CODE จากแอปพลิเคชัน</Text>
+                            <Text style={styles.qrSubtext}>เพื่อเข้าโครงการ</Text>
+
+                            {/* QR Code with Download Button */}
+                            <View style={styles.qrCodeRow}>
+                                <ViewShot ref={viewShotRef} options={{ format: "png", quality: 1 }}>
+                                    <View style={styles.qrCodeContainer}>
+                                        <QRCode
+                                            value={invitationCode || "PLACEHOLDER"}
+                                            size={180}
+                                            backgroundColor="white"
+                                            color="black"
+                                        />
+                                    </View>
+                                </ViewShot>
+
+                            </View>
+                            <View style={styles.btnDownloadRow}>
+                                <TouchableOpacity
+                                    style={styles.downloadButton}
+                                    onPress={handleDownloadQR}
+                                >
+                                    <Ionicons name="download-outline" size={32} color={primaryColor} />
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Divider */}
+                            <View style={styles.modalDivider} />
+
+                            {/* Invitation Code Section */}
+                            <Text style={[styles.qrSectionTitle, { color: primaryColor }]}>
+                                รหัสคำเชิญเข้าโครงการ
+                            </Text>
+                            <Text style={styles.qrSubtext}>กรอกรหัสคำเชิญในแอปพลิเคชัน</Text>
+                            <Text style={styles.qrSubtext}>เพื่อเข้าโครงการ</Text>
+
+                            {/* Code Box with Copy Button */}
+                            <View style={styles.codeBoxContainer}>
+                                <View style={[styles.codeBox, { borderColor: primaryColor }]}>
+                                    <Text style={[styles.codeText, { color: primaryColor }]}>
+                                        {invitationCode}
+                                    </Text>
+                                </View>
+                                <TouchableOpacity
+                                    style={[styles.copyButton, { backgroundColor: primaryColor }]}
+                                    onPress={handleCopyCode}
+                                >
+                                    <Ionicons name="copy-outline" size={24} color="#fff" />
+                                </TouchableOpacity>
+                            </View>
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Resident Detail Modal */}
+            <Modal
+                visible={residentModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={handleCloseResidentModal}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.residentModalContainer}>
+                        {/* Modal Header */}
+                        <View style={styles.residentModalHeader}>
+                            <TouchableOpacity onPress={handleCloseResidentModal}>
+                                <Text style={styles.cancelText}>ยกเลิก</Text>
+                            </TouchableOpacity>
+                            <Text style={[styles.residentModalTitle, { color: primaryColor }]}>
+                                รายละเอียดผู้อาศัย
+                            </Text>
+                            <View style={{ width: 50 }} />
+                        </View>
+
+                        {/* Resident Info Card */}
+                        {selectedResident && (
+                            <View style={styles.residentInfoCard}>
+                                {/* Name Row */}
+                                <View style={styles.infoRow}>
+                                    <View style={styles.infoColumn}>
+                                        <Text style={styles.infoLabel}>ชื่อ:</Text>
+                                        <Text style={styles.infoValue}>
+                                            {selectedResident.full_name}
+                                        </Text>
+                                    </View>
+                                    <View style={[styles.infoColumn, styles.infoDivider]}>
+                                        <Text style={styles.infoLabel}>เบอร์โทรศัพท์:</Text>
+                                        <Text style={styles.infoValue}>
+                                            {selectedResident.phone || "-"}
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                {/* Email Row */}
+                                <View style={styles.emailRow}>
+                                    <Text style={styles.infoLabel}>อีเมล:</Text>
+                                    <Text style={styles.infoValue}>
+                                        {selectedResident.email || "-"}
+                                    </Text>
+                                </View>
+                            </View>
+                        )}
+
+                        {/* Spacer */}
+                        <View style={{ flex: 1 }} />
+
+                        {/* Bottom Buttons - Only show for owner */}
+                        {canRemoveResident() && (
+                            <View style={styles.residentModalButtons}>
+                                <TouchableOpacity
+                                    style={[styles.removeResidentButton, { borderColor: primaryColor }]}
+                                    onPress={handleShowRemoveConfirmation}
+                                >
+                                    <Text style={[styles.removeResidentButtonText, { color: primaryColor }]}>
+                                        เชิญออก
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Confirmation Dialog for Remove */}
+            <Modal
+                visible={confirmRemoveVisible}
+                animationType="fade"
+                transparent={true}
+                onRequestClose={handleCancelRemove}
+            >
+                <View style={styles.confirmOverlay}>
+                    <View style={styles.confirmDialog}>
+                        {/* Warning Icon */}
+                        <View style={styles.confirmIconContainer}>
+                            <Ionicons name="warning" size={50} color="#FF6B6B" />
+                        </View>
+
+                        {/* Title */}
+                        <Text style={styles.confirmTitle}>ยืนยันการเชิญออก</Text>
+
+                        {/* Message */}
+                        <Text style={styles.confirmMessage}>
+                            คุณต้องการเชิญ{'\n'}
+                            <Text style={styles.confirmHighlight}>
+                                {selectedResident?.full_name}
+                            </Text>
+                            {'\n'}ออกจากบ้านหรือไม่?
+                        </Text>
+
+                        {/* Buttons */}
+                        <View style={styles.confirmButtons}>
+                            <TouchableOpacity
+                                style={styles.confirmCancelButton}
+                                onPress={handleCancelRemove}
+                            >
+                                <Text style={styles.confirmCancelText}>ยกเลิก</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.confirmRemoveButton}
+                                onPress={handleConfirmRemove}
+                                disabled={removeLoading}
+                            >
+                                {removeLoading ? (
+                                    <ActivityIndicator color="#fff" size="small" />
+                                ) : (
+                                    <Text style={styles.confirmRemoveText}>เชิญออก</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Loading Overlay */}
+            {qrLoading && (
+                <View style={styles.loadingOverlay}>
+                    <ActivityIndicator size="large" color={primaryColor} />
+                    <Text style={styles.loadingOverlayText}>กำลังสร้าง QR Code...</Text>
+                </View>
             )}
         </SafeAreaView>
     );
@@ -394,6 +719,11 @@ const styles = StyleSheet.create({
         borderRadius: 22,
         marginRight: 12,
     },
+    viewProfileButtonText: {
+        fontSize: 12,
+        fontFamily: "Kanit_500Medium",
+        color: "#fff",
+    },
     avatarPlaceholder: {
         width: 44,
         height: 44,
@@ -413,11 +743,10 @@ const styles = StyleSheet.create({
         color: "#333",
         flex: 1,
     },
-    removeButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: "#FFF0F0",
+    viewProfileButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 10,
         justifyContent: "center",
         alignItems: "center",
     },
@@ -473,6 +802,305 @@ const styles = StyleSheet.create({
         color: "#bbb",
         marginTop: 8,
         textAlign: "center",
+    },
+    // QR Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        justifyContent: "flex-end",
+    },
+    modalContainer: {
+        backgroundColor: "#fff",
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        maxHeight: "90%",
+        paddingBottom: Platform.OS === "ios" ? 34 : 20,
+    },
+    modalHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: "#f0f0f0",
+    },
+    modalCancelText: {
+        fontSize: 16,
+        fontFamily: "Kanit_400Regular",
+        color: "#666",
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontFamily: "Kanit_700Bold",
+        color: "#333",
+    },
+    modalScrollContent: {
+        paddingHorizontal: 24,
+        paddingTop: 24,
+        paddingBottom: 20,
+        alignItems: "center",
+    },
+    qrSectionTitle: {
+        fontSize: 18,
+        fontFamily: "Kanit_700Bold",
+        textAlign: "center",
+        marginBottom: 8,
+    },
+    qrSubtext: {
+        fontSize: 14,
+        fontFamily: "Kanit_400Regular",
+        color: "#888",
+        textAlign: "center",
+    },
+    qrCodeRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 24,
+        marginBottom: 24,
+    },
+    btnDownloadRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 24,
+        marginBottom: 24,
+    },
+    qrCodeContainer: {
+        padding: 16,
+        backgroundColor: "#fff",
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: "#e0e0e0",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    downloadButton: {
+        marginLeft: 16,
+        width: 50,
+        height: 50,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    modalDivider: {
+        width: "100%",
+        height: 1,
+        backgroundColor: "#e0e0e0",
+        marginVertical: 24,
+    },
+    codeBoxContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 20,
+        width: "100%",
+    },
+    codeBox: {
+        flex: 1,
+        borderWidth: 2,
+        borderRadius: 12,
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        backgroundColor: "#fff",
+    },
+    codeText: {
+        fontSize: 24,
+        fontFamily: "Kanit_700Bold",
+        textAlign: "center",
+        letterSpacing: 4,
+    },
+    copyButton: {
+        marginLeft: 12,
+        width: 52,
+        height: 52,
+        borderRadius: 12,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    loadingOverlay: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(255, 255, 255, 0.9)",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 999,
+    },
+    loadingOverlayText: {
+        marginTop: 16,
+        fontSize: 16,
+        fontFamily: "Kanit_400Regular",
+        color: "#666",
+    },
+    // Resident Detail Modal Styles
+    residentModalContainer: {
+        backgroundColor: "#fff",
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        paddingTop: 20,
+        paddingHorizontal: 20,
+        paddingBottom: 40,
+        height: "70%",
+    },
+    residentModalHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 24,
+    },
+    cancelText: {
+        fontSize: 16,
+        fontFamily: "Kanit_400Regular",
+        color: "#888",
+    },
+    residentModalTitle: {
+        fontSize: 18,
+        fontFamily: "Kanit_700Bold",
+        textAlign: "center",
+    },
+    residentInfoCard: {
+        backgroundColor: "#F8F9FA",
+        borderRadius: 16,
+        padding: 20,
+    },
+    infoRow: {
+        flexDirection: "row",
+        borderBottomWidth: 1,
+        borderBottomColor: "#E5E5E5",
+        paddingBottom: 16,
+    },
+    infoColumn: {
+        flex: 1,
+    },
+    infoDivider: {
+        borderLeftWidth: 1,
+        borderLeftColor: "#E5E5E5",
+        paddingLeft: 16,
+    },
+    infoLabel: {
+        fontSize: 12,
+        fontFamily: "Kanit_400Regular",
+        color: "#888",
+        marginBottom: 4,
+    },
+    infoValue: {
+        fontSize: 16,
+        fontFamily: "Kanit_500Medium",
+        color: "#333",
+    },
+    emailRow: {
+        paddingTop: 16,
+    },
+    residentModalButtons: {
+        flexDirection: "row",
+        gap: 12,
+        paddingTop: 20,
+    },
+    removeResidentButton: {
+        flex: 1,
+        height: 54,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderColor: "#E5E5E5",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#fff",
+    },
+    removeResidentButtonText: {
+        fontSize: 18,
+        fontFamily: "Kanit_500Medium",
+    },
+    editButton: {
+        flex: 1,
+        height: 54,
+        borderRadius: 12,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    editButtonText: {
+        fontSize: 18,
+        fontFamily: "Kanit_500Medium",
+        color: "#fff",
+    },
+    // Confirmation Dialog Styles
+    confirmOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.6)",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 24,
+    },
+    confirmDialog: {
+        width: "100%",
+        maxWidth: 340,
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        paddingVertical: 32,
+        paddingHorizontal: 24,
+        alignItems: "center",
+    },
+    confirmIconContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: "#FFF0F0",
+        justifyContent: "center",
+        alignItems: "center",
+        marginBottom: 20,
+    },
+    confirmTitle: {
+        fontSize: 20,
+        fontFamily: "Kanit_700Bold",
+        color: "#333",
+        marginBottom: 12,
+    },
+    confirmMessage: {
+        fontSize: 16,
+        fontFamily: "Kanit_400Regular",
+        color: "#666",
+        textAlign: "center",
+        lineHeight: 24,
+        marginBottom: 24,
+    },
+    confirmHighlight: {
+        fontFamily: "Kanit_500Medium",
+        color: "#333",
+    },
+    confirmButtons: {
+        flexDirection: "row",
+        gap: 12,
+        width: "100%",
+    },
+    confirmCancelButton: {
+        flex: 1,
+        height: 50,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderColor: "#E5E5E5",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#fff",
+    },
+    confirmCancelText: {
+        fontSize: 16,
+        fontFamily: "Kanit_500Medium",
+        color: "#666",
+    },
+    confirmRemoveButton: {
+        flex: 1,
+        height: 50,
+        borderRadius: 12,
+        backgroundColor: "#FF6B6B",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    confirmRemoveText: {
+        fontSize: 16,
+        fontFamily: "Kanit_500Medium",
+        color: "#fff",
     },
 });
 

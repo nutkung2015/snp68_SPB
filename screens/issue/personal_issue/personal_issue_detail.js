@@ -23,7 +23,7 @@ export default function PersonalIssueDetailScreen({ route, navigation }) {
     const [issue, setIssue] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [primaryColor, setPrimaryColor] = useState("#4BB59F"); // Default
+    const [primaryColor, setPrimaryColor] = useState("#2A405E"); // Default
     const [secondaryColor, setSecondaryColor] = useState("#33FF57"); // Default
 
     useEffect(() => {

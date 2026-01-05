@@ -25,6 +25,7 @@ import {
   Kanit_500Medium,
 } from "@expo-google-fonts/kanit";
 import { UserService } from "../../services";
+import NotificationService from "../../services/notificationService";
 
 const ProfileScreen = ({ recheckLoginStatus }) => {
   const [userData, setUserData] = useState(null);
@@ -44,6 +45,15 @@ const ProfileScreen = ({ recheckLoginStatus }) => {
 
   const handleLogout = async () => {
     try {
+      // Unregister push token before logout
+      try {
+        await NotificationService.unregisterPushToken();
+        console.log("[Logout] Push token unregistered");
+      } catch (pushError) {
+        // Don't block logout if unregister fails
+        console.error("[Logout] Push token unregister error:", pushError);
+      }
+
       await AsyncStorage.removeItem("userData");
       await AsyncStorage.removeItem("authToken");
       navigation.navigate("Login");
@@ -96,7 +106,7 @@ const ProfileScreen = ({ recheckLoginStatus }) => {
   if (!fontsLoaded || loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4BB59F" />
+        <ActivityIndicator size="large" color="#2A405E" />
         <Text style={styles.loadingText}>กำลังโหลดข้อมูล...</Text>
       </View>
     );
@@ -173,7 +183,7 @@ const ProfileScreen = ({ recheckLoginStatus }) => {
         <View style={styles.profileHeaderCard}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
-              <Ionicons name="person" size={40} color="#4BB59F" />
+              <Ionicons name="person" size={40} color="#2A405E" />
             </View>
           </View>
           <Text style={styles.profileName}>{userData.full_name}</Text>
@@ -228,7 +238,7 @@ const ProfileScreen = ({ recheckLoginStatus }) => {
             >
               <View style={styles.menuItemLeft}>
                 <View style={styles.menuIconContainer}>
-                  <Ionicons name={item.icon} size={22} color="#4BB59F" />
+                  <Ionicons name={item.icon} size={22} color="#2A405E" />
                 </View>
                 <Text style={styles.menuItemText}>{item.title}</Text>
               </View>
@@ -239,15 +249,8 @@ const ProfileScreen = ({ recheckLoginStatus }) => {
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <LinearGradient
-            colors={["#FF6B6B", "#FF8E53"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.logoutGradient}
-          >
-            <Ionicons name="log-out-outline" size={24} color="#fff" />
-            <Text style={styles.logoutButtonText}>ออกจากระบบ</Text>
-          </LinearGradient>
+          <Ionicons name="log-out-outline" size={24} color="#666" />
+          <Text style={styles.logoutButtonText}>ออกจากระบบ</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -419,26 +422,21 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   logoutButton: {
-    marginHorizontal: 16,
-    marginBottom: 30,
-    borderRadius: 15,
-    overflow: "hidden",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  logoutGradient: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    marginHorizontal: 16,
+    marginBottom: 30,
     padding: 16,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#D0D0D0",
+    backgroundColor: "#fff",
   },
   logoutButtonText: {
-    color: "#fff",
+    color: "#666",
     fontSize: 18,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "Kanit_500Medium",
     marginLeft: 10,
   },
 });
