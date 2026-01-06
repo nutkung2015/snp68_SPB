@@ -161,7 +161,7 @@ app.use(morgan(':remote-addr - :method :url :status :res[content-length] - :resp
 
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? process.env.ALLOWED_ORIGINS?.split(',') || ['https://snp68-spb.onrender.com']
+    ? process.env.ALLOWED_ORIGINS?.split(',') || ['https://snp68-spb.onrender.com', 'http://localhost:8081']
     : [
       'http://localhost:8081',   // Expo Dev Server
       'http://localhost:4200',   // Angular Web Backoffice
