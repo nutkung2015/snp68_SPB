@@ -103,8 +103,7 @@ exports.createZone = async (req, res) => {
             description,
             color,
             sort_order,
-            guard_phone,
-            guard_phone_2,
+            guard_post_id,
             status = "active"
         } = req.body;
 
@@ -133,9 +132,9 @@ exports.createZone = async (req, res) => {
 
         await db.promise().execute(
             `INSERT INTO zones 
-        (id, project_id, name, code, description, color, sort_order, guard_phone, guard_phone_2, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [id, project_id, name, code || null, description || null, color || null, sort_order || 0, guard_phone || null, guard_phone_2 || null, status]
+        (id, project_id, name, code, description, color, sort_order, guard_post_id, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [id, project_id, name, code || null, description || null, color || null, sort_order || 0, guard_post_id || null, status]
         );
 
         res.status(201).json({
@@ -165,8 +164,7 @@ exports.updateZone = async (req, res) => {
             description,
             color,
             sort_order,
-            guard_phone,
-            guard_phone_2,
+            guard_post_id,
             status
         } = req.body;
 
@@ -207,12 +205,11 @@ exports.updateZone = async (req, res) => {
         description = COALESCE(?, description),
         color = COALESCE(?, color),
         sort_order = COALESCE(?, sort_order),
-        guard_phone = COALESCE(?, guard_phone),
-        guard_phone_2 = COALESCE(?, guard_phone_2),
+        guard_post_id = COALESCE(?, guard_post_id),
         status = COALESCE(?, status),
         updated_at = NOW()
       WHERE id = ?`,
-            [name, code, description, color, sort_order, guard_phone, guard_phone_2, status, id]
+            [name, code, description, color, sort_order, guard_post_id, status, id]
         );
 
         res.json({
