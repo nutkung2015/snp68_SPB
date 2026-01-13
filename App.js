@@ -8,10 +8,12 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Image,
+  Platform,
 } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import * as Font from "expo-font";
@@ -449,9 +451,14 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <RootNavigator />
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <StatusBar style="auto" />
+      <SafeAreaView style={{ flex: 1 }}>
+        <NavigationContainer>
+          <RootNavigator />
+        </NavigationContainer>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 const styles = StyleSheet.create({

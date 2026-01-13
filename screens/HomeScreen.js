@@ -396,7 +396,8 @@ const HomeScreen = ({ navigation }) => {
                 onPress={() => navigation.navigate("VilageOption")}
               >
                 <Ionicons name="people" size={24} color={primaryColor || "#155B5B"} />
-                <Text style={[styles.menuText, { color: primaryColor || "#155B5B" }]}>หมู่บ้านของฉัน</Text>
+                <Text style={[styles.menuText, { color: primaryColor || "#155B5B" }]}>โครงการ</Text>
+                {/* โครงการ */}
               </TouchableOpacity>
             </View>
           </View>

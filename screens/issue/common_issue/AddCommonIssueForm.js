@@ -13,6 +13,7 @@ import {
     Alert,
     Image,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
@@ -213,9 +214,12 @@ export default function AddCommonIssueForm({ navigation }) {
                 <Text style={styles.gap100px}>.</Text>
             </View>
 
-            <ScrollView
+            <KeyboardAwareScrollView
                 style={styles.formContainer}
                 keyboardShouldPersistTaps="handled"
+                enableOnAndroid={true}
+                extraScrollHeight={Platform.OS === 'ios' ? 20 : 100}
+                enableAutomaticScroll={true}
             >
                 {/* บ้านเลขที่ */}
                 <View style={styles.inputGroup_normalText}>
@@ -333,7 +337,7 @@ export default function AddCommonIssueForm({ navigation }) {
                         {isSubmitting ? "กำลังส่ง..." : "ส่งแบบฟอร์ม"}
                     </Text>
                 </TouchableOpacity>
-            </ScrollView>
+            </KeyboardAwareScrollView>
 
             {/* Type Picker Modal */}
             <Modal

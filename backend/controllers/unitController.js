@@ -579,3 +579,215 @@ exports.getProjectResidents = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// @desc    Delete a unit
+// @route   DELETE /api/units/:id
+// @access  Private (Juristic Leader/Admin)
+exports.deleteUnit = async (req, res) => {
+  try {
+    const { id: unit_id } = req.params;
+    const { force } = req.query; // ?force=true to delete even with members
+    const user_id = req.user.id;
+
+    // 1. Check if unit exists
+    const [unitRows] = await db.promise().execute(
+      "SELECT id, project_id, unit_number FROM units WHERE id = ?",
+      [unit_id]
+    );
+
+    if (unitRows.length === 0) {
+      return res.status(404).json({ message: "Unit not found." });
+    }
+
+    const unit = unitRows[0];
+    const project_id = unit.project_id;
+
+    // 2. Check user permission (must be juristic or admin of this project)
+    const [projectMembership] = await db.promise().execute(
+      "SELECT role FROM project_members WHERE user_id = ? AND project_id = ?",
+      [user_id, project_id]
+    );
+
+    if (projectMembership.length === 0) {
+      return res.status(403).json({
+        message: "You don't have permission to delete units in this project"
+      });
+    }
+
+    const userRole = projectMembership[0].role;
+    const allowedRoles = ['admin', 'juristicMember', 'juristicLeader'];
+
+    if (!allowedRoles.includes(userRole)) {
+      return res.status(403).json({
+        message: "Only juristic or admins can delete units"
+      });
+    }
+
+    // 3. Check if unit has active members
+    const [activeMembers] = await db.promise().execute(
+      "SELECT id, user_id FROM unit_members WHERE unit_id = ? AND left_at IS NULL",
+      [unit_id]
+    );
+
+    if (activeMembers.length > 0 && force !== 'true') {
+      return res.status(400).json({
+        message: `Unit has ${activeMembers.length} active member(s). Use ?force=true to delete anyway.`,
+        active_members_count: activeMembers.length
+      });
+    }
+
+    // 4. Begin deletion (cascade related data)
+    // 4.1 Delete unit_invitations related to this unit
+    const [deletedInvitations] = await db.promise().execute(
+      "DELETE FROM unit_invitations WHERE unit_id = ?",
+      [unit_id]
+    );
+
+    // 4.2 Delete unit_members (or soft delete by setting left_at)
+    const [deletedMembers] = await db.promise().execute(
+      "DELETE FROM unit_members WHERE unit_id = ?",
+      [unit_id]
+    );
+
+    // 4.3 Delete the unit itself
+    await db.promise().execute(
+      "DELETE FROM units WHERE id = ?",
+      [unit_id]
+    );
+
+    res.status(200).json({
+      status: "success",
+      message: `Unit "${unit.unit_number}" deleted successfully`,
+      deleted: {
+        unit_id: unit_id,
+        unit_number: unit.unit_number,
+        invitations_removed: deletedInvitations.affectedRows,
+        members_removed: deletedMembers.affectedRows
+      }
+    });
+
+  } catch (error) {
+    console.error("Error in deleteUnit:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Get unit details by ID
+// @route   GET /api/units/:id
+// @access  Private (Juristic, Super-Admin)
+exports.getUnitById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user_id = req.user.id;
+
+    // 1. Fetch Unit Information
+    const [unitRows] = await db.promise().execute(
+      `SELECT u.*, p.name as project_name 
+       FROM units u 
+       JOIN projects p ON u.project_id = p.id 
+       WHERE u.id = ?`,
+      [id]
+    );
+
+    if (unitRows.length === 0) {
+      return res.status(404).json({ message: "Unit not found." });
+    }
+
+    const unit = unitRows[0];
+    const project_id = unit.project_id;
+
+    // 2. Access Control: Check if user is Juristic or Admin of this project
+    // Note: Super Admin check might be handled globally or here if needed
+    const [projectMembership] = await db.promise().execute(
+      "SELECT role FROM project_members WHERE user_id = ? AND project_id = ?",
+      [user_id, project_id]
+    );
+
+    let isAuthorized = false;
+    if (projectMembership.length > 0) {
+      const role = projectMembership[0].role;
+      if (['juristicMember', 'juristicLeader', 'admin', 'super-admin'].includes(role)) {
+        isAuthorized = true;
+      }
+    }
+
+    // If not authorized via project membership, check table `users` for super-admin role globally (if applicable)
+    if (!isAuthorized) {
+      const [userGlobal] = await db.promise().execute(
+        "SELECT role FROM users WHERE id = ?",
+        [user_id]
+      );
+      if (userGlobal.length > 0 && userGlobal[0].role === 'super-admin') {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return res.status(403).json({
+        message: "Unauthorized: Only Juristic or Admins can view full unit details."
+      });
+    }
+
+    // 3. Fetch Residents (Unit Members) - specific fields
+    const [residents] = await db.promise().execute(
+      `SELECT u.full_name, u.email, u.phone, um.role, um.joined_at 
+       FROM unit_members um 
+       JOIN users u ON um.user_id = u.id 
+       WHERE um.unit_id = ? AND um.left_at IS NULL`,
+      [id]
+    );
+
+    // 4. Fetch House Model & Details
+    // Logic similar to getMyHouseModel but for specific unit
+    let houseModel = null;
+    if (unit.building) {
+      const [modelRows] = await db.promise().execute(
+        `SELECT id, model_name, plan_file_url, detail_file_url 
+         FROM house_models 
+         WHERE project_id = ? AND model_name = ?`,
+        [project_id, unit.building]
+      );
+      if (modelRows.length > 0) {
+        houseModel = modelRows[0];
+      }
+    }
+
+    // 5. Fetch Invitation History
+    const [invitations] = await db.promise().execute(
+      `SELECT 
+        ui.id, ui.code, ui.status, ui.role, 
+        ui.invited_email, ui.invited_phone, 
+        ui.created_at, ui.expires_at, 
+        u.full_name as invited_by_name
+       FROM unit_invitations ui
+       LEFT JOIN users u ON ui.invited_by = u.id
+       WHERE ui.unit_id = ?
+       ORDER BY ui.created_at DESC`,
+      [id]
+    );
+
+    // 6. Return Aggregated Response
+    res.status(200).json({
+      status: "success",
+      data: {
+        unit_info: {
+          id: unit.id,
+          unit_number: unit.unit_number,
+          zone: unit.zone,
+          status: unit.status,
+          area_sqm: unit.area_sqm,
+          building: unit.building,
+          floor: unit.floor,
+          project_name: unit.project_name
+        },
+        residents: residents,
+        house_model: houseModel,
+        invitation_history: invitations
+      }
+    });
+
+  } catch (error) {
+    console.error("Error in getUnitById:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

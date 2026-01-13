@@ -264,6 +264,13 @@ app.use("/api/guard-posts", require("./routes/guardPosts"));
 // Notification Routes
 app.use("/api/notifications", require("./routes/notifications"));
 
+// Super Admin Routes (Protected)
+app.use("/api/super-admin", require("./routes/superAdmin"));
+
+// Global Announcements for Users (Protected by auth only)
+// Note: This endpoint is for normal users to fetch announcements, handled by the same controller
+app.get("/api/global-announcements", require("./middleware/authMiddleware"), require("./controllers/globalAnnouncementController").getAnnouncementsForProject);
+
 // Error handling middleware
 app.use(require("./middleware/errorMiddleware"));
 

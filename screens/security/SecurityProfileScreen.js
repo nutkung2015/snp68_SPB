@@ -15,7 +15,8 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import SecurityBottomNavigation from "../../components/SecurityBottomNavigation";
 import { useNavigation } from "@react-navigation/native";
-import { onLogoutCallback, setNavigation } from "../../services/authService";
+import { setNavigation } from "../../services/authService";
+import { UserService, ProjectCustomizationsService } from "../../services";
 import { LinearGradient } from "expo-linear-gradient";
 import {
     useFonts,
@@ -27,6 +28,7 @@ import {
 const SecurityProfileScreen = ({ recheckLoginStatus }) => {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [primaryColor, setPrimaryColor] = useState("#2A405E"); // Default security color
     const navigation = useNavigation();
 
     const [fontsLoaded] = useFonts({
@@ -77,48 +79,32 @@ const SecurityProfileScreen = ({ recheckLoginStatus }) => {
         }
     };
 
+    const fetchProjectCustomizations = async (projectId) => {
+        try {
+            const response = await ProjectCustomizationsService.getProjectCustomizations(projectId);
+            if (response && response.primary_color) {
+                setPrimaryColor(response.primary_color);
+            }
+        } catch (err) {
+            console.error("Error fetching project customizations:", err);
+        }
+    };
+
     useEffect(() => {
         const fetchUserProfile = async () => {
             try {
-                const userDataStr = await AsyncStorage.getItem("userData");
-                const userData = userDataStr ? JSON.parse(userDataStr) : null;
-                const token = userData?.token;
-                console.log("SecurityProfileScreen: Fetched authToken:", token);
-                if (!token) {
-                    console.log("SecurityProfileScreen: No authToken found, returning.");
-                    return;
-                }
-
-                const response = await fetch("http://localhost:5000/api/auth/profile", {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                console.log("SecurityProfileScreen: API response status:", response.status);
-
-                if (response.status === 401) {
-                    console.log("SecurityProfileScreen: Unauthorized (401), handling logout.");
-                    await AsyncStorage.removeItem("authToken");
-                    if (typeof onLogoutCallback === "function") {
-                        onLogoutCallback();
-                    } else {
-                        console.warn("onLogoutCallback not set in SecurityProfileScreen.");
-                    }
-                    return;
-                }
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error("SecurityProfileScreen: API response not OK:", errorData);
-                    throw new Error(errorData.message || "Failed to fetch user profile");
-                }
-
-                const data = await response.json();
+                const data = await UserService.getUserProfile();
                 console.log("SecurityProfileScreen: Fetched user data:", data);
                 setUserData(data.user);
+
+                // Fetch project customizations
+                const storedUserData = await AsyncStorage.getItem("userData");
+                if (storedUserData) {
+                    const parsedUserData = JSON.parse(storedUserData);
+                    if (parsedUserData?.projectMemberships?.[0]?.project_id) {
+                        await fetchProjectCustomizations(parsedUserData.projectMemberships[0].project_id);
+                    }
+                }
             } catch (error) {
                 console.error("Error fetching user profile:", error);
                 Alert.alert("ผิดพลาด", "ไม่สามารถโหลดข้อมูลโปรไฟล์ได้");
@@ -188,6 +174,14 @@ const SecurityProfileScreen = ({ recheckLoginStatus }) => {
                     height: "100%",
                 }}
             >
+                {/* Color Overlay from primaryColor */}
+                <View
+                    style={[
+                        styles.colorOverlay,
+                        { backgroundColor: primaryColor }
+                    ]}
+                />
+
                 <View style={styles.headerContent}>
                     <TouchableOpacity
                         style={styles.backButton}
@@ -202,7 +196,7 @@ const SecurityProfileScreen = ({ recheckLoginStatus }) => {
                 <View style={styles.profileHeaderCard}>
                     <View style={styles.avatarContainer}>
                         <View style={styles.avatar}>
-                            <Ionicons name="person" size={40} color="#2A405E" />
+                            <Ionicons name="person" size={40} color={primaryColor} />
                         </View>
                     </View>
                     <Text style={styles.profileName}>{userData.full_name}</Text>
@@ -257,7 +251,7 @@ const SecurityProfileScreen = ({ recheckLoginStatus }) => {
                         >
                             <View style={styles.menuItemLeft}>
                                 <View style={styles.menuIconContainer}>
-                                    <Ionicons name={item.icon} size={22} color="#2A405E" />
+                                    <Ionicons name={item.icon} size={22} color={primaryColor} />
                                 </View>
                                 <Text style={styles.menuItemText}>{item.title}</Text>
                             </View>
@@ -305,6 +299,10 @@ const styles = StyleSheet.create({
     headerBackground: {
         width: "100%",
         paddingBottom: 30,
+    },
+    colorOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        opacity: 0.85,
     },
     headerContent: {
         flexDirection: "row",

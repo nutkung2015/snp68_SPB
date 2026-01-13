@@ -10,12 +10,16 @@ import {
     RefreshControl,
     Modal,
     Platform,
+    TextInput,
+    TouchableWithoutFeedback,
+    Keyboard,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import moment from "moment";
 import VisitorService from "../../services/visitorService";
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const EstampScreen = ({ navigation }) => {
     const [loading, setLoading] = useState(false);
@@ -26,6 +30,13 @@ const EstampScreen = ({ navigation }) => {
     // Modal state
     const [selectedVisitor, setSelectedVisitor] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
+
+    // Invite Modal state
+    const [inviteModalVisible, setInviteModalVisible] = useState(false);
+    const [invitePlate, setInvitePlate] = useState("");
+    const [inviteName, setInviteName] = useState("");
+    const [inviteDate, setInviteDate] = useState(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     const fetchVisitors = async () => {
         try {
@@ -88,6 +99,73 @@ const EstampScreen = ({ navigation }) => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleInviteSubmit = async () => {
+        if (!invitePlate.trim()) {
+            Alert.alert("แจ้งเตือน", "กรุณาระบุทะเบียนรถ");
+            return;
+        }
+
+        if (!userData || !userData.unitMemberships || userData.unitMemberships.length === 0) {
+            Alert.alert("ข้อผิดพลาด", "ไม่พบข้อมูลยูนิตของคุณ");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const membership = userData.unitMemberships[0];
+            // Attempt to find project_id. Ideally it's on the membership or the unit object within.
+            let projectId = membership.project_id || (membership.unit && membership.unit.project_id);
+
+            // Fallback: Use projectMemberships if available
+            if (!projectId && userData.projectMemberships && userData.projectMemberships.length > 0) {
+                projectId = userData.projectMemberships[0].project_id;
+            }
+
+            const unitId = membership.unit_id;
+
+            if (!projectId) {
+                // Fallback: If we can't find project_id, we might fail. 
+                // But let's try sending what we have or rely on backend to handle if possible (visitorController needs it).
+                console.warn("Project ID not found in userData");
+            }
+
+            const payload = {
+                project_id: projectId,
+                unit_id: unitId,
+                plate_number: invitePlate,
+                visitor_name: inviteName,
+                expected_date: inviteDate, // Date object or ISO string
+            };
+
+            const res = await VisitorService.inviteVisitor(payload);
+
+            if (res.status === "success") {
+                Alert.alert("สำเร็จ", "แจ้งรายการรถล่วงหน้าเรียบร้อยแล้ว");
+                closeInviteModal();
+            } else {
+                Alert.alert("ผิดพลาด", res.message || "ไม่สามารถทำรายการได้");
+            }
+        } catch (error) {
+            console.error("Invite Error:", error);
+            Alert.alert("Error", "เกิดข้อผิดพลาดในการเชื่อมต่อ");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const closeInviteModal = () => {
+        setInviteModalVisible(false);
+        setInvitePlate("");
+        setInviteName("");
+        setInviteDate(new Date());
+    };
+
+    const onDateChange = (event, selectedDate) => {
+        const currentDate = selectedDate || inviteDate;
+        setShowDatePicker(Platform.OS === 'ios');
+        setInviteDate(currentDate);
     };
 
     // Modal component
@@ -162,6 +240,87 @@ const EstampScreen = ({ navigation }) => {
         );
     };
 
+    const renderInviteModal = () => {
+        return (
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={inviteModalVisible}
+                onRequestClose={closeInviteModal}
+            >
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <View style={styles.modalHeader}>
+                                <TouchableOpacity onPress={closeInviteModal}>
+                                    <Text style={styles.cancelText}>ยกเลิก</Text>
+                                </TouchableOpacity>
+                                <Text style={styles.modalTitle}>แจ้งรถเข้า</Text>
+                                <View style={{ width: 30 }} />
+                            </View>
+
+                            <View style={styles.detailCard}>
+                                <View style={styles.inputGroup}>
+                                    <Text style={styles.inputLabel}>ทะเบียนรถ <Text style={{ color: 'red' }}>*</Text></Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="ตัวอย่าง 1กข-1234"
+                                        value={invitePlate}
+                                        onChangeText={setInvitePlate}
+                                        placeholderTextColor="#9CA3AF"
+                                    />
+                                </View>
+
+                                <View style={styles.inputGroup}>
+                                    <Text style={styles.inputLabel}>ชื่อผู้มาติดต่อ (ถ้ามี)</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="ระบุชื่อผู้มาติดต่อ"
+                                        value={inviteName}
+                                        onChangeText={setInviteName}
+                                        placeholderTextColor="#9CA3AF"
+                                    />
+                                </View>
+
+                                <View style={styles.inputGroup}>
+                                    <Text style={styles.inputLabel}>วันที่คาดว่าจะเข้า</Text>
+                                    <TouchableOpacity
+                                        style={styles.dateDisplay}
+                                        onPress={() => setShowDatePicker(true)}
+                                    >
+                                        <Text style={styles.dateText}>
+                                            {moment(inviteDate).format("DD/MM/YYYY")}
+                                        </Text>
+                                        <Icon name="calendar" size={16} color="#6B7280" />
+                                    </TouchableOpacity>
+                                    {showDatePicker && (
+                                        <DateTimePicker
+                                            testID="dateTimePicker"
+                                            value={inviteDate}
+                                            mode="date"
+                                            display="default"
+                                            onChange={onDateChange}
+                                            minimumDate={new Date()}
+                                        />
+                                    )}
+                                </View>
+                            </View>
+
+                            <View style={styles.modalFooter}>
+                                <TouchableOpacity
+                                    style={styles.fullButton}
+                                    onPress={handleInviteSubmit}
+                                >
+                                    <Text style={styles.fullButtonText}>ยืนยัน</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </TouchableWithoutFeedback>
+            </Modal>
+        );
+    };
+
     const renderItem = ({ item }) => {
         const isPending = item.estamp_status === "pending";
         const statusColor = isPending ? "#FCD34D" : "#1F2937";
@@ -201,6 +360,7 @@ const EstampScreen = ({ navigation }) => {
     return (
         <View style={styles.container}>
             {renderDetailModal()}
+            {renderInviteModal()}
 
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -211,7 +371,7 @@ const EstampScreen = ({ navigation }) => {
 
             <Text style={styles.title}>ผู้มาเยี่ยม</Text>
 
-            <TouchableOpacity style={styles.addButton} onPress={() => Alert.alert("Coming Soon", "Feature to invite visitor")}>
+            <TouchableOpacity style={styles.addButton} onPress={() => setInviteModalVisible(true)}>
                 <Icon name="plus" size={16} color="#6B7280" style={{ marginRight: 8 }} />
                 <Text style={styles.addButtonText}>แจ้งรายการรถเข้าหมู่บ้าน</Text>
             </TouchableOpacity>
@@ -430,6 +590,39 @@ const styles = StyleSheet.create({
         color: "#9ca3af",
         marginTop: 20,
         fontSize: 16,
+    },
+    // Input Styles
+    inputGroup: {
+        marginBottom: 15,
+    },
+    inputLabel: {
+        fontSize: 14,
+        color: '#003049',
+        marginBottom: 8,
+        fontWeight: 'bold',
+    },
+    input: {
+        backgroundColor: '#f9fafb',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        color: '#000',
+    },
+    dateDisplay: {
+        backgroundColor: '#f9fafb',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        borderRadius: 8,
+        padding: 12,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    dateText: {
+        fontSize: 16,
+        color: '#000',
     },
 });
 

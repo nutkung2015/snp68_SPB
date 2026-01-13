@@ -1,19 +1,27 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { createUnit, createUnitInvitations, joinUnit, getUnits, getUnitInvitations, importUnits } = require('../controllers/unitController');
-const multer = require('multer');
-const upload = multer({ storage: multer.memoryStorage() }); // Use memory storage for processing
-const protect = require('../middleware/authMiddleware'); // Assuming you have an auth middleware
+const unitController = require("../controllers/unitController");
+console.log('🔍 unitController exports:', Object.keys(unitController)); // DEBUG
+const protect = require("../middleware/authMiddleware"); // Fixed: default export, not named
+const multer = require("multer");
 
-// Protect all unit routes
-router.use(protect);
+// Configure multer for memory storage (for Excel import)
+const upload = multer({ storage: multer.memoryStorage() });
 
-// Unit management routes
-router.post('/', createUnit); // Create a new unit
-router.get('/', getUnits); // Get units by project_id
-router.post('/invitations', createUnitInvitations); // Create a unit invitation
-router.post('/invitations/join', joinUnit); // Join a unit using an invitation code
-router.get("/unit-invitations", getUnitInvitations);
-router.post('/import', upload.single('file'), importUnits); // Import units from Excel
+// POST routes
+router.post("/import", protect, upload.single("file"), unitController.importUnits);
+router.post("/", protect, unitController.createUnit);
+router.post("/create-unit-invitation", protect, unitController.createUnitInvitations);
+router.post("/join-unit", protect, unitController.joinUnit);
+
+// GET routes - IMPORTANT: Specific paths BEFORE parameterized paths
+router.get("/invitations", protect, unitController.getUnitInvitations);
+router.get("/residents", protect, unitController.getProjectResidents);
+router.get("/project-residents", protect, unitController.getProjectResidents);
+router.get("/", protect, unitController.getUnits);
+router.get("/:id", protect, unitController.getUnitById); // Must be LAST among GET routes
+
+// DELETE routes
+router.delete("/:id", protect, unitController.deleteUnit);
 
 module.exports = router;

@@ -212,13 +212,42 @@ const GuardCheckInScreen = ({ navigation }) => {
                     </TouchableOpacity>
                 )}
                 ListEmptyComponent={
-                    <View style={{ alignItems: 'center', marginTop: 20 }}>
-                        <Text style={{ marginBottom: 10 }}>ไม่พบข้อมูล</Text>
-                        <TouchableOpacity style={styles.primaryButton} onPress={() => {
-                            setFormData(prev => ({ ...prev, plate_number: query }));
-                            setStep("form");
-                        }}>
-                            <Text style={styles.primaryButtonText}>บันทึกเป็นรถขาจร (Walk-in)</Text>
+                    <View style={styles.emptyContainer}>
+                        {/* Illustration */}
+                        <View style={styles.emptyIconWrapper}>
+                            <View style={styles.emptyIconCircle}>
+                                <Icon name="car" size={40} color="#9CA3AF" />
+                            </View>
+                            <View style={styles.emptyBadge}>
+                                <Icon name="question" size={14} color="#fff" />
+                            </View>
+                        </View>
+
+                        {/* Text */}
+                        <Text style={styles.emptyTitle}>ไม่พบข้อมูลรถในระบบ</Text>
+                        <Text style={styles.emptySubtitle}>
+                            ไม่พบทะเบียน "{query}" ในรายการ{'\n'}
+                            คุณสามารถบันทึกเป็นรถภายนอกได้
+                        </Text>
+
+                        {/* CTA Button */}
+                        <TouchableOpacity
+                            style={styles.walkInButton}
+                            onPress={() => {
+                                setFormData(prev => ({ ...prev, plate_number: query }));
+                                setStep("form");
+                            }}
+                        >
+                            <Icon name="plus-circle" size={18} color="#fff" style={{ marginRight: 8 }} />
+                            <Text style={styles.walkInButtonText}>บันทึกเป็นรถภายนอก (Walk-in)</Text>
+                        </TouchableOpacity>
+
+                        {/* Secondary action */}
+                        <TouchableOpacity
+                            style={styles.retryButton}
+                            onPress={() => setStep('search')}
+                        >
+                            <Text style={styles.retryButtonText}>ค้นหาใหม่</Text>
                         </TouchableOpacity>
                     </View>
                 }
@@ -570,7 +599,82 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: '#E5E7EB',
         marginVertical: 15,
-    }
+    },
+    // Empty State Styles
+    emptyContainer: {
+        alignItems: 'center',
+        paddingVertical: 40,
+        paddingHorizontal: 20,
+    },
+    emptyIconWrapper: {
+        position: 'relative',
+        marginBottom: 20,
+    },
+    emptyIconCircle: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: '#F3F4F6',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#E5E7EB',
+        borderStyle: 'dashed',
+    },
+    emptyBadge: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: '#F59E0B',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 3,
+        borderColor: '#fff',
+    },
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#374151',
+        marginBottom: 8,
+    },
+    emptySubtitle: {
+        fontSize: 14,
+        color: '#6B7280',
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 24,
+    },
+    walkInButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#1F4E46',
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 12,
+        shadowColor: '#1F4E46',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    walkInButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    retryButton: {
+        marginTop: 16,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+    },
+    retryButtonText: {
+        color: '#6B7280',
+        fontSize: 14,
+        textDecorationLine: 'underline',
+    },
 });
 
 export default GuardCheckInScreen;

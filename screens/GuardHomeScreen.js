@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import SecurityBottomNavigation from "../components/SecurityBottomNavigation";
+import { useFocusEffect } from "@react-navigation/native";
+import { NotificationService } from "../services";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -31,6 +33,7 @@ const GuardHomeScreen = ({ navigation }) => {
   const [secondaryColor, setSecondaryColor] = useState("#155B5B");
   const [primaryColor, setPrimaryColor] = useState("#14336B");
   const [logoUrl, setLogoUrl] = useState(null);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -63,6 +66,16 @@ const GuardHomeScreen = ({ navigation }) => {
     }
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUnreadCount = async () => {
+        const count = await NotificationService.getUnreadCount();
+        setUnreadNotificationCount(count);
+      };
+      fetchUnreadCount();
+    }, [])
+  );
+
   if (!fontsLoaded) {
     return null;
   }
@@ -83,11 +96,18 @@ const GuardHomeScreen = ({ navigation }) => {
             style={styles.logoImage}
           />
           <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.notificationButton}>
+            <TouchableOpacity
+              style={styles.notificationButton}
+              onPress={() => navigation.navigate("Notifications")}
+            >
               <Ionicons name="notifications-outline" size={24} color="#18545d" />
-              <View style={styles.notificationBadge}>
-                <Text style={styles.badgeText}>5</Text>
-              </View>
+              {unreadNotificationCount > 0 && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.badgeText}>
+                    {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
             <TouchableOpacity style={styles.profileCircle} onPress={() => navigation.navigate("Profile")}>
               <Text style={styles.profileText}>
@@ -244,13 +264,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 3,
     right: 2,
-    backgroundColor: "#18545d",
+    backgroundColor: "#EF4444",
     borderRadius: 8,
     minWidth: 16,
     height: 16,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 3,
+    borderWidth: 1,
+    borderColor: "#fff",
   },
   badgeText: {
     color: "#fff",

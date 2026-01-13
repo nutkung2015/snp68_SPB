@@ -13,6 +13,7 @@ import {
   Alert,
   Image,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
@@ -248,9 +249,12 @@ export default function AddIssueForm({ route, navigation }) {
         <Text style={styles.gap100px}>.</Text>
       </View>
 
-      <ScrollView
+      <KeyboardAwareScrollView
         style={styles.formContainer}
         keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        extraScrollHeight={Platform.OS === 'ios' ? 20 : 100}
+        enableAutomaticScroll={true}
       >
         {/* บ้านเลขที่ */}
         <View style={styles.inputGroup_normalText}>
@@ -387,7 +391,7 @@ export default function AddIssueForm({ route, navigation }) {
             {isSubmitting ? "กำลังส่ง..." : "ส่งแบบฟอร์ม"}
           </Text>
         </TouchableOpacity>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Date Picker Modal */}
       {showDatePicker && (
