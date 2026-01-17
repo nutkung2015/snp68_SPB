@@ -241,12 +241,14 @@ export default function HouseDetailScreen({ navigation }) {
     if (error) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={[styles.header, { backgroundColor: primaryColor }]}>
-                    <TouchableOpacity onPress={handleGoBack} style={styles.headerButton}>
-                        <Ionicons name="chevron-back" size={24} color="white" />
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+                        <Ionicons name="chevron-back" size={24} color="black" />
+                        <Text style={styles.backButtonText}>ย้อนกลับ</Text>
                     </TouchableOpacity>
+                </View>
+                <View style={styles.headerSecond}>
                     <Text style={styles.headerTitle}>รายละเอียดบ้าน</Text>
-                    <View style={styles.headerButton} />
                 </View>
 
                 <View style={styles.centerContainer}>
@@ -277,14 +279,16 @@ export default function HouseDetailScreen({ navigation }) {
     if (!detailFileUrl) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={[styles.header, { backgroundColor: primaryColor }]}>
-                    <TouchableOpacity onPress={handleGoBack} style={styles.headerButton}>
-                        <Ionicons name="chevron-back" size={24} color="white" />
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+                        <Ionicons name="chevron-back" size={24} color="black" />
+                        <Text style={styles.backButtonText}>ย้อนกลับ</Text>
                     </TouchableOpacity>
+                </View>
+                <View style={styles.headerSecond}>
                     <Text style={styles.headerTitle}>
                         {houseModelData?.house_model?.model_name || "รายละเอียดบ้าน"}
                     </Text>
-                    <View style={styles.headerButton} />
                 </View>
 
                 <View style={styles.centerContainer}>
@@ -308,10 +312,13 @@ export default function HouseDetailScreen({ navigation }) {
     return (
         <SafeAreaView style={styles.container}>
             {/* Header */}
-            <View style={[styles.header, { backgroundColor: primaryColor }]}>
-                <TouchableOpacity onPress={handleGoBack} style={styles.headerButton}>
-                    <Ionicons name="chevron-back" size={24} color="white" />
+            <View style={styles.header}>
+                <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+                    <Ionicons name="chevron-back" size={24} color="black" />
+                    <Text style={styles.backButtonText}>ย้อนกลับ</Text>
                 </TouchableOpacity>
+            </View>
+            <View style={styles.headerSecond}>
                 <View style={styles.headerTitleContainer}>
                     <Text style={styles.headerTitle} numberOfLines={1}>
                         {getDetailTitle()}
@@ -322,7 +329,6 @@ export default function HouseDetailScreen({ navigation }) {
                         </Text>
                     )}
                 </View>
-                <View style={styles.headerButton} />
             </View>
 
             {/* Content */}
@@ -429,31 +435,43 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 8,
-        paddingVertical: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: "#fff",
     },
-    headerButton: {
-        width: 44,
-        height: 44,
-        justifyContent: "center",
+    headerSecond: {
+        flexDirection: "row",
         alignItems: "center",
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: "#fff",
+        borderBottomWidth: 1,
+        borderBottomColor: "#eee",
+    },
+    backButton: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    backButtonText: {
+        fontSize: 16,
+        color: "black",
+        marginLeft: 4,
+        fontFamily: "Kanit_400Regular",
     },
     headerTitleContainer: {
         flex: 1,
-        alignItems: "center",
     },
     headerTitle: {
-        fontSize: 18,
+        fontSize: 24,
         fontWeight: "bold",
-        color: "white",
-        textAlign: "center",
+        color: "#000",
+        textAlign: "left",
         fontFamily: "Kanit_600SemiBold",
     },
     headerSubtitle: {
-        fontSize: 12,
-        color: "rgba(255, 255, 255, 0.8)",
-        textAlign: "center",
+        fontSize: 14,
+        color: "#666",
+        textAlign: "left",
         fontFamily: "Kanit_400Regular",
     },
     centerContainer: {

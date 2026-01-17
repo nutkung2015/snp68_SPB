@@ -105,12 +105,15 @@ export default function CommonIssueDetailScreen({ route, navigation }) {
             <StatusBar backgroundColor="#fff" barStyle="dark-content" />
 
             {/* Header */}
+            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-                    <Ionicons name="chevron-back" size={24} color="#333" />
+                    <Ionicons name="chevron-back" size={24} color="black" />
+                    <Text style={styles.backButtonText}>ย้อนกลับ</Text>
                 </TouchableOpacity>
+            </View>
+            <View style={styles.headerSecond}>
                 <Text style={styles.headerTitle}>รายละเอียดปัญหาส่วนกลาง</Text>
-                <View style={{ width: 24 }} />
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -273,20 +276,35 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingVertical: 10,
+        backgroundColor: "#fff",
+    },
+    headerSecond: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingVertical: 10,
         backgroundColor: "#fff",
         borderBottomWidth: 1,
         borderBottomColor: "#eee",
     },
     backButton: {
-        padding: 4,
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    backButtonText: {
+        fontSize: 16,
+        color: "black",
+        marginLeft: 4,
+        fontFamily: "Kanit_400Regular",
     },
     headerTitle: {
-        fontSize: 18,
+        fontSize: 24,
+        fontWeight: "bold",
+        color: "#000",
+        textAlign: "left",
         fontFamily: "Kanit_600SemiBold",
-        color: "#333",
     },
     content: {
         flex: 1,

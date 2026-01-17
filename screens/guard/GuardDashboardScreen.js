@@ -144,15 +144,12 @@ const GuardDashboardScreen = ({ navigation }) => {
         </TouchableOpacity>
     );
 
-    // Render item for Tab รถออก
+    // Render item for Tab รถออก (ไม่มีรถลูกบ้านแล้ว เพราะ backend filter ออก)
     const renderInsideItem = ({ item }) => {
         let statusText = "";
         let statusColor = "#FCD34D";
 
-        if (item.visitor_type === 'resident') {
-            statusText = "ลูกบ้าน";
-            statusColor = "#10B981";
-        } else if (item.estamp_status === 'approved') {
+        if (item.estamp_status === 'approved') {
             statusText = "อนุมัติแล้ว";
             statusColor = "#10B981";
         } else if (item.estamp_status === 'pending') {
@@ -323,7 +320,7 @@ const GuardDashboardScreen = ({ navigation }) => {
             <Text style={styles.sectionTitle}>
                 {activeTab === 'scheduled'
                     ? "รายการรถที่ลูกบ้านแจ้งล่วงหน้า"
-                    : "รายการรถในโครงการ (แตะเพื่อบันทึกออก)"}
+                    : "รายการรถผู้มาติดต่อในโครงการ (แตะเพื่อบันทึกออก)"}
             </Text>
 
             <FlatList

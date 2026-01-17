@@ -17,6 +17,9 @@ router.get('/dashboard', superAdminController.getDashboardStats);
 // Activity Logs
 router.get('/logs', superAdminController.getActivityLogs);
 
+// Users Management
+router.get('/users', superAdminController.getAllUsers);
+
 // System Config
 router.get('/config', superAdminController.getSystemConfig);
 router.put('/config', superAdminController.updateSystemConfig);

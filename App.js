@@ -63,6 +63,8 @@ import HomeInfoOptionScreen from "./screens/Myhome/HomeInfoOptionScreen";
 import VilageRuleScreen from "./screens/MyVilage/VilageRuleScreen";
 import VilageDetailScreen from "./screens/MyVilage/VilageDetailScreen";
 import ResidentManageScreen from "./screens/residentManageUser/residentManageScreen";
+import ChangePasswordScreen from "./screens/้ChangePasswordScreen/ChangePasswordScreen";
+import VehiclesResidentsScreen from "./screens/vehicles-residents/vehicles-residents";
 
 // Security screens
 import SecurityServiceScreen from "./screens/security/SecurityServiceScreen";
@@ -168,6 +170,8 @@ const Stack = createNativeStackNavigator();
 // }
 
 // Initialize Firebase outside component
+import { getApps } from 'firebase/app';
+
 const firebaseConfig = {
   apiKey: EXTERNAL_SERVICES.FIREBASE.API_KEY,
   authDomain: EXTERNAL_SERVICES.FIREBASE.AUTH_DOMAIN,
@@ -178,7 +182,13 @@ const firebaseConfig = {
   measurementId: EXTERNAL_SERVICES.FIREBASE.MEASUREMENT_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase only once
+let app;
+if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApps()[0];
+}
 export const db = getFirestore(app);
 
 export default function App() {
@@ -331,6 +341,7 @@ export default function App() {
               <SecurityProfileScreen {...props} recheckLoginStatus={recheckLoginStatus} />
             )}
           </Stack.Screen>
+          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="Login">
             {(props) => (
@@ -371,6 +382,7 @@ export default function App() {
               <ProfileScreen {...props} recheckLoginStatus={recheckLoginStatus} />
             )}
           </Stack.Screen>
+          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
           <Stack.Screen name="News" component={NewsScreen} />
           <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
           <Stack.Screen name="Login">
@@ -443,6 +455,8 @@ export default function App() {
 
           {/* Notifications */}
           <Stack.Screen name="Notifications" component={NotificationScreen} />
+
+          <Stack.Screen name="VehiclesResidents" component={VehiclesResidentsScreen} />
 
 
         </Stack.Navigator>

@@ -134,7 +134,7 @@ const ProfileScreen = ({ recheckLoginStatus }) => {
       id: "2",
       title: "เปลี่ยนรหัสผ่าน",
       icon: "lock-closed-outline",
-      onPress: () => navigation.navigate("ChangePassword"),
+      onPress: () => navigation.navigate("ChangePassword", { phone: userData.phone }),
     },
     // {
     //   id: "3",

@@ -40,8 +40,12 @@ exports.createAnnouncement = async (req, res) => {
             (title, content, type, target_projects, is_active, start_date, end_date, created_by)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
-
-        const targetProjectsJson = target_projects ? JSON.stringify(target_projects) : null;
+        // target_projects logic:
+        // - null, undefined, or empty array [] = NULL in DB (means ALL projects)
+        // - array with values [1, 2] = JSON string in DB (means specific projects only)
+        const targetProjectsJson = (target_projects && Array.isArray(target_projects) && target_projects.length > 0)
+            ? JSON.stringify(target_projects)
+            : null;
 
         const [result] = await db.promise().query(insertQuery, [
             title,
@@ -84,7 +88,11 @@ exports.updateAnnouncement = async (req, res) => {
         if (type) { updates.push('type = ?'); params.push(type); }
         if (target_projects !== undefined) {
             updates.push('target_projects = ?');
-            params.push(target_projects ? JSON.stringify(target_projects) : null);
+            // Same logic as create: empty array = NULL (all projects)
+            const targetProjectsValue = (target_projects && Array.isArray(target_projects) && target_projects.length > 0)
+                ? JSON.stringify(target_projects)
+                : null;
+            params.push(targetProjectsValue);
         }
         if (is_active !== undefined) { updates.push('is_active = ?'); params.push(is_active); }
         if (start_date !== undefined) { updates.push('start_date = ?'); params.push(start_date); }

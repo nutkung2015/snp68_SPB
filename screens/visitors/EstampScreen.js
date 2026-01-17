@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
+        fontFamily: 'Kanit_700Bold',
         color: '#003049',
     },
     detailCard: {
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
     },
     detailValue: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontFamily: 'Kanit_700Bold',
         color: '#003049',
     },
     detailSubValue: {
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     fullButtonText: {
         color: '#fff',
         fontSize: 18,
-        fontWeight: 'bold',
+        fontFamily: 'Kanit_700Bold',
     },
 
     // Main Screen Styles
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
-        fontWeight: "bold",
+        fontFamily: "Kanit_700Bold",
         color: "#023e3a",
         marginBottom: 20,
     },
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 16,
-        fontWeight: "bold",
+        fontFamily: "Kanit_700Bold",
         color: "#023e3a",
         marginBottom: 10,
     },
@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
     },
     plateText: {
         fontSize: 18,
-        fontWeight: "bold",
+        fontFamily: "Kanit_700Bold",
         color: "#003049",
     },
     subText: {
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
     },
     statusButtonText: {
         fontSize: 12,
-        fontWeight: "bold",
+        fontFamily: "Kanit_700Bold",
     },
     emptyText: {
         textAlign: "center",
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#003049',
         marginBottom: 8,
-        fontWeight: 'bold',
+        fontFamily: 'Kanit_700Bold',
     },
     input: {
         backgroundColor: '#f9fafb',

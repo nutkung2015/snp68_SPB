@@ -42,6 +42,88 @@ exports.getDashboardStats = async (req, res) => {
 };
 
 // ==========================================
+// User Management
+// ==========================================
+exports.getAllUsers = async (req, res) => {
+    try {
+        const {
+            page = 1,
+            limit = 20,
+            search = '',
+            role = '',
+            sort_by = 'created_at',
+            sort_order = 'DESC'
+        } = req.query;
+
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+
+        // Build query
+        let query = `
+            SELECT 
+                u.id, 
+                u.email, 
+                u.full_name, 
+                u.phone, 
+                u.role,
+                u.created_at,
+                u.updated_at
+            FROM users u
+            WHERE 1=1
+        `;
+        let countQuery = 'SELECT COUNT(*) as total FROM users u WHERE 1=1';
+        let params = [];
+        let countParams = [];
+
+        // Search filter
+        if (search) {
+            const searchFilter = ' AND (u.full_name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)';
+            query += searchFilter;
+            countQuery += searchFilter;
+            const searchParam = `%${search}%`;
+            params.push(searchParam, searchParam, searchParam);
+            countParams.push(searchParam, searchParam, searchParam);
+        }
+
+        // Role filter
+        if (role) {
+            query += ' AND u.role = ?';
+            countQuery += ' AND u.role = ?';
+            params.push(role);
+            countParams.push(role);
+        }
+
+        // Sorting (whitelist allowed columns)
+        const allowedSortColumns = ['created_at', 'full_name', 'email', 'role'];
+        const sortColumn = allowedSortColumns.includes(sort_by) ? sort_by : 'created_at';
+        const sortDir = sort_order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+        query += ` ORDER BY u.${sortColumn} ${sortDir}`;
+
+        // Pagination
+        query += ' LIMIT ? OFFSET ?';
+        params.push(parseInt(limit), offset);
+
+        // Execute queries
+        const [users] = await db.promise().query(query, params);
+        const [countResult] = await db.promise().query(countQuery, countParams);
+
+        res.json({
+            status: 'success',
+            data: users,
+            pagination: {
+                total: countResult[0].total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total_pages: Math.ceil(countResult[0].total / parseInt(limit))
+            }
+        });
+
+    } catch (error) {
+        console.error('Get All Users Error:', error);
+        res.status(500).json({ status: 'error', message: 'Server error' });
+    }
+};
+
+// ==========================================
 // Activity Logs
 // ==========================================
 exports.getActivityLogs = async (req, res) => {

@@ -12,24 +12,27 @@ const protect = require("../middleware/authMiddleware");
 // Protect all routes
 router.use(protect);
 
-// @route   GET /api/vehicle-management/units/:unitId/vehicles
+// ==================== Resident Vehicle Routes ====================
+// Base Path: /api/resident-vehicles
+
+// @route   GET /api/resident-vehicles/:unitId
 // @desc    Get all vehicles of a unit
-router.get("/units/:unitId/vehicles", getUnitVehicles);
+router.get("/:unitId", getUnitVehicles);
 
-// @route   POST /api/vehicle-management/units/:unitId/vehicles
+// @route   POST /api/resident-vehicles/:unitId
 // @desc    Add a vehicle to a unit
-router.post("/units/:unitId/vehicles", addVehicle);
+router.post("/:unitId", addVehicle);
 
-// @route   GET /api/vehicle-management/units/:unitId/vehicles/:vehicleId
+// @route   GET /api/resident-vehicles/:unitId/:vehicleId
 // @desc    Get a single vehicle by ID
-router.get("/units/:unitId/vehicles/:vehicleId", getVehicleById);
+router.get("/:unitId/:vehicleId", getVehicleById);
 
-// @route   PUT /api/vehicle-management/units/:unitId/vehicles/:vehicleId
+// @route   PUT /api/resident-vehicles/:unitId/:vehicleId
 // @desc    Update a vehicle
-router.put("/units/:unitId/vehicles/:vehicleId", updateVehicle);
+router.put("/:unitId/:vehicleId", updateVehicle);
 
-// @route   DELETE /api/vehicle-management/units/:unitId/vehicles/:vehicleId
+// @route   DELETE /api/resident-vehicles/:unitId/:vehicleId
 // @desc    Remove a vehicle from a unit
-router.delete("/units/:unitId/vehicles/:vehicleId", removeVehicle);
+router.delete("/:unitId/:vehicleId", removeVehicle);
 
 module.exports = router;

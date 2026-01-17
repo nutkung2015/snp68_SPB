@@ -121,16 +121,15 @@ const NewsDetailScreen = ({ navigation, route }) => {
             <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
             {/* Header */}
+            {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={handleBack}
-                >
-                    <Ionicons name="chevron-back" size={24} color="#000" />
-                    <Text style={styles.backText}>ย้อนกลับ</Text>
+                <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+                    <Ionicons name="chevron-back" size={24} color="black" />
+                    <Text style={styles.backButtonText}>ย้อนกลับ</Text>
                 </TouchableOpacity>
+            </View>
+            <View style={styles.headerSecond}>
                 <Text style={styles.headerTitle}>ข่าวสารและประกาศ</Text>
-                <View style={styles.headerRight} />
             </View>
 
             {loading ? (
@@ -203,31 +202,34 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: Platform.OS === 'ios' ? 50 : 16,
-        paddingBottom: 16,
         paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: '#fff',
+    },
+    headerSecond: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: '#fff',
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
-        backgroundColor: '#fff',
-        zIndex: 10,
     },
     headerTitle: {
-        flex: 1,
-        textAlign: 'center',
-        fontSize: 18,
-        fontFamily: 'Kanit_700Bold',
-        marginLeft: -40, // To center the title
-    },
-    headerRight: {
-        width: 40,
+        fontSize: 24,
+        fontFamily: 'Kanit_600SemiBold',
+        color: '#000',
+        fontWeight: 'bold',
+        textAlign: 'left',
     },
     backButton: {
         flexDirection: 'row',
         alignItems: 'center',
     },
-    backText: {
-        marginLeft: 4,
+    backButtonText: {
         fontSize: 16,
+        color: 'black',
+        marginLeft: 4,
         fontFamily: 'Kanit_400Regular',
     },
     content: {

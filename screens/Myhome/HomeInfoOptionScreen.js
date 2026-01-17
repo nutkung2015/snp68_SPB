@@ -85,12 +85,15 @@ export default function HomeInfoOptionScreen({ navigation }) {
     return (
         <SafeAreaView style={styles.container}>
             {/* Header */}
-            <View style={[styles.header, { backgroundColor: primaryColor }]}>
-                <TouchableOpacity onPress={handleGoBack} style={styles.headerButton}>
-                    <Ionicons name="chevron-back" size={24} color="white" />
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+                    <Ionicons name="chevron-back" size={24} color="black" />
+                    <Text style={styles.backButtonText}>ย้อนกลับ</Text>
                 </TouchableOpacity>
+            </View>
+            <View style={styles.headerSecond}>
                 <Text style={styles.headerTitle}>ข้อมูลบ้าน</Text>
-                <View style={styles.headerButton} />
             </View>
 
             {/* Content */}
@@ -142,22 +145,37 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 8,
-        paddingVertical: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: "#fff",
     },
-    headerButton: {
-        width: 44,
-        height: 44,
-        justifyContent: "center",
+    headerSecond: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: "#fff",
+        borderBottomWidth: 1,
+        borderBottomColor: "#eee",
+    },
+    backButton: {
+        flexDirection: "row",
         alignItems: "center",
     },
+    backButtonText: {
+        fontSize: 16,
+        color: "black",
+        marginLeft: 4,
+        fontFamily: "Kanit_400Regular",
+    },
     headerTitle: {
-        fontSize: 18,
+        flex: 1,
+        fontSize: 24,
         fontWeight: "bold",
-        color: "white",
-        textAlign: "center",
+        textAlign: "start",
+        marginRight: 24,
         fontFamily: "Kanit_600SemiBold",
+        color: "#000",
     },
     content: {
         flex: 1,

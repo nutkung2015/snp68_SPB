@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         flex: 1,
         fontSize: 18,
-        fontWeight: 'bold',
+        fontFamily: 'Kanit_700Bold',
         color: '#1F2937',
         fontFamily: 'Kanit_700Bold',
     },
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
     },
     typeLabel: {
         fontSize: 12,
-        fontWeight: '600',
+        fontFamily: 'Kanit_600SemiBold',
         fontFamily: 'Kanit_400Regular',
     },
     timeText: {
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Kanit_400Regular',
     },
     unreadText: {
-        fontWeight: 'bold',
+        fontFamily: 'Kanit_700Bold',
         color: '#1F2937',
         fontFamily: 'Kanit_700Bold',
     },
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
     emptyTitle: {
         marginTop: 16,
         fontSize: 18,
-        fontWeight: 'bold',
+        fontFamily: 'Kanit_700Bold',
         color: '#6B7280',
         fontFamily: 'Kanit_700Bold',
     },

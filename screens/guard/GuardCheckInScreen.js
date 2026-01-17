@@ -11,6 +11,7 @@ import {
     Image,
     ScrollView,
     Switch,
+    ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import SecurityService from "../../services/securityService";
@@ -23,6 +24,11 @@ const GuardCheckInScreen = ({ navigation }) => {
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState("search"); // 'search' | 'result' | 'form'
 
+    // Quick Check-in Modal State (for registered vehicles)
+    const [quickCheckInModal, setQuickCheckInModal] = useState(false);
+    const [selectedVehicle, setSelectedVehicle] = useState(null);
+    const [quickCheckInLoading, setQuickCheckInLoading] = useState(false);
+
     // Form Data
     const [formData, setFormData] = useState({
         plate_number: "",
@@ -31,7 +37,7 @@ const GuardCheckInScreen = ({ navigation }) => {
         unit_number: "",
         visitor_name: "",
         project_id: "",
-        id_card_consent: true, // Default Yes
+        id_card_consent: true,
     });
 
     const [driverImage, setDriverImage] = useState(null);
@@ -42,7 +48,6 @@ const GuardCheckInScreen = ({ navigation }) => {
         if (!query) return;
         setLoading(true);
         try {
-            // Get Project ID
             const userStr = await AsyncStorage.getItem("userData");
             const user = JSON.parse(userStr);
             const pid = user.projectMemberships?.[0]?.project_id;
@@ -66,20 +71,77 @@ const GuardCheckInScreen = ({ navigation }) => {
         }
     };
 
+    // Handle selecting a registered vehicle - show quick check-in dialog
     const handleSelectVehicle = (item) => {
-        setFormData(prev => ({
-            ...prev,
-            plate_number: item.plate_number,
-            visitor_name: item.visitor_name || "",
-            target_unit_id: item.unit_id || "",
-            unit_number: item.unit_number || "",
-        }));
+        // Check if this is a registered vehicle (resident or pre-registered visitor)
+        if (item.type === 'resident' || item.type === 'visitor_pre_registered' || item.unit_id) {
+            // Show quick check-in confirmation dialog
+            setSelectedVehicle(item);
+            setQuickCheckInModal(true);
+        } else {
+            // Unknown vehicle - go to form
+            setFormData(prev => ({
+                ...prev,
+                plate_number: item.plate_number,
+                visitor_name: item.visitor_name || "",
+                target_unit_id: item.unit_id || "",
+                unit_number: item.unit_number || "",
+            }));
+            setStep("form");
+        }
+    };
+
+    // Quick check-in for registered vehicles
+    const handleQuickCheckIn = async () => {
+        if (!selectedVehicle) return;
+
+        setQuickCheckInLoading(true);
+        try {
+            const checkInPayload = {
+                plate_number: selectedVehicle.plate_number,
+                province: selectedVehicle.province || "กรุงเทพมหานคร",
+                target_unit_id: selectedVehicle.unit_id || "",
+                unit_number: selectedVehicle.unit_number || "",
+                visitor_name: selectedVehicle.visitor_name || "",
+                project_id: formData.project_id,
+                id_card_consent: 1,
+                is_quick_checkin: true, // Flag for backend
+            };
+
+            const response = await SecurityService.checkIn(checkInPayload);
+            if (response.status === "success") {
+                setQuickCheckInModal(false);
+                // Navigate back immediately after success
+                navigation.goBack();
+                // Show success message (will appear on previous screen briefly)
+                Alert.alert("สำเร็จ", `บันทึกรถเข้าเรียบร้อย\n${selectedVehicle.plate_number}`);
+            }
+        } catch (error) {
+            console.error(error);
+            Alert.alert("Error", "บันทึกข้อมูลไม่สำเร็จ");
+        } finally {
+            setQuickCheckInLoading(false);
+        }
+    };
+
+    // Go to full form instead of quick check-in
+    const handleGoToForm = () => {
+        if (selectedVehicle) {
+            setFormData(prev => ({
+                ...prev,
+                plate_number: selectedVehicle.plate_number,
+                province: selectedVehicle.province || "กรุงเทพมหานคร",
+                visitor_name: selectedVehicle.visitor_name || "",
+                target_unit_id: selectedVehicle.unit_id || "",
+                unit_number: selectedVehicle.unit_number || "",
+            }));
+        }
+        setQuickCheckInModal(false);
         setStep("form");
     };
 
     const takePhoto = async (type) => {
         try {
-            // Request permissions first
             const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
             if (permissionResult.granted === false) {
@@ -92,7 +154,7 @@ const GuardCheckInScreen = ({ navigation }) => {
                 allowsEditing: true,
                 aspect: [4, 3],
                 quality: 0.5,
-                saveToPhotos: false, // Security: Don't save to gallery
+                saveToPhotos: false,
             });
 
             if (!result.canceled) {
@@ -119,7 +181,6 @@ const GuardCheckInScreen = ({ navigation }) => {
             let driverUrl = null;
             let carUrl = null;
 
-            // Upload Driver Image
             if (driverImage) {
                 const res = await SecurityService.uploadVisitorImage(formData.project_id, driverImage);
                 if (res.status === 'success') {
@@ -127,7 +188,6 @@ const GuardCheckInScreen = ({ navigation }) => {
                 }
             }
 
-            // Upload Car Image
             if (carImage) {
                 const res = await SecurityService.uploadVisitorImage(formData.project_id, carImage);
                 if (res.status === 'success') {
@@ -135,12 +195,10 @@ const GuardCheckInScreen = ({ navigation }) => {
                 }
             }
 
-            // Submit Check In
             const checkInPayload = {
                 ...formData,
                 image_driver_url: driverUrl,
                 image_car_url: carUrl,
-                // Ensure consent is boolean/integer as needed by backend
                 id_card_consent: formData.id_card_consent ? 1 : 0
             };
 
@@ -158,6 +216,133 @@ const GuardCheckInScreen = ({ navigation }) => {
             setUploading(false);
         }
     };
+
+    // Get vehicle type label
+    const getVehicleTypeLabel = (type) => {
+        switch (type) {
+            case 'resident':
+                return { text: 'รถลูกบ้าน', color: '#10B981', icon: 'home' };
+            case 'visitor_pre_registered':
+                return { text: 'ลงทะเบียนล่วงหน้า', color: '#3B82F6', icon: 'calendar-check' };
+            default:
+                return { text: 'รถภายนอก', color: '#F59E0B', icon: 'car' };
+        }
+    };
+
+    // Quick Check-in Confirmation Modal
+    const renderQuickCheckInModal = () => (
+        <Modal
+            visible={quickCheckInModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setQuickCheckInModal(false)}
+        >
+            <View style={styles.quickModalOverlay}>
+                <View style={styles.quickModalContainer}>
+                    {/* Header */}
+                    <View style={styles.quickModalHeader}>
+                        <View style={[styles.quickModalIconCircle, { backgroundColor: '#10B98120' }]}>
+                            <Icon name="check-circle" size={32} color="#10B981" />
+                        </View>
+                        <Text style={styles.quickModalTitle}>ยืนยันการเข้าหมู่บ้าน</Text>
+                        <Text style={styles.quickModalSubtitle}>พบข้อมูลรถในระบบ</Text>
+                    </View>
+
+                    {/* Vehicle Info Card */}
+                    {selectedVehicle && (
+                        <View style={styles.vehicleInfoCard}>
+                            {/* License Plate */}
+                            <View style={styles.plateContainer}>
+                                <View style={styles.plateBox}>
+                                    <Text style={styles.plateText}>{selectedVehicle.plate_number}</Text>
+                                </View>
+                                {selectedVehicle.province && (
+                                    <Text style={styles.provinceText}>{selectedVehicle.province}</Text>
+                                )}
+                            </View>
+
+                            {/* Vehicle Type Badge */}
+                            <View style={[
+                                styles.typeBadge,
+                                { backgroundColor: getVehicleTypeLabel(selectedVehicle.type).color + '20' }
+                            ]}>
+                                <Icon
+                                    name={getVehicleTypeLabel(selectedVehicle.type).icon}
+                                    size={14}
+                                    color={getVehicleTypeLabel(selectedVehicle.type).color}
+                                />
+                                <Text style={[
+                                    styles.typeBadgeText,
+                                    { color: getVehicleTypeLabel(selectedVehicle.type).color }
+                                ]}>
+                                    {getVehicleTypeLabel(selectedVehicle.type).text}
+                                </Text>
+                            </View>
+
+                            {/* Details */}
+                            <View style={styles.infoRow}>
+                                <Icon name="home" size={14} color="#6B7280" />
+                                <Text style={styles.infoText}>
+                                    บ้านเลขที่: {selectedVehicle.unit_number || '-'}
+                                </Text>
+                            </View>
+
+                            {selectedVehicle.visitor_name && (
+                                <View style={styles.infoRow}>
+                                    <Icon name="user" size={14} color="#6B7280" />
+                                    <Text style={styles.infoText}>
+                                        ชื่อ: {selectedVehicle.visitor_name}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {selectedVehicle.brand && (
+                                <View style={styles.infoRow}>
+                                    <Icon name="car" size={14} color="#6B7280" />
+                                    <Text style={styles.infoText}>
+                                        {selectedVehicle.brand} {selectedVehicle.color ? `(${selectedVehicle.color})` : ''}
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+                    )}
+
+                    {/* Buttons */}
+                    <View style={styles.quickModalButtons}>
+                        <TouchableOpacity
+                            style={styles.quickConfirmButton}
+                            onPress={handleQuickCheckIn}
+                            disabled={quickCheckInLoading}
+                        >
+                            {quickCheckInLoading ? (
+                                <ActivityIndicator color="#fff" size="small" />
+                            ) : (
+                                <>
+                                    <Icon name="check" size={16} color="#fff" style={{ marginRight: 8 }} />
+                                    <Text style={styles.quickConfirmText}>ยืนยันเข้าหมู่บ้าน</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.quickEditButton}
+                            onPress={handleGoToForm}
+                        >
+                            <Icon name="edit" size={14} color="#003049" style={{ marginRight: 8 }} />
+                            <Text style={styles.quickEditText}>แก้ไข/เพิ่มข้อมูล</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.quickCancelButton}
+                            onPress={() => setQuickCheckInModal(false)}
+                        >
+                            <Text style={styles.quickCancelText}>ยกเลิก</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    );
 
     // UI Components
     const renderSearchStep = () => (
@@ -201,19 +386,31 @@ const GuardCheckInScreen = ({ navigation }) => {
             <FlatList
                 data={results}
                 keyExtractor={(item, index) => index.toString()}
-                renderItem={({ item }) => (
-                    <TouchableOpacity style={styles.resultItem} onPress={() => handleSelectVehicle(item)}>
-                        <Icon name="car" size={20} color="#003049" style={{ marginRight: 10 }} />
-                        <View>
-                            <Text style={styles.resultTitle}>{item.plate_number}</Text>
-                            <Text style={styles.resultSub}>{item.label}</Text>
-                        </View>
-                        <Icon name="chevron-right" size={16} color="#9CA3AF" style={{ marginLeft: 'auto' }} />
-                    </TouchableOpacity>
-                )}
+                renderItem={({ item }) => {
+                    const typeInfo = getVehicleTypeLabel(item.type);
+                    return (
+                        <TouchableOpacity style={styles.resultItem} onPress={() => handleSelectVehicle(item)}>
+                            <View style={[styles.resultIconCircle, { backgroundColor: typeInfo.color + '20' }]}>
+                                <Icon name={typeInfo.icon} size={18} color={typeInfo.color} />
+                            </View>
+                            <View style={styles.resultContent}>
+                                <Text style={styles.resultTitle}>{item.plate_number}</Text>
+                                <Text style={styles.resultSub}>{item.label || typeInfo.text}</Text>
+                                {item.unit_number && (
+                                    <Text style={styles.resultUnit}>บ้านเลขที่: {item.unit_number}</Text>
+                                )}
+                            </View>
+                            <View style={[styles.resultBadge, { backgroundColor: typeInfo.color }]}>
+                                <Text style={styles.resultBadgeText}>
+                                    {item.type === 'resident' ? 'ลูกบ้าน' : 'จอง'}
+                                </Text>
+                            </View>
+                            <Icon name="chevron-right" size={16} color="#9CA3AF" style={{ marginLeft: 8 }} />
+                        </TouchableOpacity>
+                    );
+                }}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        {/* Illustration */}
                         <View style={styles.emptyIconWrapper}>
                             <View style={styles.emptyIconCircle}>
                                 <Icon name="car" size={40} color="#9CA3AF" />
@@ -223,14 +420,12 @@ const GuardCheckInScreen = ({ navigation }) => {
                             </View>
                         </View>
 
-                        {/* Text */}
                         <Text style={styles.emptyTitle}>ไม่พบข้อมูลรถในระบบ</Text>
                         <Text style={styles.emptySubtitle}>
                             ไม่พบทะเบียน "{query}" ในรายการ{'\n'}
                             คุณสามารถบันทึกเป็นรถภายนอกได้
                         </Text>
 
-                        {/* CTA Button */}
                         <TouchableOpacity
                             style={styles.walkInButton}
                             onPress={() => {
@@ -242,7 +437,6 @@ const GuardCheckInScreen = ({ navigation }) => {
                             <Text style={styles.walkInButtonText}>บันทึกเป็นรถภายนอก (Walk-in)</Text>
                         </TouchableOpacity>
 
-                        {/* Secondary action */}
                         <TouchableOpacity
                             style={styles.retryButton}
                             onPress={() => setStep('search')}
@@ -265,7 +459,6 @@ const GuardCheckInScreen = ({ navigation }) => {
             </View>
             <Text style={styles.title}>บันทึกข้อมูลรถเข้า</Text>
 
-            {/* License Plate & Province */}
             <View style={styles.row}>
                 <View style={[styles.col, { marginRight: 10 }]}>
                     <Text style={styles.label}>ทะเบียนรถ (เต็ม)</Text>
@@ -286,10 +479,8 @@ const GuardCheckInScreen = ({ navigation }) => {
                 </View>
             </View>
 
-            {/* Photos */}
             <Text style={styles.sectionHeader}>ภาพถ่าย (Camera Only)</Text>
             <View style={styles.photoContainer}>
-                {/* Driver / ID Card Photo */}
                 <View style={styles.photoBox}>
                     <Text style={styles.photoLabel}>บัตรประชาชน/คนขับ</Text>
                     <TouchableOpacity onPress={() => takePhoto('driver')} style={styles.photoButton}>
@@ -304,7 +495,6 @@ const GuardCheckInScreen = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
 
-                {/* Car Photo */}
                 <View style={styles.photoBox}>
                     <Text style={styles.photoLabel}>รูปรถ</Text>
                     <TouchableOpacity onPress={() => takePhoto('car')} style={styles.photoButton}>
@@ -320,7 +510,6 @@ const GuardCheckInScreen = ({ navigation }) => {
                 </View>
             </View>
 
-            {/* Consent Toggle */}
             <View style={styles.toggleRow}>
                 <Text style={styles.toggleLabel}>ยินยอมให้ถ่ายรูปบัตรประชาชน</Text>
                 <Switch
@@ -362,21 +551,23 @@ const GuardCheckInScreen = ({ navigation }) => {
                     <Text style={styles.submitButtonText}>บันทึก (Check-in)</Text>
                 )}
             </TouchableOpacity>
-
         </ScrollView>
     );
 
-    if (step === 'search') {
-        return (
-            <View style={styles.modalContainer}>
-                {renderSearchStep()}
-            </View>
-        );
-    } else if (step === 'result') {
-        return renderResultStep();
-    } else {
-        return renderFormStep();
-    }
+    return (
+        <>
+            {step === 'search' && (
+                <View style={styles.modalContainer}>
+                    {renderSearchStep()}
+                </View>
+            )}
+            {step === 'result' && renderResultStep()}
+            {step === 'form' && renderFormStep()}
+
+            {/* Quick Check-in Modal */}
+            {renderQuickCheckInModal()}
+        </>
+    );
 };
 
 const styles = StyleSheet.create({
@@ -393,7 +584,7 @@ const styles = StyleSheet.create({
         height: '50%',
     },
     container: {
-        flexGrow: 1, // for scrollView
+        flexGrow: 1,
         backgroundColor: "#fff",
         padding: 20,
     },
@@ -484,6 +675,18 @@ const styles = StyleSheet.create({
         padding: 15,
         borderBottomWidth: 1,
         borderBottomColor: '#F3F4F6',
+        backgroundColor: '#fff',
+    },
+    resultIconCircle: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    resultContent: {
+        flex: 1,
     },
     resultTitle: {
         fontSize: 16,
@@ -493,6 +696,21 @@ const styles = StyleSheet.create({
     resultSub: {
         fontSize: 12,
         color: '#6B7280',
+    },
+    resultUnit: {
+        fontSize: 11,
+        color: '#9CA3AF',
+        marginTop: 2,
+    },
+    resultBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    resultBadgeText: {
+        fontSize: 10,
+        color: '#fff',
+        fontWeight: 'bold',
     },
     primaryButton: {
         backgroundColor: '#003049',
@@ -674,6 +892,147 @@ const styles = StyleSheet.create({
         color: '#6B7280',
         fontSize: 14,
         textDecorationLine: 'underline',
+    },
+    // Quick Check-in Modal Styles
+    quickModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    quickModalContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        width: '100%',
+        maxWidth: 400,
+        padding: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.25,
+        shadowRadius: 20,
+        elevation: 10,
+    },
+    quickModalHeader: {
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    quickModalIconCircle: {
+        width: 70,
+        height: 70,
+        borderRadius: 35,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    quickModalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#1F2937',
+    },
+    quickModalSubtitle: {
+        fontSize: 14,
+        color: '#6B7280',
+        marginTop: 4,
+    },
+    vehicleInfoCard: {
+        backgroundColor: '#F9FAFB',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    },
+    plateContainer: {
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    plateBox: {
+        backgroundColor: '#fff',
+        borderWidth: 2,
+        borderColor: '#003049',
+        borderRadius: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 24,
+        marginBottom: 4,
+    },
+    plateText: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#003049',
+        letterSpacing: 2,
+    },
+    provinceText: {
+        fontSize: 12,
+        color: '#6B7280',
+    },
+    typeBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        marginBottom: 12,
+    },
+    typeBadgeText: {
+        fontSize: 12,
+        fontWeight: '600',
+        marginLeft: 6,
+    },
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    infoText: {
+        fontSize: 14,
+        color: '#374151',
+        marginLeft: 8,
+    },
+    quickModalButtons: {
+        gap: 10,
+    },
+    quickConfirmButton: {
+        flexDirection: 'row',
+        backgroundColor: '#10B981',
+        paddingVertical: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#10B981',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    quickConfirmText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    quickEditButton: {
+        flexDirection: 'row',
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#003049',
+        paddingVertical: 14,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    quickEditText: {
+        color: '#003049',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    quickCancelButton: {
+        paddingVertical: 12,
+        alignItems: 'center',
+    },
+    quickCancelText: {
+        color: '#9CA3AF',
+        fontSize: 14,
     },
 });
 

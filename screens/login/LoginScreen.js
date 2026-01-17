@@ -67,7 +67,7 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground
-        source={require("../../assets/mockup_banner_header_4.png")}
+        source={require("../../assets/baner_new_r5.png")}
         style={styles.headerBackground}
         resizeMode="cover"
         imageStyle={{
@@ -95,8 +95,8 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
           <View style={styles.emailContainer}>
             <TextInput
               style={styles.emailInput}
-              placeholder="email"
-              placeholderTextColor="#07354E"
+              placeholder="อีเมลหรือเบอร์โทรศัพท์"
+              placeholderTextColor="#2f3f47ff"
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -105,8 +105,8 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
           <View style={styles.passwordContainer}>
             <TextInput
               style={styles.passwordInput}
-              placeholder="password"
-              placeholderTextColor="#07354E"
+              placeholder="รหัสผ่าน"
+              placeholderTextColor="#2f3f47ff"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
@@ -118,7 +118,7 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
               <Ionicons
                 name={showPassword ? "eye-off-outline" : "eye-outline"}
                 size={24}
-                color="#07354E"
+                color="#2f3f47ff"
               />
             </TouchableOpacity>
           </View>

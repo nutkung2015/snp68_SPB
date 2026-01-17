@@ -237,9 +237,9 @@ exports.getEntryLogs = async (req, res) => {
             // Tab "รถเข้า" - ไม่ใช้แล้ว (legacy)
             query += " AND el.status = 'inside' AND el.estamp_status = 'pending'";
         } else if (status === 'inside') {
-            // Tab "รถออก" - รถที่อยู่ในโครงการทั้งหมด (รอบันทึกออก)
-            // แสดงทั้ง pending และ approved เพื่อให้ รปภ เห็นสถานะประทับตรา
-            query += " AND el.status = 'inside'";
+            // Tab "รถออก" - รถที่อยู่ในโครงการ (รอบันทึกออก)
+            // ไม่รวมรถลูกบ้าน (visitor_type='resident') เพราะไม่จำเป็นต้องบันทึกออก
+            query += " AND el.status = 'inside' AND el.visitor_type != 'resident'";
         } else if (status === 'exited') {
             // Tab "ประวัติ" - รถที่ออกไปแล้ว
             query += " AND el.status = 'exited'";

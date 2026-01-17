@@ -209,7 +209,7 @@ const ResidentManageScreen = ({ navigation }) => {
             Alert.alert("ผิดพลาด", "ไม่พบข้อมูลบ้าน");
             return;
         }
-        navigation.navigate("UnitVehicles", { unitId: unitId });
+        navigation.navigate("VehiclesResidents", { unitId: unitId });
     };
 
     // Get initials from name

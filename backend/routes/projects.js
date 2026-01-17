@@ -8,6 +8,7 @@ const houseModelController = require('../controllers/houseModelController');
 const projectModelController = require('../controllers/projectModelController');
 
 const upload = require('../middleware/uploadMiddleware'); // Import upload middleware
+const requireSuperAdmin = require('../middleware/superAdminMiddleware'); // For super admin only routes
 
 // Route สำหรับดึงข้อมูล project memberships (ต้องอยู่ก่อน /:id เพื่อไม่ให้ conflict)
 router.get('/memberships', authMiddleware, projectController.getProjectMemberships);
@@ -17,8 +18,20 @@ router.get('/memberships', authMiddleware, projectController.getProjectMembershi
 // IMPORTANT: ต้องอยู่ก่อน /:id เพื่อไม่ให้ถูก match เป็น project id
 router.get('/info-docs', authMiddleware, projectModelController.getProjectInfoDocs);
 
-// Route สำหรับสร้างโปรเจกต์ใหม่
-router.post('/', authMiddleware, projectController.createProject);
+// Route สำหรับดึงโปรเจกต์ทั้งหมด (Super Admin Only)
+router.get('/', authMiddleware, requireSuperAdmin, projectController.getAllProjects);
+
+// Route สำหรับสร้างโปรเจกต์ใหม่ (Super Admin Only)
+router.post('/', authMiddleware, requireSuperAdmin, projectController.createProject);
+
+// Route สำหรับแก้ไขโปรเจกต์ (Super Admin Only)
+router.put('/:id', authMiddleware, requireSuperAdmin, projectController.updateProject);
+
+// Route สำหรับลบโปรเจกต์ (Super Admin Only) - Soft Delete
+router.delete('/:id', authMiddleware, requireSuperAdmin, projectController.deleteProject);
+
+// Route สำหรับกู้คืนโปรเจกต์ที่ถูกลบ (Super Admin Only)
+router.post('/:id/restore', authMiddleware, requireSuperAdmin, projectController.restoreProject);
 
 // Route สำหรับดึงรายละเอียดโปรเจกต์
 router.get('/:id', authMiddleware, projectController.getProjectDetails);

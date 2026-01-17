@@ -1,8 +1,11 @@
 const db = require("../config/db");
 const { v4: uuidv4 } = require("uuid");
 
+// Table name constant
+const VEHICLES_TABLE = "project_vehicles";
+
 // @desc    Get all vehicles of a unit
-// @route   GET /api/units/:unitId/vehicles
+// @route   GET /api/resident-vehicles/:unitId
 // @access  Private (Unit members or Project juristic)
 exports.getUnitVehicles = async (req, res) => {
     try {
@@ -18,21 +21,18 @@ exports.getUnitVehicles = async (req, res) => {
         // Get all vehicles of the unit
         const [vehicles] = await db.promise().execute(
             `SELECT 
-        v.id,
-        v.unit_id,
-        v.license_plate,
-        v.vehicle_type,
-        v.brand,
-        v.model,
-        v.color,
-        v.is_primary,
-        v.created_at,
-        v.updated_at,
-        u.full_name as registered_by_name
-       FROM vehicles v
-       LEFT JOIN users u ON v.registered_by = u.id
-       WHERE v.unit_id = ?
-       ORDER BY v.is_primary DESC, v.created_at ASC`,
+                id,
+                project_id,
+                unit_id,
+                plate_number,
+                province,
+                brand,
+                color,
+                is_active,
+                created_at
+            FROM ${VEHICLES_TABLE}
+            WHERE unit_id = ?
+            ORDER BY is_active DESC, created_at ASC`,
             [unitId]
         );
 
@@ -49,18 +49,17 @@ exports.getUnitVehicles = async (req, res) => {
 };
 
 // @desc    Add a vehicle to a unit
-// @route   POST /api/units/:unitId/vehicles
+// @route   POST /api/resident-vehicles/:unitId
 // @access  Private (Unit members)
 exports.addVehicle = async (req, res) => {
     try {
         const { unitId } = req.params;
-        const { license_plate, vehicle_type, brand, model, color, is_primary } =
-            req.body;
+        const { plate_number, province, brand, color, is_active } = req.body;
         const user_id = req.user.id;
 
         // Validate required fields
-        if (!license_plate) {
-            return res.status(400).json({ message: "License plate is required" });
+        if (!plate_number) {
+            return res.status(400).json({ message: "Plate number is required" });
         }
 
         // Check if user is a member of the unit
@@ -75,22 +74,34 @@ exports.addVehicle = async (req, res) => {
             });
         }
 
-        // Check if license plate already exists in this unit
+        // Get project_id from unit
+        const [unitInfo] = await db.promise().execute(
+            "SELECT project_id FROM units WHERE id = ?",
+            [unitId]
+        );
+
+        if (unitInfo.length === 0) {
+            return res.status(404).json({ message: "Unit not found" });
+        }
+
+        const project_id = unitInfo[0].project_id;
+
+        // Check if plate number already exists in this unit
         const [existingVehicle] = await db.promise().execute(
-            "SELECT id FROM vehicles WHERE unit_id = ? AND license_plate = ?",
-            [unitId, license_plate.trim().toUpperCase()]
+            `SELECT id FROM ${VEHICLES_TABLE} WHERE unit_id = ? AND plate_number = ?`,
+            [unitId, plate_number.trim().toUpperCase()]
         );
 
         if (existingVehicle.length > 0) {
             return res.status(409).json({
-                message: "This license plate is already registered in this unit",
+                message: "This plate number is already registered in this unit",
             });
         }
 
-        // If this is primary, remove primary from other vehicles
-        if (is_primary) {
+        // If this is active, set other vehicles to inactive
+        if (is_active) {
             await db.promise().execute(
-                "UPDATE vehicles SET is_primary = FALSE WHERE unit_id = ?",
+                `UPDATE ${VEHICLES_TABLE} SET is_active = FALSE WHERE unit_id = ?`,
                 [unitId]
             );
         }
@@ -98,19 +109,18 @@ exports.addVehicle = async (req, res) => {
         // Insert new vehicle
         const vehicleId = uuidv4();
         await db.promise().execute(
-            `INSERT INTO vehicles 
-        (id, unit_id, license_plate, vehicle_type, brand, model, color, is_primary, registered_by, created_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            `INSERT INTO ${VEHICLES_TABLE} 
+                (id, project_id, unit_id, plate_number, province, brand, color, is_active, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
             [
                 vehicleId,
+                project_id,
                 unitId,
-                license_plate.trim().toUpperCase(),
-                vehicle_type || "car",
+                plate_number.trim().toUpperCase(),
+                province || null,
                 brand || null,
-                model || null,
                 color || null,
-                is_primary || false,
-                user_id,
+                is_active || false,
             ]
         );
 
@@ -126,13 +136,12 @@ exports.addVehicle = async (req, res) => {
 };
 
 // @desc    Update a vehicle
-// @route   PUT /api/units/:unitId/vehicles/:vehicleId
+// @route   PUT /api/resident-vehicles/:unitId/:vehicleId
 // @access  Private (Unit members)
 exports.updateVehicle = async (req, res) => {
     try {
         const { unitId, vehicleId } = req.params;
-        const { license_plate, vehicle_type, brand, model, color, is_primary } =
-            req.body;
+        const { plate_number, province, brand, color, is_active } = req.body;
         const user_id = req.user.id;
 
         // Check if user is a member of the unit
@@ -149,7 +158,7 @@ exports.updateVehicle = async (req, res) => {
 
         // Check if vehicle exists
         const [vehicle] = await db.promise().execute(
-            "SELECT id FROM vehicles WHERE id = ? AND unit_id = ?",
+            `SELECT id FROM ${VEHICLES_TABLE} WHERE id = ? AND unit_id = ?`,
             [vehicleId, unitId]
         );
 
@@ -157,24 +166,24 @@ exports.updateVehicle = async (req, res) => {
             return res.status(404).json({ message: "Vehicle not found" });
         }
 
-        // If changing license plate, check for duplicates
-        if (license_plate) {
+        // If changing plate number, check for duplicates
+        if (plate_number) {
             const [existingVehicle] = await db.promise().execute(
-                "SELECT id FROM vehicles WHERE unit_id = ? AND license_plate = ? AND id != ?",
-                [unitId, license_plate.trim().toUpperCase(), vehicleId]
+                `SELECT id FROM ${VEHICLES_TABLE} WHERE unit_id = ? AND plate_number = ? AND id != ?`,
+                [unitId, plate_number.trim().toUpperCase(), vehicleId]
             );
 
             if (existingVehicle.length > 0) {
                 return res.status(409).json({
-                    message: "This license plate is already registered in this unit",
+                    message: "This plate number is already registered in this unit",
                 });
             }
         }
 
-        // If setting as primary, remove primary from other vehicles
-        if (is_primary) {
+        // If setting as active, set other vehicles to inactive
+        if (is_active) {
             await db.promise().execute(
-                "UPDATE vehicles SET is_primary = FALSE WHERE unit_id = ? AND id != ?",
+                `UPDATE ${VEHICLES_TABLE} SET is_active = FALSE WHERE unit_id = ? AND id != ?`,
                 [unitId, vehicleId]
             );
         }
@@ -183,40 +192,35 @@ exports.updateVehicle = async (req, res) => {
         const updates = [];
         const values = [];
 
-        if (license_plate !== undefined) {
-            updates.push("license_plate = ?");
-            values.push(license_plate.trim().toUpperCase());
+        if (plate_number !== undefined) {
+            updates.push("plate_number = ?");
+            values.push(plate_number.trim().toUpperCase());
         }
-        if (vehicle_type !== undefined) {
-            updates.push("vehicle_type = ?");
-            values.push(vehicle_type);
+        if (province !== undefined) {
+            updates.push("province = ?");
+            values.push(province);
         }
         if (brand !== undefined) {
             updates.push("brand = ?");
             values.push(brand);
         }
-        if (model !== undefined) {
-            updates.push("model = ?");
-            values.push(model);
-        }
         if (color !== undefined) {
             updates.push("color = ?");
             values.push(color);
         }
-        if (is_primary !== undefined) {
-            updates.push("is_primary = ?");
-            values.push(is_primary);
+        if (is_active !== undefined) {
+            updates.push("is_active = ?");
+            values.push(is_active);
         }
 
         if (updates.length === 0) {
             return res.status(400).json({ message: "No fields to update" });
         }
 
-        updates.push("updated_at = NOW()");
         values.push(vehicleId);
 
         await db.promise().execute(
-            `UPDATE vehicles SET ${updates.join(", ")} WHERE id = ?`,
+            `UPDATE ${VEHICLES_TABLE} SET ${updates.join(", ")} WHERE id = ?`,
             values
         );
 
@@ -231,7 +235,7 @@ exports.updateVehicle = async (req, res) => {
 };
 
 // @desc    Remove a vehicle from a unit
-// @route   DELETE /api/units/:unitId/vehicles/:vehicleId
+// @route   DELETE /api/resident-vehicles/:unitId/:vehicleId
 // @access  Private (Unit members)
 exports.removeVehicle = async (req, res) => {
     try {
@@ -275,7 +279,7 @@ exports.removeVehicle = async (req, res) => {
 
         // Check if vehicle exists
         const [vehicle] = await db.promise().execute(
-            "SELECT id FROM vehicles WHERE id = ? AND unit_id = ?",
+            `SELECT id FROM ${VEHICLES_TABLE} WHERE id = ? AND unit_id = ?`,
             [vehicleId, unitId]
         );
 
@@ -284,7 +288,7 @@ exports.removeVehicle = async (req, res) => {
         }
 
         // Delete the vehicle
-        await db.promise().execute("DELETE FROM vehicles WHERE id = ?", [vehicleId]);
+        await db.promise().execute(`DELETE FROM ${VEHICLES_TABLE} WHERE id = ?`, [vehicleId]);
 
         res.status(200).json({
             status: "success",
@@ -297,7 +301,7 @@ exports.removeVehicle = async (req, res) => {
 };
 
 // @desc    Get a single vehicle by ID
-// @route   GET /api/units/:unitId/vehicles/:vehicleId
+// @route   GET /api/resident-vehicles/:unitId/:vehicleId
 // @access  Private (Unit members or Project juristic)
 exports.getVehicleById = async (req, res) => {
     try {
@@ -313,20 +317,17 @@ exports.getVehicleById = async (req, res) => {
         // Get vehicle
         const [vehicles] = await db.promise().execute(
             `SELECT 
-        v.id,
-        v.unit_id,
-        v.license_plate,
-        v.vehicle_type,
-        v.brand,
-        v.model,
-        v.color,
-        v.is_primary,
-        v.created_at,
-        v.updated_at,
-        u.full_name as registered_by_name
-       FROM vehicles v
-       LEFT JOIN users u ON v.registered_by = u.id
-       WHERE v.id = ? AND v.unit_id = ?`,
+                id,
+                project_id,
+                unit_id,
+                plate_number,
+                province,
+                brand,
+                color,
+                is_active,
+                created_at
+            FROM ${VEHICLES_TABLE}
+            WHERE id = ? AND unit_id = ?`,
             [vehicleId, unitId]
         );
 

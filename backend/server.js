@@ -165,7 +165,8 @@ const corsOptions = {
     : [
       'http://localhost:8081',   // Expo Dev Server
       'http://localhost:4200',   // Angular Web Backoffice
-      'http://127.0.0.1:5000'    // Backend Local
+      'http://127.0.0.1:5000',  // Backend Local
+      'http://127.0.0.1:8081'
     ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
@@ -247,7 +248,10 @@ app.use("/api/visitors", require("./routes/visitors"));
 app.use("/api/resident-management", require("./routes/manageResidentForResident"));
 
 // Vehicle Management Routes (for residents)
-app.use("/api/vehicle-management", require("./routes/manageVehicleForResident"));
+app.use("/api/resident-vehicles", require("./routes/manageVehicleForResident"));
+
+// Vehicle Management Routes (for juristic)
+app.use("/api/juristic/vehicles", require("./routes/juristicVehicles"));
 
 // Residents Route (All residents of a project)
 app.use("/api/residents", require("./routes/residents"));

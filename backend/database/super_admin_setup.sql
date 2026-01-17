@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS admin_activity_logs (
     INDEX idx_admin_id (admin_user_id),
     INDEX idx_action_type (action_type),
     INDEX idx_created_at (created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- 2. system_config
 -- เก็บค่า Config ของระบบแบบ Key-Value
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS system_config (
     updated_by VARCHAR(255),
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_config_key (config_key)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- Initial System Config Data (Example)
 INSERT IGNORE INTO system_config (config_key, config_value, config_type, description) VALUES
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS project_feature_flags (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY unique_project_feature (project_id, feature_name),
     INDEX idx_project_id (project_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 -- 4. global_announcements
 -- ประกาศจาก Super Admin ไปยังทุกโครงการ หรือเฉพาะโครงการ
@@ -66,4 +66,4 @@ CREATE TABLE IF NOT EXISTS global_announcements (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_is_active (is_active),
     INDEX idx_dates (start_date, end_date)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;

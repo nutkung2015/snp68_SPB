@@ -3,6 +3,10 @@
 .env.local
 .env.production
 
+# Firebase
+serviceAccountKey.json
+backend/config/serviceAccountKey.json
+
 # Dependencies
 node_modules/
 

@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     },
     navTitle: {
         fontSize: 17,
-        fontWeight: '600',
+        fontFamily: 'Kanit_600SemiBold',
         color: '#000',
     },
     postButton: {
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
     postButtonText: {
         color: '#fff',
         fontSize: 15,
-        fontWeight: '600',
+        fontFamily: 'Kanit_600SemiBold',
     },
     searchContainer: {
         padding: 16,
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     },
     userAlias: {
         fontSize: 15,
-        fontWeight: '600',
+        fontFamily: 'Kanit_600SemiBold',
         color: '#000',
     },
     contentContainer: {
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     },
     emotionTitle: {
         fontSize: 18,
-        fontWeight: '600',
+        fontFamily: 'Kanit_600SemiBold',
         color: '#000',
     },
     discription: {
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
     actionButtonText: {
         color: 'rgba(99, 99, 99, 1)',
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: 'Kanit_600SemiBold',
     },
     primaryButton: {
         backgroundColor: 'rgba(99, 99, 99, 1)',
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 17,
-        fontWeight: '600',
+        fontFamily: 'Kanit_600SemiBold',
     },
     modalPostButton: {
         padding: 8,
@@ -659,14 +659,14 @@ const styles = StyleSheet.create({
     modalPostButtonText: {
         color: '#474747ff',
         fontSize: 17,
-        fontWeight: '600',
+        fontFamily: 'Kanit_600SemiBold',
     },
     emojiSection: {
         padding: 16,
     },
     sectionTitle: {
         fontSize: 15,
-        fontWeight: '600',
+        fontFamily: 'Kanit_600SemiBold',
         marginBottom: 12,
     },
     emojiGrid: {

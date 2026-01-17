@@ -1,0 +1,674 @@
+import React, { useState, useEffect } from "react";
+import {
+    View,
+    Text,
+    StyleSheet,
+    SafeAreaView,
+    TouchableOpacity,
+    ScrollView,
+    ActivityIndicator,
+    Alert,
+    Platform,
+    Switch,
+    Modal,
+    TextInput,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+    useFonts,
+    Kanit_400Regular,
+    Kanit_500Medium,
+    Kanit_700Bold,
+} from "@expo-google-fonts/kanit";
+import VehicleService from "../../services/vehicleService";
+import ProjectCustomizationsService from "../../services/projectCustomizationsService";
+
+const VehiclesResidentsScreen = ({ navigation, route }) => {
+    const [fontsLoaded] = useFonts({
+        Kanit_400Regular,
+        Kanit_500Medium,
+        Kanit_700Bold,
+    });
+
+    // States
+    const [vehicles, setVehicles] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [unitId, setUnitId] = useState(route?.params?.unitId || null);
+    const [primaryColor, setPrimaryColor] = useState("#2A405E");
+
+    // Add Vehicle Modal States
+    const [addModalVisible, setAddModalVisible] = useState(false);
+    const [addLoading, setAddLoading] = useState(false);
+    const [newVehicle, setNewVehicle] = useState({
+        plate_number: "",
+        province: "",
+        brand: "",
+        color: "",
+        is_active: false,
+    });
+
+    // Fetch project customizations
+    const fetchProjectCustomizations = async (projectId) => {
+        try {
+            const response = await ProjectCustomizationsService.getProjectCustomizations(projectId);
+            if (response && response.primary_color) {
+                setPrimaryColor(response.primary_color);
+            }
+        } catch (err) {
+            console.error("Error fetching project customizations:", err);
+        }
+    };
+
+    // Fetch vehicles
+    const fetchVehicles = async (unitIdParam) => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await VehicleService.getUnitVehicles(unitIdParam);
+
+            if (response && response.status === "success") {
+                setVehicles(response.data || []);
+            } else {
+                setVehicles([]);
+            }
+        } catch (err) {
+            console.error("Error fetching vehicles:", err);
+            setError("ไม่สามารถโหลดข้อมูลรถได้");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Load data on mount
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                // If unitId passed via route params
+                if (route?.params?.unitId) {
+                    setUnitId(route.params.unitId);
+                    await fetchVehicles(route.params.unitId);
+                } else {
+                    // Otherwise get from AsyncStorage
+                    const storedUserData = await AsyncStorage.getItem("userData");
+                    if (storedUserData) {
+                        const userData = JSON.parse(storedUserData);
+                        if (userData?.unitMemberships?.[0]?.unit_id) {
+                            const currentUnitId = userData.unitMemberships[0].unit_id;
+                            setUnitId(currentUnitId);
+                            await fetchVehicles(currentUnitId);
+                        }
+
+                        // Get project customizations
+                        if (userData?.projectMemberships?.[0]?.project_id) {
+                            await fetchProjectCustomizations(userData.projectMemberships[0].project_id);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Error loading data:", err);
+                setError("ไม่สามารถโหลดข้อมูลได้");
+                setLoading(false);
+            }
+        };
+
+        loadData();
+    }, [route?.params?.unitId]);
+
+    // Handle toggle active
+    const handleToggleActive = async (vehicle) => {
+        try {
+            await VehicleService.setActiveVehicle(unitId, vehicle.id, !vehicle.is_active);
+            // Refresh list
+            await fetchVehicles(unitId);
+        } catch (err) {
+            console.error("Error toggling active:", err);
+            Alert.alert("ผิดพลาด", "ไม่สามารถเปลี่ยนสถานะได้");
+        }
+    };
+
+    // Handle add vehicle
+    const handleAddVehicle = async () => {
+        if (!newVehicle.plate_number.trim()) {
+            Alert.alert("ผิดพลาด", "กรุณากรอกทะเบียนรถ");
+            return;
+        }
+
+        try {
+            setAddLoading(true);
+            await VehicleService.addVehicle(unitId, {
+                plate_number: newVehicle.plate_number.trim(),
+                province: newVehicle.province.trim() || null,
+                brand: newVehicle.brand.trim() || null,
+                color: newVehicle.color.trim() || null,
+                is_active: newVehicle.is_active,
+            });
+
+            // Reset form and close modal
+            setNewVehicle({
+                plate_number: "",
+                province: "",
+                brand: "",
+                color: "",
+                is_active: false,
+            });
+            setAddModalVisible(false);
+
+            // Refresh list
+            await fetchVehicles(unitId);
+            Alert.alert("สำเร็จ", "เพิ่มรถเรียบร้อยแล้ว");
+        } catch (err) {
+            console.error("Error adding vehicle:", err);
+            if (err.message?.includes("already registered")) {
+                Alert.alert("ผิดพลาด", "ทะเบียนรถนี้มีอยู่ในระบบแล้ว");
+            } else {
+                Alert.alert("ผิดพลาด", "ไม่สามารถเพิ่มรถได้");
+            }
+        } finally {
+            setAddLoading(false);
+        }
+    };
+
+    // Handle remove vehicle
+    const handleRemoveVehicle = (vehicle) => {
+        Alert.alert(
+            "ยืนยันการลบ",
+            `คุณต้องการลบรถทะเบียน ${vehicle.plate_number} หรือไม่?`,
+            [
+                { text: "ยกเลิก", style: "cancel" },
+                {
+                    text: "ลบ",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await VehicleService.removeVehicle(unitId, vehicle.id);
+                            await fetchVehicles(unitId);
+                            Alert.alert("สำเร็จ", "ลบรถเรียบร้อยแล้ว");
+                        } catch (err) {
+                            Alert.alert("ผิดพลาด", "ไม่สามารถลบรถได้");
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
+    // Render vehicle item
+    const renderVehicleItem = (vehicle, index) => {
+        return (
+            <View
+                key={vehicle.id || index}
+                style={[
+                    styles.vehicleItem,
+                    index === 0 && styles.vehicleItemFirst,
+                    index === vehicles.length - 1 && styles.vehicleItemLast,
+                ]}
+            >
+                {/* Vehicle Icon */}
+                <View style={[styles.vehicleIconContainer, { backgroundColor: primaryColor + "20" }]}>
+                    <Ionicons name="car" size={28} color={primaryColor} />
+                </View>
+
+                {/* Vehicle Info */}
+                <View style={styles.vehicleInfo}>
+                    <Text style={styles.vehiclePlate}>{vehicle.plate_number}</Text>
+                    {vehicle.province && (
+                        <Text style={styles.vehicleProvince}>จังหวัด: {vehicle.province}</Text>
+                    )}
+                    {vehicle.brand && (
+                        <Text style={styles.vehicleBrand}>ยี่ห้อ: {vehicle.brand}</Text>
+                    )}
+                    {vehicle.color && (
+                        <Text style={styles.vehicleColor}>สี: {vehicle.color}</Text>
+                    )}
+                </View>
+
+                {/* Active Toggle */}
+                <View style={styles.toggleContainer}>
+                    <Text style={styles.toggleLabel}>
+                        {vehicle.is_active ? "ใช้งาน" : "ไม่ใช้งาน"}
+                    </Text>
+                    <Switch
+                        value={vehicle.is_active}
+                        onValueChange={() => handleToggleActive(vehicle)}
+                        trackColor={{ false: "#ddd", true: primaryColor + "80" }}
+                        thumbColor={vehicle.is_active ? primaryColor : "#f4f3f4"}
+                    />
+                </View>
+            </View>
+        );
+    };
+
+    if (!fontsLoaded) {
+        return null;
+    }
+
+    return (
+        <SafeAreaView style={styles.container}>
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="chevron-back" size={24} color="#000" />
+                    <Text style={styles.backText}>ย้อนกลับ</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Title */}
+            <Text style={styles.pageTitle}>รถของฉัน</Text>
+
+            {/* Action Buttons */}
+            <View style={styles.actionContainer}>
+                <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: primaryColor }]}
+                    onPress={() => setAddModalVisible(true)}
+                >
+                    <Ionicons name="add" size={24} color="#fff" />
+                    <View style={styles.actionTextContainer}>
+                        <Text style={styles.actionButtonText}>เพิ่มรถเข้ากับบ้าน</Text>
+                        <Text style={styles.actionButtonSubtext}>ลงทะเบียนรถ</Text>
+                    </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: primaryColor }]}
+                    onPress={() => Alert.alert("แจ้งเตือน", "ฟีเจอร์นี้กำลังพัฒนา")}
+                >
+                    <Ionicons name="time" size={24} color="#fff" />
+                    <View style={styles.actionTextContainer}>
+                        <Text style={styles.actionButtonText}>ประวัติการเพิ่มรถ</Text>
+                        <Text style={styles.actionButtonSubtext}>ดูประวัติ</Text>
+                    </View>
+                </TouchableOpacity>
+            </View>
+
+            {/* Vehicles Section */}
+            <Text style={styles.sectionTitle}>รายการรถของฉัน</Text>
+
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={primaryColor} />
+                    <Text style={styles.loadingText}>กำลังโหลดข้อมูล...</Text>
+                </View>
+            ) : error ? (
+                <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>{error}</Text>
+                    <TouchableOpacity
+                        style={[styles.retryButton, { backgroundColor: primaryColor }]}
+                        onPress={() => unitId && fetchVehicles(unitId)}
+                    >
+                        <Text style={styles.retryText}>ลองใหม่</Text>
+                    </TouchableOpacity>
+                </View>
+            ) : vehicles.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                    <Ionicons name="car-outline" size={60} color="#ccc" />
+                    <Text style={styles.emptyText}>ไม่มีรถที่ลงทะเบียน</Text>
+                    <Text style={styles.emptySubtext}>กดปุ่ม "เพิ่มรถเข้ากับบ้าน" เพื่อเพิ่มรถ</Text>
+                </View>
+            ) : (
+                <ScrollView
+                    style={styles.vehicleList}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={styles.vehicleCard}>
+                        {vehicles.map((vehicle, index) => renderVehicleItem(vehicle, index))}
+                    </View>
+                </ScrollView>
+            )}
+
+            {/* Add Vehicle Modal */}
+            <Modal
+                visible={addModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setAddModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        {/* Modal Header */}
+                        <View style={styles.modalHeader}>
+                            <TouchableOpacity onPress={() => setAddModalVisible(false)}>
+                                <Text style={styles.modalCancelText}>ยกเลิก</Text>
+                            </TouchableOpacity>
+                            <Text style={styles.modalTitle}>เพิ่มรถใหม่</Text>
+                            <View style={{ width: 50 }} />
+                        </View>
+
+                        <ScrollView style={styles.modalContent}>
+                            {/* Plate Number */}
+                            <Text style={styles.inputLabel}>ทะเบียนรถ *</Text>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder="เช่น กข 1234"
+                                value={newVehicle.plate_number}
+                                onChangeText={(text) => setNewVehicle({ ...newVehicle, plate_number: text })}
+                            />
+
+                            {/* Province */}
+                            <Text style={styles.inputLabel}>จังหวัด (ไม่บังคับ)</Text>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder="เช่น กรุงเทพมหานคร"
+                                value={newVehicle.province}
+                                onChangeText={(text) => setNewVehicle({ ...newVehicle, province: text })}
+                            />
+
+                            {/* Brand */}
+                            <Text style={styles.inputLabel}>ยี่ห้อ (ไม่บังคับ)</Text>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder="เช่น Toyota"
+                                value={newVehicle.brand}
+                                onChangeText={(text) => setNewVehicle({ ...newVehicle, brand: text })}
+                            />
+
+                            {/* Color */}
+                            <Text style={styles.inputLabel}>สี (ไม่บังคับ)</Text>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder="เช่น ขาว"
+                                value={newVehicle.color}
+                                onChangeText={(text) => setNewVehicle({ ...newVehicle, color: text })}
+                            />
+
+                            {/* Active Toggle */}
+                            <View style={styles.activeRow}>
+                                <Text style={styles.inputLabel}>ตั้งเป็นรถใช้งาน</Text>
+                                <Switch
+                                    value={newVehicle.is_active}
+                                    onValueChange={(value) => setNewVehicle({ ...newVehicle, is_active: value })}
+                                    trackColor={{ false: "#ddd", true: primaryColor + "80" }}
+                                    thumbColor={newVehicle.is_active ? primaryColor : "#f4f3f4"}
+                                />
+                            </View>
+                        </ScrollView>
+
+                        {/* Submit Button */}
+                        <TouchableOpacity
+                            style={[styles.submitButton, { backgroundColor: primaryColor }]}
+                            onPress={handleAddVehicle}
+                            disabled={addLoading}
+                        >
+                            {addLoading ? (
+                                <ActivityIndicator color="#fff" size="small" />
+                            ) : (
+                                <Text style={styles.submitButtonText}>เพิ่มรถ</Text>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        </SafeAreaView>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: "#F5F5F5",
+    },
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingTop: Platform.OS === "ios" ? 10 : 16,
+        paddingBottom: 12,
+        paddingHorizontal: 16,
+        backgroundColor: "#F5F5F5",
+    },
+    backButton: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    backText: {
+        marginLeft: 4,
+        fontSize: 16,
+        fontFamily: "Kanit_400Regular",
+        color: "#000",
+    },
+    pageTitle: {
+        fontSize: 28,
+        fontFamily: "Kanit_700Bold",
+        color: "#000",
+        paddingHorizontal: 16,
+        marginBottom: 16,
+    },
+    actionContainer: {
+        flexDirection: "row",
+        paddingHorizontal: 16,
+        gap: 12,
+        marginBottom: 24,
+    },
+    actionButton: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderRadius: 12,
+        gap: 10,
+        minHeight: 56,
+    },
+    actionTextContainer: {
+        flex: 1,
+    },
+    actionButtonText: {
+        fontSize: 14,
+        fontFamily: "Kanit_500Medium",
+        color: "#fff",
+    },
+    actionButtonSubtext: {
+        fontSize: 12,
+        fontFamily: "Kanit_400Regular",
+        color: "rgba(255, 255, 255, 0.8)",
+    },
+    sectionTitle: {
+        fontSize: 16,
+        fontFamily: "Kanit_500Medium",
+        color: "#666",
+        paddingHorizontal: 16,
+        marginBottom: 12,
+    },
+    vehicleList: {
+        flex: 1,
+        paddingHorizontal: 16,
+    },
+    vehicleCard: {
+        backgroundColor: "#fff",
+        borderRadius: 16,
+        overflow: "hidden",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
+        marginBottom: 20,
+    },
+    vehicleItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 16,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: "#f0f0f0",
+    },
+    vehicleItemFirst: {
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+    },
+    vehicleItemLast: {
+        borderBottomWidth: 0,
+        borderBottomLeftRadius: 16,
+        borderBottomRightRadius: 16,
+    },
+    vehicleIconContainer: {
+        width: 50,
+        height: 50,
+        borderRadius: 12,
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: 12,
+    },
+    vehicleInfo: {
+        flex: 1,
+    },
+    vehiclePlate: {
+        fontSize: 16,
+        fontFamily: "Kanit_500Medium",
+        color: "#333",
+    },
+    vehicleProvince: {
+        fontSize: 13,
+        fontFamily: "Kanit_400Regular",
+        color: "#666",
+        marginTop: 2,
+    },
+    vehicleBrand: {
+        fontSize: 13,
+        fontFamily: "Kanit_400Regular",
+        color: "#666",
+        marginTop: 2,
+    },
+    vehicleColor: {
+        fontSize: 12,
+        fontFamily: "Kanit_400Regular",
+        color: "#999",
+        marginTop: 2,
+    },
+    toggleContainer: {
+        alignItems: "flex-end",
+    },
+    toggleLabel: {
+        fontSize: 12,
+        fontFamily: "Kanit_400Regular",
+        color: "#666",
+        marginBottom: 4,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    loadingText: {
+        marginTop: 12,
+        fontSize: 16,
+        fontFamily: "Kanit_400Regular",
+        color: "#666",
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+    },
+    errorText: {
+        fontSize: 16,
+        fontFamily: "Kanit_400Regular",
+        color: "#FF6B6B",
+        marginBottom: 16,
+        textAlign: "center",
+    },
+    retryButton: {
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 8,
+    },
+    retryText: {
+        fontSize: 16,
+        fontFamily: "Kanit_500Medium",
+        color: "#fff",
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 40,
+    },
+    emptyText: {
+        fontSize: 18,
+        fontFamily: "Kanit_500Medium",
+        color: "#999",
+        marginTop: 16,
+    },
+    emptySubtext: {
+        fontSize: 14,
+        fontFamily: "Kanit_400Regular",
+        color: "#bbb",
+        marginTop: 8,
+        textAlign: "center",
+    },
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        justifyContent: "flex-end",
+    },
+    modalContainer: {
+        backgroundColor: "#fff",
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        maxHeight: "90%",
+    },
+    modalHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: "#eee",
+    },
+    modalCancelText: {
+        fontSize: 16,
+        fontFamily: "Kanit_400Regular",
+        color: "#666",
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontFamily: "Kanit_500Medium",
+        color: "#333",
+    },
+    modalContent: {
+        padding: 16,
+    },
+    inputLabel: {
+        fontSize: 14,
+        fontFamily: "Kanit_500Medium",
+        color: "#333",
+        marginBottom: 8,
+        marginTop: 16,
+    },
+    textInput: {
+        borderWidth: 1,
+        borderColor: "#ddd",
+        borderRadius: 10,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        fontSize: 16,
+        fontFamily: "Kanit_400Regular",
+        backgroundColor: "#fafafa",
+    },
+    activeRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginTop: 16,
+        marginBottom: 20,
+    },
+    submitButton: {
+        margin: 16,
+        paddingVertical: 16,
+        borderRadius: 12,
+        alignItems: "center",
+    },
+    submitButtonText: {
+        fontSize: 16,
+        fontFamily: "Kanit_500Medium",
+        color: "#fff",
+    },
+});
+
+export default VehiclesResidentsScreen;

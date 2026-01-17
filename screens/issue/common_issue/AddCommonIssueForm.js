@@ -203,15 +203,13 @@ export default function AddCommonIssueForm({ navigation }) {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity
-                    onPress={() => navigation.goBack()}
-                    style={styles.backButton}
-                >
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Ionicons name="chevron-back" size={24} color="black" />
                     <Text style={styles.backButtonText}>ย้อนกลับ</Text>
                 </TouchableOpacity>
+            </View>
+            <View style={styles.headerSecond}>
                 <Text style={styles.headerTitle}>แจ้งปัญหาส่วนกลาง</Text>
-                <Text style={styles.gap100px}>.</Text>
             </View>
 
             <KeyboardAwareScrollView
@@ -412,29 +410,35 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: "row",
         alignItems: "center",
-        display: "flex",
-        justifyContent: "space-between",
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: "#fff",
+    },
+    headerSecond: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: "#fff",
         borderBottomWidth: 1,
         borderBottomColor: "#eee",
-        backgroundColor: "#fff",
     },
     backButton: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
     },
     backButtonText: {
         fontSize: 16,
+        color: "black",
         marginLeft: 4,
         fontFamily: "Kanit_400Regular",
     },
     headerTitle: {
-        fontSize: 18,
+        fontSize: 24,
         fontWeight: "bold",
-        fontFamily: "Kanit_500Medium",
-        alignItems: "center",
-        justifyContent: "center",
+        color: "#000",
+        textAlign: "left",
+        fontFamily: "Kanit_600SemiBold",
     },
     formContainer: {
         flex: 1,
