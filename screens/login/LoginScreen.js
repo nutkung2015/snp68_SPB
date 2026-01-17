@@ -8,7 +8,9 @@ import {
   Image,
   SafeAreaView,
   ImageBackground,
+  Platform,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { login } from "../../services/authService";
 import { LinearGradient } from "expo-linear-gradient";
@@ -89,7 +91,14 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
         </View>
       </ImageBackground>
 
-      <SafeAreaView style={styles.formContainer}>
+      <KeyboardAwareScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.formContainer}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        extraScrollHeight={Platform.OS === "ios" ? 20 : 100}
+        enableAutomaticScroll={true}
+      >
         <View style={styles.form}>
           <Text style={styles.loginTitle}>ล็อกอินเพื่อเข้าสู่ระบบ</Text>
           <View style={styles.emailContainer}>
@@ -132,11 +141,10 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
           onPress={() => navigation.navigate("Register")}
         >
           <Text style={styles.registerText}>
-            ถ้าคุณไม่มีรหัส{" "}
-            <Text style={{ color: "#07354E" }}>สมัครที่นี่</Text>
+            ถ้าคุณไม่มีรหัส <Text style={{ color: "#07354E" }}>สมัครที่นี่</Text>
           </Text>
         </TouchableOpacity>
-      </SafeAreaView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
@@ -177,7 +185,7 @@ const styles = StyleSheet.create({
     resizeMode: "contain", // ปรับขนาดรูปภาพให้พอดีโดยไม่ตัดส่วนใดส่วนหนึ่งออก
   },
   formContainer: {
-    flex: 1,
+    // flex: 1, removed to support ScrollView
     // justifyContent: "center",
     alignItems: "center",
   },

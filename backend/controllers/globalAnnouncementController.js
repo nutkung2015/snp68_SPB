@@ -167,3 +167,34 @@ exports.getAnnouncementsForProject = async (req, res) => {
         res.status(500).json({ status: 'error', message: 'Server error' });
     }
 };
+
+// GET /api/announcements/global/:id - Get single global announcement detail
+exports.getGlobalAnnouncementById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const query = `
+            SELECT id, title, content, type, start_date, end_date, created_at
+            FROM global_announcements
+            WHERE id = ? AND is_active = TRUE
+        `;
+
+        const [rows] = await db.promise().query(query, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'ไม่พบประกาศที่ต้องการ'
+            });
+        }
+
+        res.json({
+            status: 'success',
+            data: rows[0]
+        });
+
+    } catch (error) {
+        console.error('Get Global Announcement By ID Error:', error);
+        res.status(500).json({ status: 'error', message: 'Server error' });
+    }
+};

@@ -13,6 +13,7 @@ import {
     TextInput,
     TouchableWithoutFeedback,
     Keyboard,
+    KeyboardAvoidingView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
@@ -248,75 +249,82 @@ const EstampScreen = ({ navigation }) => {
                 visible={inviteModalVisible}
                 onRequestClose={closeInviteModal}
             >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContent}>
-                            <View style={styles.modalHeader}>
-                                <TouchableOpacity onPress={closeInviteModal}>
-                                    <Text style={styles.cancelText}>ยกเลิก</Text>
-                                </TouchableOpacity>
-                                <Text style={styles.modalTitle}>แจ้งรถเข้า</Text>
-                                <View style={{ width: 30 }} />
-                            </View>
-
-                            <View style={styles.detailCard}>
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.inputLabel}>ทะเบียนรถ <Text style={{ color: 'red' }}>*</Text></Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="ตัวอย่าง 1กข-1234"
-                                        value={invitePlate}
-                                        onChangeText={setInvitePlate}
-                                        placeholderTextColor="#9CA3AF"
-                                    />
-                                </View>
-
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.inputLabel}>ชื่อผู้มาติดต่อ (ถ้ามี)</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="ระบุชื่อผู้มาติดต่อ"
-                                        value={inviteName}
-                                        onChangeText={setInviteName}
-                                        placeholderTextColor="#9CA3AF"
-                                    />
-                                </View>
-
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.inputLabel}>วันที่คาดว่าจะเข้า</Text>
-                                    <TouchableOpacity
-                                        style={styles.dateDisplay}
-                                        onPress={() => setShowDatePicker(true)}
-                                    >
-                                        <Text style={styles.dateText}>
-                                            {moment(inviteDate).format("DD/MM/YYYY")}
-                                        </Text>
-                                        <Icon name="calendar" size={16} color="#6B7280" />
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={{ flex: 1 }}
+                >
+                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                        <View style={styles.modalOverlay}>
+                            <View style={styles.modalContent}>
+                                <View style={styles.modalHeader}>
+                                    <TouchableOpacity onPress={closeInviteModal}>
+                                        <Text style={styles.cancelText}>ยกเลิก</Text>
                                     </TouchableOpacity>
-                                    {showDatePicker && (
-                                        <DateTimePicker
-                                            testID="dateTimePicker"
-                                            value={inviteDate}
-                                            mode="date"
-                                            display="default"
-                                            onChange={onDateChange}
-                                            minimumDate={new Date()}
-                                        />
-                                    )}
+                                    <Text style={styles.modalTitle}>แจ้งรถเข้า</Text>
+                                    <View style={{ width: 30 }} />
                                 </View>
-                            </View>
 
-                            <View style={styles.modalFooter}>
-                                <TouchableOpacity
-                                    style={styles.fullButton}
-                                    onPress={handleInviteSubmit}
-                                >
-                                    <Text style={styles.fullButtonText}>ยืนยัน</Text>
-                                </TouchableOpacity>
+                                <View style={styles.detailCard}>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.inputLabel}>
+                                            ทะเบียนรถ <Text style={{ color: "red" }}>*</Text>
+                                        </Text>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="ตัวอย่าง 1กข-1234"
+                                            value={invitePlate}
+                                            onChangeText={setInvitePlate}
+                                            placeholderTextColor="#9CA3AF"
+                                        />
+                                    </View>
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.inputLabel}>ชื่อผู้มาติดต่อ (ถ้ามี)</Text>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="ระบุชื่อผู้มาติดต่อ"
+                                            value={inviteName}
+                                            onChangeText={setInviteName}
+                                            placeholderTextColor="#9CA3AF"
+                                        />
+                                    </View>
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.inputLabel}>วันที่คาดว่าจะเข้า</Text>
+                                        <TouchableOpacity
+                                            style={styles.dateDisplay}
+                                            onPress={() => setShowDatePicker(true)}
+                                        >
+                                            <Text style={styles.dateText}>
+                                                {moment(inviteDate).format("DD/MM/YYYY")}
+                                            </Text>
+                                            <Icon name="calendar" size={16} color="#6B7280" />
+                                        </TouchableOpacity>
+                                        {showDatePicker && (
+                                            <DateTimePicker
+                                                testID="dateTimePicker"
+                                                value={inviteDate}
+                                                mode="date"
+                                                display="default"
+                                                onChange={onDateChange}
+                                                minimumDate={new Date()}
+                                            />
+                                        )}
+                                    </View>
+                                </View>
+
+                                <View style={styles.modalFooter}>
+                                    <TouchableOpacity
+                                        style={styles.fullButton}
+                                        onPress={handleInviteSubmit}
+                                    >
+                                        <Text style={styles.fullButtonText}>ยืนยัน</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                </TouchableWithoutFeedback>
+                    </TouchableWithoutFeedback>
+                </KeyboardAvoidingView>
             </Modal>
         );
     };
@@ -512,19 +520,22 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     addButton: {
-        borderWidth: 1,
-        borderColor: "#E5E7EB",
-        borderStyle: "dashed",
-        borderRadius: 12,
-        padding: 20,
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        marginBottom: 20,
+        height: 80,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 12,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: '#ccc',
+        borderStyle: 'dashed',
     },
     addButtonText: {
-        color: "#6B7280",
         fontSize: 16,
+        color: '#888',
+        marginLeft: 8,
+        fontFamily: "Kanit_600SemiBold",
     },
     sectionTitle: {
         fontSize: 16,

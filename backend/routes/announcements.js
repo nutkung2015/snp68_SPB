@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/uploadMiddleware');
 const announcementController = require('../controllers/announcementController');
+const globalAnnouncementController = require('../controllers/globalAnnouncementController');
 const authMiddleware = require('../middleware/authMiddleware');
 
 // Routes with file upload middleware
@@ -10,6 +11,12 @@ router.put('/:id', upload.array('files', 5), announcementController.updateAnnoun
 
 // Get announcements for resident (requires authentication)
 router.get('/resident', authMiddleware, announcementController.getAnnouncementsForResident);
+
+// Get global announcements for user's project
+router.get('/global', authMiddleware, globalAnnouncementController.getAnnouncementsForProject);
+
+// Get single global announcement by ID
+router.get('/global/:id', authMiddleware, globalAnnouncementController.getGlobalAnnouncementById);
 
 // Other routes
 router.get('/', authMiddleware, announcementController.getAllAnnouncements);

@@ -83,11 +83,8 @@ const GuardHomeScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <LinearGradient
-        colors={[primaryColor || "#2A405E", secondaryColor || "#155B5B"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.gradientCardHeader}
+      <View
+        style={[styles.gradientCardHeader, { backgroundColor: primaryColor || "#2A405E" }]}
       >
         {/* Row 1: Logo (ซ้าย) - Actions (ขวา) */}
         <View style={styles.headerRowTop}>
@@ -131,7 +128,7 @@ const GuardHomeScreen = ({ navigation }) => {
             </Text>
           </View>
         </View>
-      </LinearGradient>
+      </View>
 
       <ScrollView style={styles.content}>
         {/* บริการทั้งหมด */}

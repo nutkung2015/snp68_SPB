@@ -12,7 +12,10 @@ import {
     ScrollView,
     Switch,
     ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import SecurityService from "../../services/securityService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -450,9 +453,16 @@ const GuardCheckInScreen = ({ navigation }) => {
     );
 
     const renderFormStep = () => (
-        <ScrollView contentContainerStyle={styles.container}>
+        <KeyboardAwareScrollView
+            contentContainerStyle={styles.container}
+            enableOnAndroid={true}
+            extraScrollHeight={100}
+        >
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => setStep('result')} style={styles.backButton}>
+                <TouchableOpacity
+                    onPress={() => setStep("result")}
+                    style={styles.backButton}
+                >
                     <Icon name="chevron-left" size={20} color="#003049" />
                     <Text style={styles.backText}>ย้อนกลับ</Text>
                 </TouchableOpacity>
@@ -465,7 +475,9 @@ const GuardCheckInScreen = ({ navigation }) => {
                     <TextInput
                         style={styles.input}
                         value={formData.plate_number}
-                        onChangeText={(text) => setFormData({ ...formData, plate_number: text })}
+                        onChangeText={(text) =>
+                            setFormData({ ...formData, plate_number: text })
+                        }
                         placeholder="กข 1234"
                     />
                 </View>
@@ -474,7 +486,9 @@ const GuardCheckInScreen = ({ navigation }) => {
                     <TextInput
                         style={styles.input}
                         value={formData.province}
-                        onChangeText={(text) => setFormData({ ...formData, province: text })}
+                        onChangeText={(text) =>
+                            setFormData({ ...formData, province: text })
+                        }
                     />
                 </View>
             </View>
@@ -483,9 +497,15 @@ const GuardCheckInScreen = ({ navigation }) => {
             <View style={styles.photoContainer}>
                 <View style={styles.photoBox}>
                     <Text style={styles.photoLabel}>บัตรประชาชน/คนขับ</Text>
-                    <TouchableOpacity onPress={() => takePhoto('driver')} style={styles.photoButton}>
+                    <TouchableOpacity
+                        onPress={() => takePhoto("driver")}
+                        style={styles.photoButton}
+                    >
                         {driverImage ? (
-                            <Image source={{ uri: driverImage }} style={styles.previewImage} />
+                            <Image
+                                source={{ uri: driverImage }}
+                                style={styles.previewImage}
+                            />
                         ) : (
                             <View style={styles.photoPlaceholder}>
                                 <Icon name="camera" size={30} color="#6B7280" />
@@ -497,9 +517,15 @@ const GuardCheckInScreen = ({ navigation }) => {
 
                 <View style={styles.photoBox}>
                     <Text style={styles.photoLabel}>รูปรถ</Text>
-                    <TouchableOpacity onPress={() => takePhoto('car')} style={styles.photoButton}>
+                    <TouchableOpacity
+                        onPress={() => takePhoto("car")}
+                        style={styles.photoButton}
+                    >
                         {carImage ? (
-                            <Image source={{ uri: carImage }} style={styles.previewImage} />
+                            <Image
+                                source={{ uri: carImage }}
+                                style={styles.previewImage}
+                            />
                         ) : (
                             <View style={styles.photoPlaceholder}>
                                 <Icon name="camera" size={30} color="#6B7280" />
@@ -515,7 +541,9 @@ const GuardCheckInScreen = ({ navigation }) => {
                 <Switch
                     trackColor={{ false: "#767577", true: "#81b0ff" }}
                     thumbColor={formData.id_card_consent ? "#003049" : "#f4f3f4"}
-                    onValueChange={(val) => setFormData({ ...formData, id_card_consent: val })}
+                    onValueChange={(val) =>
+                        setFormData({ ...formData, id_card_consent: val })
+                    }
                     value={formData.id_card_consent}
                 />
             </View>
@@ -529,14 +557,22 @@ const GuardCheckInScreen = ({ navigation }) => {
             <TextInput
                 style={styles.input}
                 value={formData.visitor_name}
-                onChangeText={(text) => setFormData({ ...formData, visitor_name: text })}
+                onChangeText={(text) =>
+                    setFormData({ ...formData, visitor_name: text })
+                }
             />
 
             <Text style={styles.label}>บ้านเลขที่ที่ติดต่อ</Text>
             <TextInput
                 style={styles.input}
                 value={formData.unit_number}
-                onChangeText={(text) => setFormData({ ...formData, unit_number: text, target_unit_id: "" })}
+                onChangeText={(text) =>
+                    setFormData({
+                        ...formData,
+                        unit_number: text,
+                        target_unit_id: "",
+                    })
+                }
                 placeholder="เช่น 99/99"
             />
 
@@ -551,15 +587,18 @@ const GuardCheckInScreen = ({ navigation }) => {
                     <Text style={styles.submitButtonText}>บันทึก (Check-in)</Text>
                 )}
             </TouchableOpacity>
-        </ScrollView>
+        </KeyboardAwareScrollView>
     );
 
     return (
         <>
-            {step === 'search' && (
-                <View style={styles.modalContainer}>
+            {step === "search" && (
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={styles.modalContainer}
+                >
                     {renderSearchStep()}
-                </View>
+                </KeyboardAvoidingView>
             )}
             {step === 'result' && renderResultStep()}
             {step === 'form' && renderFormStep()}

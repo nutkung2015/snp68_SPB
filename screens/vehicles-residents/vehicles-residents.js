@@ -12,6 +12,7 @@ import {
     Switch,
     Modal,
     TextInput,
+    KeyboardAvoidingView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -327,80 +328,100 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
                 transparent={true}
                 onRequestClose={() => setAddModalVisible(false)}
             >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContainer}>
-                        {/* Modal Header */}
-                        <View style={styles.modalHeader}>
-                            <TouchableOpacity onPress={() => setAddModalVisible(false)}>
-                                <Text style={styles.modalCancelText}>ยกเลิก</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.modalTitle}>เพิ่มรถใหม่</Text>
-                            <View style={{ width: 50 }} />
-                        </View>
-
-                        <ScrollView style={styles.modalContent}>
-                            {/* Plate Number */}
-                            <Text style={styles.inputLabel}>ทะเบียนรถ *</Text>
-                            <TextInput
-                                style={styles.textInput}
-                                placeholder="เช่น กข 1234"
-                                value={newVehicle.plate_number}
-                                onChangeText={(text) => setNewVehicle({ ...newVehicle, plate_number: text })}
-                            />
-
-                            {/* Province */}
-                            <Text style={styles.inputLabel}>จังหวัด (ไม่บังคับ)</Text>
-                            <TextInput
-                                style={styles.textInput}
-                                placeholder="เช่น กรุงเทพมหานคร"
-                                value={newVehicle.province}
-                                onChangeText={(text) => setNewVehicle({ ...newVehicle, province: text })}
-                            />
-
-                            {/* Brand */}
-                            <Text style={styles.inputLabel}>ยี่ห้อ (ไม่บังคับ)</Text>
-                            <TextInput
-                                style={styles.textInput}
-                                placeholder="เช่น Toyota"
-                                value={newVehicle.brand}
-                                onChangeText={(text) => setNewVehicle({ ...newVehicle, brand: text })}
-                            />
-
-                            {/* Color */}
-                            <Text style={styles.inputLabel}>สี (ไม่บังคับ)</Text>
-                            <TextInput
-                                style={styles.textInput}
-                                placeholder="เช่น ขาว"
-                                value={newVehicle.color}
-                                onChangeText={(text) => setNewVehicle({ ...newVehicle, color: text })}
-                            />
-
-                            {/* Active Toggle */}
-                            <View style={styles.activeRow}>
-                                <Text style={styles.inputLabel}>ตั้งเป็นรถใช้งาน</Text>
-                                <Switch
-                                    value={newVehicle.is_active}
-                                    onValueChange={(value) => setNewVehicle({ ...newVehicle, is_active: value })}
-                                    trackColor={{ false: "#ddd", true: primaryColor + "80" }}
-                                    thumbColor={newVehicle.is_active ? primaryColor : "#f4f3f4"}
-                                />
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={{ flex: 1 }}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContainer}>
+                            {/* Modal Header */}
+                            <View style={styles.modalHeader}>
+                                <TouchableOpacity onPress={() => setAddModalVisible(false)}>
+                                    <Text style={styles.modalCancelText}>ยกเลิก</Text>
+                                </TouchableOpacity>
+                                <Text style={styles.modalTitle}>เพิ่มรถใหม่</Text>
+                                <View style={{ width: 50 }} />
                             </View>
-                        </ScrollView>
 
-                        {/* Submit Button */}
-                        <TouchableOpacity
-                            style={[styles.submitButton, { backgroundColor: primaryColor }]}
-                            onPress={handleAddVehicle}
-                            disabled={addLoading}
-                        >
-                            {addLoading ? (
-                                <ActivityIndicator color="#fff" size="small" />
-                            ) : (
-                                <Text style={styles.submitButtonText}>เพิ่มรถ</Text>
-                            )}
-                        </TouchableOpacity>
+                            <ScrollView style={styles.modalContent}>
+                                {/* Plate Number */}
+                                <Text style={styles.inputLabel}>ทะเบียนรถ *</Text>
+                                <TextInput
+                                    style={styles.textInput}
+                                    placeholder="เช่น กข 1234"
+                                    value={newVehicle.plate_number}
+                                    onChangeText={(text) =>
+                                        setNewVehicle({ ...newVehicle, plate_number: text })
+                                    }
+                                />
+
+                                {/* Province */}
+                                <Text style={styles.inputLabel}>จังหวัด (ไม่บังคับ)</Text>
+                                <TextInput
+                                    style={styles.textInput}
+                                    placeholder="เช่น กรุงเทพมหานคร"
+                                    value={newVehicle.province}
+                                    onChangeText={(text) =>
+                                        setNewVehicle({ ...newVehicle, province: text })
+                                    }
+                                />
+
+                                {/* Brand */}
+                                <Text style={styles.inputLabel}>ยี่ห้อ (ไม่บังคับ)</Text>
+                                <TextInput
+                                    style={styles.textInput}
+                                    placeholder="เช่น Toyota"
+                                    value={newVehicle.brand}
+                                    onChangeText={(text) =>
+                                        setNewVehicle({ ...newVehicle, brand: text })
+                                    }
+                                />
+
+                                {/* Color */}
+                                <Text style={styles.inputLabel}>สี (ไม่บังคับ)</Text>
+                                <TextInput
+                                    style={styles.textInput}
+                                    placeholder="เช่น ขาว"
+                                    value={newVehicle.color}
+                                    onChangeText={(text) =>
+                                        setNewVehicle({ ...newVehicle, color: text })
+                                    }
+                                />
+
+                                {/* Active Toggle */}
+                                <View style={styles.activeRow}>
+                                    <Text style={styles.inputLabel}>ตั้งเป็นรถใช้งาน</Text>
+                                    <Switch
+                                        value={newVehicle.is_active}
+                                        onValueChange={(value) =>
+                                            setNewVehicle({ ...newVehicle, is_active: value })
+                                        }
+                                        trackColor={{ false: "#ddd", true: primaryColor + "80" }}
+                                        thumbColor={
+                                            newVehicle.is_active ? primaryColor : "#f4f3f4"
+                                        }
+                                    />
+                                </View>
+                            </ScrollView>
+
+                            {/* Submit Button */}
+                            <TouchableOpacity
+                                style={[
+                                    styles.submitButton,
+                                    { backgroundColor: primaryColor },
+                                ]}
+                                onPress={handleAddVehicle}
+                                disabled={addLoading}
+                            >
+                                {addLoading ? (
+                                    <ActivityIndicator color="#fff" size="small" />
+                                ) : (
+                                    <Text style={styles.submitButtonText}>เพิ่มรถ</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </View>
+                </KeyboardAvoidingView>
             </Modal>
         </SafeAreaView>
     );

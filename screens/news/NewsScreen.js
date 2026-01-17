@@ -322,17 +322,20 @@ const NewsScreen = ({ navigation }) => {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
-            {/* Header */}
+            {/* Header Row 1 - Back Button */}
             <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.backButton}
                     onPress={() => navigation.goBack()}
                 >
-                    <Ionicons name="chevron-back" size={24} color="#000" />
+                    <Ionicons name="chevron-back" size={24} color="#333" />
                     <Text style={styles.backText}>ย้อนกลับ</Text>
                 </TouchableOpacity>
+            </View>
+
+            {/* Header Row 2 - Title */}
+            <View style={styles.headerSecond}>
                 <Text style={styles.headerTitle}>ข่าวสารและประกาศ</Text>
-                <View style={styles.headerRight} />
             </View>
 
             {/* Filter Section */}
@@ -411,12 +414,19 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingTop: Platform.OS === 'ios' ? 50 : 16,
-        paddingBottom: 16,
+        paddingBottom: 12,
         paddingHorizontal: 16,
+        backgroundColor: '#fff',
+        zIndex: 10,
+    },
+    headerSecond: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingBottom: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
         backgroundColor: '#fff',
-        zIndex: 10,
     },
     backButton: {
         flexDirection: 'row',
@@ -426,13 +436,12 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontFamily: 'Kanit_400Regular',
         marginLeft: 4,
+        color: '#333',
     },
     headerTitle: {
-        flex: 1,
-        textAlign: 'center',
-        fontSize: 18,
+        fontSize: 22,
         fontFamily: 'Kanit_700Bold',
-        marginLeft: -40, // To center the title
+        color: '#333',
     },
     filterContainer: {
         flexDirection: 'row',

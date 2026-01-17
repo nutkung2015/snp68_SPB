@@ -30,7 +30,7 @@ const NewsDetailScreen = ({ navigation, route }) => {
         Kanit_700Bold,
     });
 
-    const { announcementId } = route.params;
+    const { announcementId, isGlobal = false } = route.params;
     const [announcement, setAnnouncement] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -38,15 +38,23 @@ const NewsDetailScreen = ({ navigation, route }) => {
     // Fetch announcement detail from API
     useEffect(() => {
         fetchAnnouncementDetail();
-    }, [announcementId]);
+    }, [announcementId, isGlobal]);
 
     const fetchAnnouncementDetail = async () => {
         try {
             setLoading(true);
-            const data = await AnnouncementsService.getAnnouncementById(announcementId);
+
+            // Use different API based on whether it's a global or project announcement
+            let data;
+            if (isGlobal) {
+                data = await AnnouncementsService.getGlobalAnnouncementById(announcementId);
+            } else {
+                data = await AnnouncementsService.getAnnouncementById(announcementId);
+            }
 
             if (data.status === 'success') {
-                setAnnouncement(data.data);
+                // Add isGlobal flag to announcement data for UI rendering
+                setAnnouncement({ ...data.data, isGlobal });
             } else {
                 setError('Failed to fetch announcement');
             }
@@ -150,13 +158,28 @@ const NewsDetailScreen = ({ navigation, route }) => {
                     contentContainerStyle={styles.contentContainer}
                     showsVerticalScrollIndicator={false}
                 >
+                    {/* Global Announcement Badge */}
+                    {announcement.isGlobal && (
+                        <View style={styles.globalAnnouncementBadge}>
+                            <Ionicons name="globe-outline" size={16} color="#fff" />
+                            <Text style={styles.globalAnnouncementText}>ประกาศจากระบบ</Text>
+                        </View>
+                    )}
+
                     {/* Source Info */}
                     <View style={styles.sourceContainer}>
-                        <View style={styles.avatarContainer}>
-                            <Ionicons name="person" size={24} color="#fff" style={styles.avatarIcon} />
+                        <View style={[styles.avatarContainer, announcement.isGlobal && styles.avatarContainerGlobal]}>
+                            <Ionicons
+                                name={announcement.isGlobal ? "globe" : "person"}
+                                size={24}
+                                color="#fff"
+                                style={styles.avatarIcon}
+                            />
                         </View>
                         <View style={styles.sourceInfo}>
-                            <Text style={styles.sourceName}>นิติบุคคล</Text>
+                            <Text style={styles.sourceName}>
+                                {announcement.isGlobal ? 'ผู้ดูแลระบบ' : 'นิติบุคคล'}
+                            </Text>
                             <Text style={styles.sourceDate}>{formatDate(announcement.created_at)}</Text>
                         </View>
                     </View>
@@ -278,7 +301,26 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 12,
     },
+    avatarContainerGlobal: {
+        backgroundColor: '#8B5CF6',
+    },
     avatarIcon: {
+        color: '#fff',
+    },
+    globalAnnouncementBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#8B5CF6',
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 20,
+        alignSelf: 'flex-start',
+        marginBottom: 16,
+        gap: 6,
+    },
+    globalAnnouncementText: {
+        fontSize: 14,
+        fontFamily: 'Kanit_700Bold',
         color: '#fff',
     },
     sourceInfo: {

@@ -85,6 +85,29 @@ class AnnouncementsService {
       throw error;
     }
   }
+
+  // Get global announcements for user's project
+  static async getGlobalAnnouncements(projectId) {
+    try {
+      const token = await ApiService.getToken();
+      const endpoint = `/api/announcements/global?project_id=${projectId}`;
+      return await ApiService.get(endpoint, token);
+    } catch (error) {
+      console.error("Error fetching global announcements:", error);
+      throw error;
+    }
+  }
+
+  // Get single global announcement by ID
+  static async getGlobalAnnouncementById(announcementId) {
+    try {
+      const token = await ApiService.getToken();
+      return await ApiService.get(`/api/announcements/global/${announcementId}`, token);
+    } catch (error) {
+      console.error("Error fetching global announcement detail:", error);
+      throw error;
+    }
+  }
 }
 
 export default AnnouncementsService;

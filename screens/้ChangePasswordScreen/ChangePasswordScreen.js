@@ -7,10 +7,10 @@ import {
     StyleSheet,
     Alert,
     ActivityIndicator,
-    KeyboardAvoidingView,
     Platform,
     SafeAreaView,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import {
@@ -148,9 +148,12 @@ const ChangePasswordScreen = () => {
                 <View style={{ width: 40 }} />
             </View>
 
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
+            <KeyboardAwareScrollView
                 style={styles.container}
+                contentContainerStyle={{ flexGrow: 1 }}
+                enableOnAndroid={true}
+                extraScrollHeight={Platform.OS === "ios" ? 20 : 100}
+                keyboardShouldPersistTaps="handled"
             >
                 <View style={styles.content}>
                     {step === 1 ? (
@@ -259,7 +262,7 @@ const ChangePasswordScreen = () => {
                         </>
                     )}
                 </View>
-            </KeyboardAvoidingView>
+            </KeyboardAwareScrollView>
 
             {/* Success Dialog */}
             <SuccessDialog

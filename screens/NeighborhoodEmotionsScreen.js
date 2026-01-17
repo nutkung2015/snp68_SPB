@@ -10,8 +10,10 @@ import {
     Image,
     StatusBar,
     Modal,
-    Animated
+    Animated,
+    Platform,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Ionicons } from '@expo/vector-icons';
 
 // Initial posts data
@@ -187,86 +189,92 @@ const CreatePostModal = ({ visible, onClose, onPost, selectedEmoji, setSelectedE
                         </TouchableOpacity>
                     </View>
 
-                    {/* Emoji Selection */}
-                    <View style={styles.emojiSection}>
-                        <Text style={styles.sectionTitle}>เลือกอารมณ์ของคุณ</Text>
-                        <View style={styles.emojiGrid}>
-                            {[
-                                { emoji: '😔', label: 'เศร้า' },
-                                { emoji: '😊', label: 'มีความสุข' },
-                                { emoji: '😡', label: 'โกรธ' },
-                                { emoji: '😨', label: 'กลัว' },
-                                { emoji: '🤢', label: 'รังเกียจ' },
-                                { emoji: '😮', label: 'ประหลาดใจ' },
-                            ].map((item, index) => (
-                                <TouchableOpacity
-                                    key={index}
-                                    style={[
-                                        styles.emojiButton,
-                                        selectedEmoji === item.label && styles.selectedEmojiButton
-                                    ]}
-                                    onPress={() => setSelectedEmoji(item.label)}
-                                >
-                                    <Text style={styles.emojiText}>{item.emoji}</Text>
-                                    <Text style={styles.emojiLabel}>{item.label}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    </View>
-
-                    {/* Location Input */}
-                    <View style={styles.locationSection}>
-                        <Text style={styles.sectionTitle}>ที่ไหน?</Text>
-                        <TextInput
-                            style={styles.locationInput}
-                            placeholder="เลือกสถานที่..."
-                            value={postLocation}
-                            onChangeText={setPostLocation}
-                        />
-                    </View>
-
-                    {/* Title Input */}
-                    <View style={styles.descriptionSection}>
-                        <Text style={styles.sectionTitle}>หัวข้อความรู้สึก</Text>
-                        <TextInput
-                            style={styles.locationInput}
-                            placeholder="ระบุหัวข้อความรู้สึก..."
-                            value={emotionTitle}
-                            onChangeText={setEmotionTitle}
-                        />
-                    </View>
-
-                    {/* Description Input */}
-                    <View style={styles.descriptionSection}>
-                        <Text style={styles.sectionTitle}>เหตุผล...</Text>
-                        <TextInput
-                            style={styles.descriptionInput}
-                            placeholder="พิมพ์เหตุผลที่ทำให้คุณรู้สึก..."
-                            multiline
-                            textAlignVertical="top"
-                            value={description}
-                            onChangeText={setDescription}
-                        />
-                    </View>
-
-                    {/* Anonymous Option */}
-                    <View style={styles.anonymousSection}>
-                        <Text style={styles.sectionTitle}>โพสต์แบบไม่ระบุตัวตน</Text>
-                        <TouchableOpacity
-                            style={styles.anonymousToggle}
-                            onPress={() => setIsAnonymous(!isAnonymous)}
-                        >
-                            <View style={[
-                                styles.toggleButton,
-                                isAnonymous && styles.toggleButtonActive
-                            ]}>
-                                <View style={[
-                                    styles.toggleCircle,
-                                    isAnonymous && styles.toggleCircleActive
-                                ]} />
+                    <KeyboardAwareScrollView
+                        enableOnAndroid={true}
+                        extraScrollHeight={100}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        {/* Emoji Selection */}
+                        <View style={styles.emojiSection}>
+                            <Text style={styles.sectionTitle}>เลือกอารมณ์ของคุณ</Text>
+                            <View style={styles.emojiGrid}>
+                                {[
+                                    { emoji: '😔', label: 'เศร้า' },
+                                    { emoji: '😊', label: 'มีความสุข' },
+                                    { emoji: '😡', label: 'โกรธ' },
+                                    { emoji: '😨', label: 'กลัว' },
+                                    { emoji: '🤢', label: 'รังเกียจ' },
+                                    { emoji: '😮', label: 'ประหลาดใจ' },
+                                ].map((item, index) => (
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={[
+                                            styles.emojiButton,
+                                            selectedEmoji === item.label && styles.selectedEmojiButton
+                                        ]}
+                                        onPress={() => setSelectedEmoji(item.label)}
+                                    >
+                                        <Text style={styles.emojiText}>{item.emoji}</Text>
+                                        <Text style={styles.emojiLabel}>{item.label}</Text>
+                                    </TouchableOpacity>
+                                ))}
                             </View>
-                        </TouchableOpacity>
-                    </View>
+                        </View>
+
+                        {/* Location Input */}
+                        <View style={styles.locationSection}>
+                            <Text style={styles.sectionTitle}>ที่ไหน?</Text>
+                            <TextInput
+                                style={styles.locationInput}
+                                placeholder="เลือกสถานที่..."
+                                value={postLocation}
+                                onChangeText={setPostLocation}
+                            />
+                        </View>
+
+                        {/* Title Input */}
+                        <View style={styles.descriptionSection}>
+                            <Text style={styles.sectionTitle}>หัวข้อความรู้สึก</Text>
+                            <TextInput
+                                style={styles.locationInput}
+                                placeholder="ระบุหัวข้อความรู้สึก..."
+                                value={emotionTitle}
+                                onChangeText={setEmotionTitle}
+                            />
+                        </View>
+
+                        {/* Description Input */}
+                        <View style={styles.descriptionSection}>
+                            <Text style={styles.sectionTitle}>เหตุผล...</Text>
+                            <TextInput
+                                style={styles.descriptionInput}
+                                placeholder="พิมพ์เหตุผลที่ทำให้คุณรู้สึก..."
+                                multiline
+                                textAlignVertical="top"
+                                value={description}
+                                onChangeText={setDescription}
+                            />
+                        </View>
+
+                        {/* Anonymous Option */}
+                        <View style={styles.anonymousSection}>
+                            <Text style={styles.sectionTitle}>โพสต์แบบไม่ระบุตัวตน</Text>
+                            <TouchableOpacity
+                                style={styles.anonymousToggle}
+                                onPress={() => setIsAnonymous(!isAnonymous)}
+                            >
+                                <View style={[
+                                    styles.toggleButton,
+                                    isAnonymous && styles.toggleButtonActive
+                                ]}>
+                                    <View style={[
+                                        styles.toggleCircle,
+                                        isAnonymous && styles.toggleCircleActive
+                                    ]} />
+                                </View>
+                            </TouchableOpacity>
+                        </View>
+                    </KeyboardAwareScrollView>
                 </View>
             </View>
         </Modal>

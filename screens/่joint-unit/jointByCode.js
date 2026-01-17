@@ -13,6 +13,7 @@ import {
     KeyboardAvoidingView,
     ScrollView,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -198,77 +199,75 @@ const JointByCode = () => {
                 </TouchableOpacity>
             </View>
 
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
+            <KeyboardAwareScrollView
                 style={styles.keyboardAvoidingView}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                enableOnAndroid={true}
+                extraScrollHeight={Platform.OS === "ios" ? 20 : 100}
             >
-                <ScrollView
-                    contentContainerStyle={styles.scrollContent}
-                    showsVerticalScrollIndicator={false}
-                    keyboardShouldPersistTaps="handled"
+                {/* Title */}
+                <Text style={styles.pageTitle}>รหัสคำเชิญเข้าโครงการ</Text>
+
+                {/* Instruction */}
+                <View style={styles.instructionContainer}>
+                    <Text style={styles.instructionText}>
+                        กรอกรหัสคำเชิญที่ได้รับจากนิติบุคคล
+                    </Text>
+                    <Text style={styles.instructionText}>
+                        เพื่อเข้าสู่โครงการ
+                    </Text>
+                </View>
+
+                {/* Code Input */}
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={styles.codeInput}
+                        placeholder="กรอกรหัสคำเชิญ..."
+                        placeholderTextColor="#A0A0A0"
+                        value={invitationCode}
+                        onChangeText={setInvitationCode}
+                        autoCapitalize="characters"
+                        autoCorrect={false}
+                        maxLength={10}
+                    />
+                </View>
+
+                {/* Example Code */}
+                <View style={styles.exampleContainer}>
+                    <Ionicons name="information-circle-outline" size={18} color="#888" />
+                    <Text style={styles.exampleText}>
+                        ตัวอย่างรหัส: ABC123
+                    </Text>
+                </View>
+
+                {/* Submit Button */}
+                <TouchableOpacity
+                    style={[
+                        styles.submitButton,
+                        !invitationCode.trim() && styles.submitButtonDisabled
+                    ]}
+                    onPress={handleJoinUnit}
+                    disabled={loading || !invitationCode.trim()}
                 >
-                    {/* Title */}
-                    <Text style={styles.pageTitle}>รหัสคำเชิญเข้าโครงการ</Text>
+                    {loading ? (
+                        <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                        <Text style={styles.submitButtonText}>เข้าสู่โครงการ</Text>
+                    )}
+                </TouchableOpacity>
 
-                    {/* Instruction */}
-                    <View style={styles.instructionContainer}>
-                        <Text style={styles.instructionText}>
-                            กรอกรหัสคำเชิญที่ได้รับจากนิติบุคคล
-                        </Text>
-                        <Text style={styles.instructionText}>
-                            เพื่อเข้าสู่โครงการ
-                        </Text>
-                    </View>
-
-                    {/* Code Input */}
-                    <View style={styles.inputContainer}>
-                        <TextInput
-                            style={styles.codeInput}
-                            placeholder="กรอกรหัสคำเชิญ..."
-                            placeholderTextColor="#A0A0A0"
-                            value={invitationCode}
-                            onChangeText={setInvitationCode}
-                            autoCapitalize="characters"
-                            autoCorrect={false}
-                            maxLength={10}
-                        />
-                    </View>
-
-                    {/* Example Code */}
-                    <View style={styles.exampleContainer}>
-                        <Ionicons name="information-circle-outline" size={18} color="#888" />
-                        <Text style={styles.exampleText}>
-                            ตัวอย่างรหัส: ABC123
-                        </Text>
-                    </View>
-
-                    {/* Submit Button */}
-                    <TouchableOpacity
-                        style={[
-                            styles.submitButton,
-                            !invitationCode.trim() && styles.submitButtonDisabled
-                        ]}
-                        onPress={handleJoinUnit}
-                        disabled={loading || !invitationCode.trim()}
-                    >
-                        {loading ? (
-                            <ActivityIndicator color="#fff" size="small" />
-                        ) : (
-                            <Text style={styles.submitButtonText}>เข้าสู่โครงการ</Text>
-                        )}
-                    </TouchableOpacity>
-
-                    {/* Footer Note */}
-                    <View style={styles.footerNote}>
-                        <Text style={styles.footerNoteText}>
-                            ถ้าหากคุณไม่มีรหัสคำเชิญ
-                        </Text>
-                        <Text style={styles.footerNoteText}>
-                            โปรดติดต่อที่นิติบุคคลของโครงการ
-                        </Text>
-                    </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
+                {/* Footer Note */}
+                <View style={styles.footerNote}>
+                    <Text style={styles.footerNoteText}>
+                        ถ้าหากคุณไม่มีรหัสคำเชิญ
+                    </Text>
+                    <Text style={styles.footerNoteText}>
+                        โปรดติดต่อที่นิติบุคคลของโครงการ
+                    </Text>
+                </View>
+            </KeyboardAwareScrollView>
 
             {/* Success Dialog */}
             <SuccessDialog

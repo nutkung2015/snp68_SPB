@@ -11,7 +11,9 @@ import {
   Alert,
   ActivityIndicator,
   Keyboard,
+  Platform,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -220,7 +222,14 @@ export default function RegisterScreen({ navigation }) {
         </View>
       </ImageBackground>
 
-      <SafeAreaView style={styles.formContainer}>
+      <KeyboardAwareScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.formContainer}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        extraScrollHeight={Platform.OS === "ios" ? 20 : 100}
+        enableAutomaticScroll={true}
+      >
         <View style={styles.form}>
           <Text style={styles.registerTitle}>ลงทะเบียน</Text>
 
@@ -266,7 +275,7 @@ export default function RegisterScreen({ navigation }) {
               style={[
                 styles.phoneInput,
                 otpVerified && styles.inputVerified,
-                otpSent && !otpVerified && styles.inputPending
+                otpSent && !otpVerified && styles.inputPending,
               ]}
               placeholder="เบอร์โทรศัพท์"
               placeholderTextColor="#07354E"
@@ -277,8 +286,8 @@ export default function RegisterScreen({ navigation }) {
                 if (otpSent || otpVerified) {
                   setOtpSent(false);
                   setOtpVerified(false);
-                  setOtpDigits(['', '', '', '', '', '']);
-                  setOtpCode('');
+                  setOtpDigits(["", "", "", "", "", ""]);
+                  setOtpCode("");
                 }
               }}
               keyboardType="phone-pad"
@@ -292,7 +301,7 @@ export default function RegisterScreen({ navigation }) {
               <TouchableOpacity
                 style={[
                   styles.otpButton,
-                  (sendingOtp || countdown > 0) && styles.otpButtonDisabled
+                  (sendingOtp || countdown > 0) && styles.otpButtonDisabled,
                 ]}
                 onPress={handleSendOTP}
                 disabled={sendingOtp || countdown > 0}
@@ -301,7 +310,11 @@ export default function RegisterScreen({ navigation }) {
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <Text style={styles.otpButtonText}>
-                    {countdown > 0 ? `${countdown}s` : otpSent ? 'ส่งอีกครั้ง' : 'ขอ OTP'}
+                    {countdown > 0
+                      ? `${countdown}s`
+                      : otpSent
+                        ? "ส่งอีกครั้ง"
+                        : "ขอ OTP"}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -319,7 +332,12 @@ export default function RegisterScreen({ navigation }) {
                     ref={(ref) => (otpInputRefs.current[index] = ref)}
                     style={styles.otpDigitInput}
                     value={otpDigits[index]}
-                    onChangeText={(text) => handleOtpDigitChange(text.replace(/[^0-9]/g, '').slice(-1), index)}
+                    onChangeText={(text) =>
+                      handleOtpDigitChange(
+                        text.replace(/[^0-9]/g, "").slice(-1),
+                        index
+                      )
+                    }
                     onKeyPress={(e) => handleOtpKeyPress(e, index)}
                     keyboardType="number-pad"
                     maxLength={1}
@@ -330,10 +348,10 @@ export default function RegisterScreen({ navigation }) {
               <TouchableOpacity
                 style={[
                   styles.verifyOtpButton,
-                  verifyingOtp && styles.verifyOtpButtonDisabled
+                  verifyingOtp && styles.verifyOtpButtonDisabled,
                 ]}
                 onPress={handleVerifyOTP}
-                disabled={verifyingOtp || otpDigits.join('').length !== 6}
+                disabled={verifyingOtp || otpDigits.join("").length !== 6}
               >
                 {verifyingOtp ? (
                   <ActivityIndicator size="small" color="#fff" />
@@ -348,7 +366,9 @@ export default function RegisterScreen({ navigation }) {
           {otpVerified && (
             <View style={styles.verifiedMessage}>
               <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-              <Text style={styles.verifiedText}>เบอร์โทรศัพท์ได้รับการยืนยันแล้ว</Text>
+              <Text style={styles.verifiedText}>
+                เบอร์โทรศัพท์ได้รับการยืนยันแล้ว
+              </Text>
             </View>
           )}
 
@@ -357,7 +377,7 @@ export default function RegisterScreen({ navigation }) {
           <TouchableOpacity
             style={[
               styles.registerButton,
-              !isFormValid && styles.registerButtonDisabled
+              !isFormValid && styles.registerButtonDisabled,
             ]}
             onPress={handleRegister}
             disabled={loading || !isFormValid}
@@ -376,7 +396,7 @@ export default function RegisterScreen({ navigation }) {
             <Text style={{ color: "#07354E" }}>เข้าสู่ระบบที่นี่</Text>
           </Text>
         </TouchableOpacity>
-      </SafeAreaView>
+      </KeyboardAwareScrollView>
 
       {/* Hidden reCAPTCHA container for Firebase */}
       <View id="recaptcha-container" />
@@ -409,7 +429,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   formContainer: {
-    flex: 1,
+    // flex: 1, removed to support ScrollView
     alignItems: "center",
   },
   form: {

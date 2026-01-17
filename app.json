@@ -13,11 +13,19 @@
       "eas": {
         "projectId": "7c6d8598-fa21-4f26-ab88-eb019a0d52b7"
       },
-      "APP_ENV": "development",
-      "DEBUG": true,
+      "APP_ENV": "production",
+      "DEBUG": false,
       "PROD_API_BASE_URL": "https://snp68-spb.onrender.com",
       "DEV_API_BASE_URL": "http://127.0.0.1:5000",
-      "API_VERSION": "v1"
+      "API_VERSION": "v1",
+      "CLOUDINARY_CLOUD_NAME": "dwsl5h6a7",
+      "FIREBASE_API_KEY": "AIzaSyAwN3VxOfTy6lF-p18uQOXwTwBtcuilJhw",
+      "FIREBASE_AUTH_DOMAIN": "livlink-a45f4.firebaseapp.com",
+      "FIREBASE_PROJECT_ID": "livlink-a45f4",
+      "FIREBASE_STORAGE_BUCKET": "livlink-a45f4.firebasestorage.app",
+      "FIREBASE_MESSAGING_SENDER_ID": "340838499264",
+      "FIREBASE_APP_ID": "1:340838499264:web:f2f4661ce2e9eface43e25",
+      "FIREBASE_MEASUREMENT_ID": "G-PRHV2HW0PE"
     },
     "ios": {
       "bundleIdentifier": "com.nutkung2015.myapp",

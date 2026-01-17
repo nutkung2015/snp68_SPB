@@ -152,19 +152,42 @@ const HomeScreen = ({ navigation }) => {
         }
       }
 
-      const params = {
-        limit: 5,
-        status: "published",
-        projectId: projectId // Add projectId to params
-      };
+      // Fetch both project announcements and global announcements in parallel
+      const [projectAnnouncementsResult, globalAnnouncementsResult] = await Promise.all([
+        // Project announcements
+        AnnouncementsService.getAnnouncements({
+          limit: 5,
+          status: "published",
+          projectId: projectId
+        }),
+        // Global announcements
+        projectId ? AnnouncementsService.getGlobalAnnouncements(projectId) : Promise.resolve({ status: "success", data: [] })
+      ]);
 
-      const data = await AnnouncementsService.getAnnouncements(params);
+      // Merge announcements
+      let allAnnouncements = [];
 
-      if (data.status === "success") {
-        setAnnouncements(data.data);
-      } else {
-        setError("Failed to fetch announcements");
+      // Add project announcements
+      if (projectAnnouncementsResult.status === "success" && projectAnnouncementsResult.data) {
+        allAnnouncements = [...projectAnnouncementsResult.data.map(item => ({ ...item, source: 'project' }))];
       }
+
+      // Add global announcements
+      if (globalAnnouncementsResult.status === "success" && globalAnnouncementsResult.data) {
+        const globalItems = globalAnnouncementsResult.data.map(item => ({
+          ...item,
+          source: 'global',
+          // Map global announcement fields to match project announcement structure if needed
+          type: item.type || 'announcement'
+        }));
+        allAnnouncements = [...allAnnouncements, ...globalItems];
+      }
+
+      // Sort by created_at descending and take first 5
+      allAnnouncements.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      allAnnouncements = allAnnouncements.slice(0, 5);
+
+      setAnnouncements(allAnnouncements);
     } catch (err) {
       console.error("Error fetching announcements:", err);
       setError("Network error");
@@ -257,11 +280,11 @@ const HomeScreen = ({ navigation }) => {
         }
       }
 
-      // ถ้าไม่มีรูปภาพ ใช้รูป default
-      return "https://picsum.photos/300/200";
+      // ถ้าไม่มีรูปภาพ ให้ return null
+      return null;
     } catch (error) {
       console.error("Error parsing attachment_urls:", error);
-      return "https://picsum.photos/300/200";
+      return null;
     }
   };
 
@@ -278,22 +301,41 @@ const HomeScreen = ({ navigation }) => {
 
   const renderNewsItem = ({ item }) => {
     const typeInfo = getTypeInfo(item.type);
+    const imageUrl = getImageUrl(item.attachment_urls);
 
     return (
       <TouchableOpacity
         style={styles.newsCard}
         onPress={() =>
-          navigation.navigate("NewsDetail", { announcementId: item.id })
+          navigation.navigate("NewsDetail", {
+            announcementId: item.id,
+            isGlobal: item.source === 'global'
+          })
         }
         activeOpacity={0.7}
       >
         <View style={styles.newsImageContainer}>
-          <Image
-            source={{ uri: getImageUrl(item.attachment_urls) }}
-            style={styles.newsImage}
-          />
+          {imageUrl ? (
+            <Image
+              source={{ uri: imageUrl }}
+              style={styles.newsImage}
+            />
+          ) : (
+            <View style={styles.noImagePlaceholder}>
+              <Ionicons name="image-outline" size={48} color="#9CA3AF" />
+              <Text style={styles.noImageText}>ไม่มีรูปภาพ</Text>
+            </View>
+          )}
           {/* Gradient Overlay */}
           <View style={styles.imageGradient} />
+
+          {/* Global/System Badge */}
+          {item.source === 'global' && (
+            <View style={styles.globalBadge}>
+              <Ionicons name="globe-outline" size={12} color="#fff" />
+              <Text style={styles.globalBadgeText}>ประกาศจากระบบ</Text>
+            </View>
+          )}
 
           {/* Type Badge on Image */}
           <View style={[styles.typeBadge, { backgroundColor: typeInfo.color }]}>
@@ -489,9 +531,9 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity> */}
           </View>
           <View style={styles.favoriteGrid}>
-            {renderMenuItem("megaphone", "ข่าวสาร", () =>
+            {/* {renderMenuItem("megaphone", "ข่าวสาร", () =>
               navigation.navigate("News")
-            )}
+            )} */}
             {renderMenuItem("warning", "แจ้งปัญหา", () =>
               navigation.navigate("IssueMenu")
             )}
@@ -806,6 +848,19 @@ const styles = StyleSheet.create({
     height: "100%",
     resizeMode: 'cover',
   },
+  noImagePlaceholder: {
+    width: "100%",
+    height: "100%",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#E5E7EB',
+  },
+  noImageText: {
+    marginTop: 8,
+    fontSize: 14,
+    fontFamily: 'Kanit_400Regular',
+    color: '#9CA3AF',
+  },
   imageGradient: {
     position: 'absolute',
     bottom: 0,
@@ -832,6 +887,28 @@ const styles = StyleSheet.create({
   },
   typeBadgeText: {
     fontSize: 12,
+    fontFamily: 'Kanit_700Bold',
+    color: '#fff',
+  },
+  globalBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#8B5CF6',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  globalBadgeText: {
+    fontSize: 11,
     fontFamily: 'Kanit_700Bold',
     color: '#fff',
   },
