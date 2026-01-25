@@ -25,8 +25,7 @@ class ProjectDocumentsService {
     }
 
     /**
-     * Get project info docs V2 - Returns raw Cloudinary URLs
-     * ใช้กับ getStreamPdfUrl() สำหรับ pdf-stream endpoint
+     * Get project info docs V2 - Returns raw URLs
      */
     static async getProjectInfoDocsV2(projectId) {
         try {
@@ -62,8 +61,7 @@ class ProjectDocumentsService {
     }
 
     /**
-     * Get my house model V2 - Returns raw Cloudinary URLs
-     * ใช้กับ getStreamPdfUrl() สำหรับ pdf-stream endpoint
+     * Get my house model V2 - Returns raw URLs
      */
     static async getMyHouseModelV2(projectId) {
         try {
@@ -76,65 +74,21 @@ class ProjectDocumentsService {
     }
 
 
-    // Helper to construct authenticated Proxy URL (BaseURL + Path + Token)
-    static async getAuthenticatedProxyUrl(relativeUrl) {
-        try {
-            if (!relativeUrl) return null;
-
-            // ถ้าเป็น Full URL อยู่แล้ว (เช่น Cloudinary link เก่า) ให้คืนค่าเดิม
-            if (relativeUrl.startsWith('http')) {
-                return relativeUrl;
-            }
-
-            const token = await ApiService.getToken();
-            // ดึง Base URL จาก config (ผ่าน ApiService หรือ import โดยตรง)
-            // สมมติว่า relativeUrl คือ /api/projects/...
-            // เราต้องการ http://domain/api/projects/...?token=xxx
-
-            // เนื่องจาก ApiService ซ่อน axios instance ไว้
-            // เรา import getApiBaseUrl จาก config ได้เลย
-            const { getApiBaseUrl } = require('../utils/config');
-            const baseUrl = getApiBaseUrl();
-
-            // เชื่อมด้วย ? หรือ &
-            const separator = relativeUrl.includes('?') ? '&' : '?';
-
-            return `${baseUrl}${relativeUrl}${separator}token=${token}`;
-        } catch (error) {
-            console.error("Error generating authenticated url:", error);
-            return null;
-        }
-    }
-
     /**
-     * NEW: Generate URL for pdf-stream endpoint (with caching support)
-     * ใช้ /pdf-stream แทน /download-pdf เพื่อ performance ที่ดีกว่า (Cache-Control, ETag, 304)
+     * Generate URL for PDF viewing/downloading
+     * Since we switched to Firebase Storage (fully public), we can just return the raw URL.
+     * No need for proxy or complex logic anymore.
      * 
-     * @param {string} projectId - Project ID
-     * @param {string} cloudinaryUrl - Raw Cloudinary URL
-     * @param {string} filename - Filename for download
-     * @param {string} disposition - 'inline' (view) or 'attachment' (download)
-     * @returns {Promise<string|null>} - Full URL with authentication token
+     * @param {string} projectId - Project ID (unused now but kept for compatibility)
+     * @param {string} fileUrl - Raw storage URL
+     * @param {string} filename - Filename (unused now)
+     * @param {string} disposition - (unused now)
+     * @returns {Promise<string|null>} - Direct URL
      */
-    static async getStreamPdfUrl(projectId, cloudinaryUrl, filename = 'document.pdf', disposition = 'inline') {
-        try {
-            if (!cloudinaryUrl || !projectId) return null;
-
-            const token = await ApiService.getToken();
-            const { getApiBaseUrl } = require('../utils/config');
-            const baseUrl = getApiBaseUrl();
-
-            // สร้าง URL สำหรับ pdf-stream endpoint
-            const encodedUrl = encodeURIComponent(cloudinaryUrl);
-            const encodedFilename = encodeURIComponent(filename);
-
-            return `${baseUrl}/api/projects/${projectId}/member/pdf-stream?url=${encodedUrl}&filename=${encodedFilename}&disposition=${disposition}&token=${token}`;
-        } catch (error) {
-            console.error("Error generating stream pdf url:", error);
-            return null;
-        }
+    static async getStreamPdfUrl(projectId, fileUrl, filename = 'document.pdf', disposition = 'inline') {
+        // Return URL directly as it's accessible publicly via Firebase Storage
+        return fileUrl;
     }
 }
 
 export default ProjectDocumentsService;
-

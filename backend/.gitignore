@@ -7,6 +7,10 @@
 serviceAccountKey.json
 backend/config/serviceAccountKey.json
 
+# Firebase
+config/serviceAccountKey.json
+config/livlink-*.json
+
 # Dependencies
 node_modules/
 

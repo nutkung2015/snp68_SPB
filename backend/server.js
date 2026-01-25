@@ -173,10 +173,13 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
+const cookieParser = require("cookie-parser"); // Import cookie-parser
+
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
+app.use(cookieParser()); // Use cookie-parser middleware
 
 // Rate Limiting
 const apiLimiter = rateLimit({

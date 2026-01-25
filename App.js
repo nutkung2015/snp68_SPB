@@ -65,6 +65,7 @@ import VilageDetailScreen from "./screens/MyVilage/VilageDetailScreen";
 import ResidentManageScreen from "./screens/residentManageUser/residentManageScreen";
 import ChangePasswordScreen from "./screens/้ChangePasswordScreen/ChangePasswordScreen";
 import VehiclesResidentsScreen from "./screens/vehicles-residents/vehicles-residents";
+import UnitEntryHistoryScreen from "./screens/unit-entry-history/unit-entry-history";
 
 // Security screens
 import SecurityServiceScreen from "./screens/security/SecurityServiceScreen";
@@ -74,6 +75,7 @@ import SecurityProfileScreen from "./screens/security/SecurityProfileScreen";
 import EstampScreen from "./screens/visitors/EstampScreen";
 import GuardDashboardScreen from "./screens/guard/GuardDashboardScreen";
 import GuardCheckInScreen from "./screens/guard/GuardCheckInScreen";
+import EntryHistoryScreen from "./screens/guard/EntryHistoryScreen";
 
 // Notifications
 import NotificationScreen from "./screens/NotificationScreen";
@@ -356,6 +358,33 @@ export default function App() {
             component={GuardCheckInScreen}
             options={{ presentation: 'transparentModal', headerShown: false }}
           />
+          <Stack.Screen name="EntryHistory" component={EntryHistoryScreen} />
+
+          {/* Issue Management for Guard */}
+          <Stack.Screen name="IssueMenu" component={IssueMenuScreen} />
+          <Stack.Screen
+            name="CommonIssue"
+            component={CommonIssueScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AddCommonIssue"
+            component={AddCommonIssueForm}
+            options={{
+              headerShown: false,
+              presentation: 'modal',
+              cardOverlayEnabled: true,
+              cardStyle: { backgroundColor: 'transparent' },
+            }}
+          />
+          <Stack.Screen
+            name="CommonIssueDetail"
+            component={CommonIssueDetailScreen}
+            options={{ headerShown: false }}
+          />
+
+          {/* Emergency Contact */}
+          <Stack.Screen name="NumberEmergency" component={NumberEmergencyScreen} />
 
           {/* Notifications */}
           <Stack.Screen name="Notifications" component={NotificationScreen} />
@@ -458,6 +487,7 @@ export default function App() {
 
           <Stack.Screen name="VehiclesResidents" component={VehiclesResidentsScreen} />
 
+          <Stack.Screen name="UnitEntryHistory" component={UnitEntryHistoryScreen} />
 
         </Stack.Navigator>
       );

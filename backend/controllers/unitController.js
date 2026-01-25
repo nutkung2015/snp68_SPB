@@ -351,6 +351,98 @@ exports.getUnitInvitations = async (req, res) => {
   }
 };
 
+// @desc    Get unit invitation details by ID
+// @route   GET /api/units/invitations/:id
+// @access  Private (Project members / unit owners / inviter)
+exports.getUnitInvitationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user_id = req.user.id;
+
+    const query = `
+      SELECT
+        ui.id,
+        ui.unit_id,
+        u.unit_number,
+        u.project_id,
+        ui.invited_by,
+        inviter.full_name AS invited_by_name,
+        ui.code,
+        ui.qr_code_url,
+        ui.status,
+        ui.role,
+        ui.invited_email,
+        ui.invited_phone,
+        ui.expires_at,
+        ui.created_at,
+        ui.updated_at
+      FROM unit_invitations ui
+      JOIN units u ON ui.unit_id = u.id
+      LEFT JOIN users inviter ON ui.invited_by = inviter.id
+      WHERE ui.id = ?
+    `;
+
+    const [rows] = await db.promise().execute(query, [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Invitation not found." });
+    }
+
+    const invitation = rows[0];
+    const project_id = invitation.project_id;
+    const unit_id = invitation.unit_id;
+
+    // ตรวจสิทธิ์: เป็นคนเชิญ, เป็นสมาชิกโปรเจกต์ หรือเป็นสมาชิกห้อง
+    let hasPermission = false;
+
+    // 1. เป็นคนเชิญหรือไม่
+    if (invitation.invited_by === user_id) {
+      hasPermission = true;
+    }
+
+    // 2. ถ้ายังไม่มีสิทธิ์ ให้เช็ค project_members
+    if (!hasPermission) {
+      const [projectMembership] = await db
+        .promise()
+        .execute(
+          "SELECT role FROM project_members WHERE user_id = ? AND project_id = ?",
+          [user_id, project_id]
+        );
+      if (projectMembership.length > 0) {
+        hasPermission = true;
+      }
+    }
+
+    // 3. ถ้ายังไม่มีสิทธิ์ ให้เช็ค unit_members
+    if (!hasPermission) {
+      const [unitMembership] = await db
+        .promise()
+        .execute(
+          "SELECT id FROM unit_members WHERE user_id = ? AND unit_id = ?",
+          [user_id, unit_id]
+        );
+      if (unitMembership.length > 0) {
+        hasPermission = true;
+      }
+    }
+
+    if (!hasPermission) {
+      return res.status(403).json({
+        message: "You don't have permission to view this invitation",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Unit invitation details fetched successfully",
+      data: invitation,
+    });
+  } catch (error) {
+    console.error("Error in getUnitInvitationById:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // @desc    Import units from Excel file
 // @route   POST /api/units/import
 // @access  Private (Project Admin/Leader)
@@ -548,6 +640,7 @@ exports.getProjectResidents = async (req, res) => {
     }
 
     // Query to get all residents across all units in the project
+    // Include status (active/inactive based on left_at), created_at and updated_at for stat badge
     const query = `
       SELECT 
         um.id as membership_id,
@@ -555,9 +648,13 @@ exports.getProjectResidents = async (req, res) => {
         um.user_id,
         um.role as unit_role,
         um.joined_at,
+        um.left_at,
+        CASE WHEN um.left_at IS NULL THEN 'active' ELSE 'inactive' END as status,
         u.full_name,
         u.email,
         u.phone,
+        u.created_at,
+        u.updated_at,
         un.unit_number
       FROM unit_members um
       JOIN users u ON um.user_id = u.id

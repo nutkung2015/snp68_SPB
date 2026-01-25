@@ -180,6 +180,7 @@ exports.getAllProjectVehicles = async (req, res) => {
                 v.project_id,
                 v.unit_id,
                 v.plate_number,
+                v.type,
                 v.province,
                 v.brand,
                 v.color,
@@ -265,6 +266,7 @@ exports.getUnitVehicles = async (req, res) => {
                 project_id,
                 unit_id,
                 plate_number,
+                type,
                 province,
                 brand,
                 color,
@@ -324,6 +326,7 @@ exports.getVehicleById = async (req, res) => {
                 v.project_id,
                 v.unit_id,
                 v.plate_number,
+                v.type,
                 v.province,
                 v.brand,
                 v.color,
@@ -376,7 +379,7 @@ exports.getVehicleById = async (req, res) => {
  */
 exports.addVehicle = async (req, res) => {
     try {
-        const { project_id, unit_id, plate_number, province, brand, color, is_active } = req.body;
+        const { project_id, unit_id, plate_number, type, province, brand, color, is_active } = req.body;
         const user_id = req.user.id;
 
         // Validate required fields
@@ -442,17 +445,22 @@ exports.addVehicle = async (req, res) => {
             );
         }
 
+        // Validate vehicle type
+        const validTypes = ['car', 'motorcycle'];
+        const vehicleType = validTypes.includes(type) ? type : 'car';
+
         // Insert new vehicle
         const vehicleId = uuidv4();
         await db.promise().execute(
             `INSERT INTO ${VEHICLES_TABLE} 
-                (id, project_id, unit_id, plate_number, province, brand, color, is_active, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+                (id, project_id, unit_id, plate_number, type, province, brand, color, is_active, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
             [
                 vehicleId,
                 project_id,
                 unit_id,
                 normalizedPlate,
+                vehicleType,
                 province || null,
                 brand || null,
                 color || null,
@@ -495,7 +503,7 @@ exports.addVehicle = async (req, res) => {
 exports.updateVehicle = async (req, res) => {
     try {
         const { vehicleId } = req.params;
-        const { project_id, plate_number, province, brand, color, is_active } = req.body;
+        const { project_id, plate_number, type, province, brand, color, is_active } = req.body;
         const user_id = req.user.id;
 
         // Validate project_id
@@ -574,6 +582,13 @@ exports.updateVehicle = async (req, res) => {
         if (is_active !== undefined) {
             updates.push("is_active = ?");
             values.push(is_active);
+        }
+        if (type !== undefined) {
+            const validTypes = ['car', 'motorcycle'];
+            if (validTypes.includes(type)) {
+                updates.push("type = ?");
+                values.push(type);
+            }
         }
 
         if (updates.length === 0) {
@@ -713,6 +728,7 @@ exports.searchVehicles = async (req, res) => {
                 v.id,
                 v.unit_id,
                 v.plate_number,
+                v.type,
                 v.province,
                 v.brand,
                 v.color,

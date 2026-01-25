@@ -89,7 +89,7 @@ export default function HomeOptionScreen({ navigation }) {
         </TouchableOpacity>
       </View>
       <View style={styles.headerSecond}>
-        <Text style={styles.headerTitle}>ข้อมูลพื้นฐาน</Text>
+        <Text style={styles.headerTitle}>ข้อมูลของบ้านฉัน</Text>
       </View>
 
       {/* Content Cards */}
@@ -115,6 +115,11 @@ export default function HomeOptionScreen({ navigation }) {
               iconName="people-outline"
               title="ผู้อยู่อาศัย"
               onPress={() => navigation.navigate("ResidentManage")}
+            />
+            <Card
+              iconName="car-outline"
+              title="รถของฉัน"
+              onPress={() => navigation.navigate("VehiclesResidents")}
             />
           </>
         )}

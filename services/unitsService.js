@@ -82,6 +82,17 @@ class UnitsService {
       throw error;
     }
   }
+
+  // Get unit entry history (Visitors entry/exit logs)
+  static async getUnitEntryHistory(unitId, page = 1, limit = 20) {
+    try {
+      const token = await ApiService.getToken();
+      return await ApiService.get(`/api/visitors/history?unit_id=${unitId}&page=${page}&limit=${limit}`, token);
+    } catch (error) {
+      console.error("Error fetching unit entry history:", error);
+      throw error;
+    }
+  }
 }
 
 export default UnitsService;

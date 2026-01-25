@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
+
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -77,7 +77,6 @@ export default function AddIssueForm({ route, navigation }) {
     images: [],
   });
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showAreaPicker, setShowAreaPicker] = useState(false);
   const [selectedArea, setSelectedArea] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -88,14 +87,6 @@ export default function AddIssueForm({ route, navigation }) {
       ...formData,
       [name]: value,
     });
-  };
-
-  // ฟังก์ชันจัดการการเลือกวันที่
-  const handleDateChange = (event, selectedDate) => {
-    setShowDatePicker(Platform.OS === "ios");
-    if (selectedDate) {
-      handleInputChange("reportDate", selectedDate);
-    }
   };
 
   // ฟังก์ชันจัดการการเลือกพื้นที่ซ่อม
@@ -272,25 +263,12 @@ export default function AddIssueForm({ route, navigation }) {
           <Text style={styles.valueText_normalText}>{formData.reporterName}</Text>
         </View>
 
-        {/* วันที่ยื่น */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>วันที่ยื่น</Text>
-          <TouchableOpacity
-            style={styles.inputContainer}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <TextInput
-              style={[styles.input, styles.disabledInput]}
-              value={formatDate(formData.reportDate)}
-              editable={false}
-            />
-            <MaterialIcons
-              name="calendar-today"
-              size={20}
-              color="#666"
-              style={styles.icon}
-            />
-          </TouchableOpacity>
+        {/* วันที่ยื่น (อัตโนมัติ) */}
+        <View style={styles.inputGroup_normalText}>
+          <Text style={styles.label_normalText}>วันที่ยื่น</Text>
+          <Text style={styles.valueText_normalText}>
+            {formatDate(formData.reportDate)}
+          </Text>
         </View>
 
         {/* พื้นที่แจ้งซ่อม */}
@@ -391,15 +369,7 @@ export default function AddIssueForm({ route, navigation }) {
         </TouchableOpacity>
       </KeyboardAwareScrollView>
 
-      {/* Date Picker Modal */}
-      {showDatePicker && (
-        <DateTimePicker
-          value={formData.reportDate}
-          mode="datetime"
-          display="default"
-          onChange={handleDateChange}
-        />
-      )}
+
 
       {/* Area Picker Modal */}
       <Modal

@@ -44,6 +44,7 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
     const [addLoading, setAddLoading] = useState(false);
     const [newVehicle, setNewVehicle] = useState({
         plate_number: "",
+        type: "car", // 'car' or 'motorcycle'
         province: "",
         brand: "",
         color: "",
@@ -140,6 +141,7 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
             setAddLoading(true);
             await VehicleService.addVehicle(unitId, {
                 plate_number: newVehicle.plate_number.trim(),
+                type: newVehicle.type,
                 province: newVehicle.province.trim() || null,
                 brand: newVehicle.brand.trim() || null,
                 color: newVehicle.color.trim() || null,
@@ -149,6 +151,7 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
             // Reset form and close modal
             setNewVehicle({
                 plate_number: "",
+                type: "car",
                 province: "",
                 brand: "",
                 color: "",
@@ -206,14 +209,25 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
                     index === vehicles.length - 1 && styles.vehicleItemLast,
                 ]}
             >
-                {/* Vehicle Icon */}
+                {/* Vehicle Icon - based on type */}
                 <View style={[styles.vehicleIconContainer, { backgroundColor: primaryColor + "20" }]}>
-                    <Ionicons name="car" size={28} color={primaryColor} />
+                    <Ionicons
+                        name={vehicle.type === 'motorcycle' ? 'bicycle' : 'car'}
+                        size={28}
+                        color={primaryColor}
+                    />
                 </View>
 
                 {/* Vehicle Info */}
                 <View style={styles.vehicleInfo}>
-                    <Text style={styles.vehiclePlate}>{vehicle.plate_number}</Text>
+                    <View style={styles.vehiclePlateRow}>
+                        <Text style={styles.vehiclePlate}>{vehicle.plate_number}</Text>
+                        <View style={[styles.vehicleTypeBadge, { backgroundColor: vehicle.type === 'motorcycle' ? '#FF9800' : primaryColor }]}>
+                            <Text style={styles.vehicleTypeBadgeText}>
+                                {vehicle.type === 'motorcycle' ? 'มอไซค์' : 'รถยนต์'}
+                            </Text>
+                        </View>
+                    </View>
                     {vehicle.province && (
                         <Text style={styles.vehicleProvince}>จังหวัด: {vehicle.province}</Text>
                     )}
@@ -337,7 +351,7 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
                             {/* Modal Header */}
                             <View style={styles.modalHeader}>
                                 <TouchableOpacity onPress={() => setAddModalVisible(false)}>
-                                    <Text style={styles.modalCancelText}>ยกเลิก</Text>
+                                    <Text style={[styles.modalCancelText, { color: primaryColor }]}>ยกเลิก</Text>
                                 </TouchableOpacity>
                                 <Text style={styles.modalTitle}>เพิ่มรถใหม่</Text>
                                 <View style={{ width: 50 }} />
@@ -345,21 +359,66 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
 
                             <ScrollView style={styles.modalContent}>
                                 {/* Plate Number */}
-                                <Text style={styles.inputLabel}>ทะเบียนรถ *</Text>
+                                <Text style={[styles.inputLabel, { color: primaryColor }]}>ทะเบียนรถ *</Text>
                                 <TextInput
-                                    style={styles.textInput}
+                                    style={[styles.textInput, { borderColor: primaryColor }]}
                                     placeholder="เช่น กข 1234"
+                                    placeholderTextColor="#999"
                                     value={newVehicle.plate_number}
                                     onChangeText={(text) =>
                                         setNewVehicle({ ...newVehicle, plate_number: text })
                                     }
                                 />
 
+                                {/* Vehicle Type Selector */}
+                                <Text style={[styles.inputLabel, { color: primaryColor }]}>ประเภทรถ *</Text>
+                                <View style={styles.typeSelector}>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.typeOption,
+                                            newVehicle.type === 'car' && { backgroundColor: primaryColor, borderColor: primaryColor },
+                                        ]}
+                                        onPress={() => setNewVehicle({ ...newVehicle, type: 'car' })}
+                                    >
+                                        <Ionicons
+                                            name="car"
+                                            size={24}
+                                            color={newVehicle.type === 'car' ? '#fff' : '#666'}
+                                        />
+                                        <Text style={[
+                                            styles.typeOptionText,
+                                            newVehicle.type === 'car' && { color: '#fff' }
+                                        ]}>
+                                            รถยนต์
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.typeOption,
+                                            newVehicle.type === 'motorcycle' && { backgroundColor: '#FF9800', borderColor: '#FF9800' },
+                                        ]}
+                                        onPress={() => setNewVehicle({ ...newVehicle, type: 'motorcycle' })}
+                                    >
+                                        <Ionicons
+                                            name="bicycle"
+                                            size={24}
+                                            color={newVehicle.type === 'motorcycle' ? '#fff' : '#666'}
+                                        />
+                                        <Text style={[
+                                            styles.typeOptionText,
+                                            newVehicle.type === 'motorcycle' && { color: '#fff' }
+                                        ]}>
+                                            มอไซค์
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+
                                 {/* Province */}
-                                <Text style={styles.inputLabel}>จังหวัด (ไม่บังคับ)</Text>
+                                <Text style={[styles.inputLabel, { color: primaryColor }]}>จังหวัด (ไม่บังคับ)</Text>
                                 <TextInput
-                                    style={styles.textInput}
+                                    style={[styles.textInput, { borderColor: primaryColor }]}
                                     placeholder="เช่น กรุงเทพมหานคร"
+                                    placeholderTextColor="#999"
                                     value={newVehicle.province}
                                     onChangeText={(text) =>
                                         setNewVehicle({ ...newVehicle, province: text })
@@ -367,10 +426,11 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
                                 />
 
                                 {/* Brand */}
-                                <Text style={styles.inputLabel}>ยี่ห้อ (ไม่บังคับ)</Text>
+                                <Text style={[styles.inputLabel, { color: primaryColor }]}>ยี่ห้อ (ไม่บังคับ)</Text>
                                 <TextInput
-                                    style={styles.textInput}
+                                    style={[styles.textInput, { borderColor: primaryColor }]}
                                     placeholder="เช่น Toyota"
+                                    placeholderTextColor="#999"
                                     value={newVehicle.brand}
                                     onChangeText={(text) =>
                                         setNewVehicle({ ...newVehicle, brand: text })
@@ -378,10 +438,11 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
                                 />
 
                                 {/* Color */}
-                                <Text style={styles.inputLabel}>สี (ไม่บังคับ)</Text>
+                                <Text style={[styles.inputLabel, { color: primaryColor }]}>สี (ไม่บังคับ)</Text>
                                 <TextInput
-                                    style={styles.textInput}
+                                    style={[styles.textInput, { borderColor: primaryColor }]}
                                     placeholder="เช่น ขาว"
+                                    placeholderTextColor="#999"
                                     value={newVehicle.color}
                                     onChangeText={(text) =>
                                         setNewVehicle({ ...newVehicle, color: text })
@@ -390,7 +451,7 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
 
                                 {/* Active Toggle */}
                                 <View style={styles.activeRow}>
-                                    <Text style={styles.inputLabel}>ตั้งเป็นรถใช้งาน</Text>
+                                    <Text style={[styles.inputLabel, { color: primaryColor, marginTop: 0 }]}>ตั้งเป็นรถใช้งาน</Text>
                                     <Switch
                                         value={newVehicle.is_active}
                                         onValueChange={(value) =>
@@ -541,6 +602,21 @@ const styles = StyleSheet.create({
         fontFamily: "Kanit_500Medium",
         color: "#333",
     },
+    vehiclePlateRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+    },
+    vehicleTypeBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 10,
+    },
+    vehicleTypeBadgeText: {
+        fontSize: 10,
+        fontFamily: "Kanit_500Medium",
+        color: "#fff",
+    },
     vehicleProvince: {
         fontSize: 13,
         fontFamily: "Kanit_400Regular",
@@ -678,6 +754,27 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginTop: 16,
         marginBottom: 20,
+    },
+    typeSelector: {
+        flexDirection: "row",
+        gap: 12,
+    },
+    typeOption: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        paddingVertical: 14,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: "#ddd",
+        backgroundColor: "#fafafa",
+    },
+    typeOptionText: {
+        fontSize: 14,
+        fontFamily: "Kanit_500Medium",
+        color: "#666",
     },
     submitButton: {
         margin: 16,

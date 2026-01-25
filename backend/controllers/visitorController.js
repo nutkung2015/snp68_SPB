@@ -160,3 +160,64 @@ exports.inviteVisitor = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
+// @desc    Get Unit Entry History (all status)
+// @route   GET /api/visitors/history
+// @access  Private (Resident of that unit)
+exports.getUnitEntryHistory = async (req, res) => {
+    try {
+        const user_id = req.user.id;
+        const { unit_id, page = 1, limit = 20 } = req.query;
+
+        if (!unit_id) {
+            return res.status(400).json({ message: "Unit ID is required" });
+        }
+
+        // 1. Verify user belongs to this unit (Security check)
+        const [membership] = await db.promise().query(
+            "SELECT * FROM unit_members WHERE user_id = ? AND unit_id = ?",
+            [user_id, unit_id]
+        );
+
+        if (membership.length === 0) {
+            return res.status(403).json({ message: "You are not a member of this unit" });
+        }
+
+        // Calculate offset
+        const offset = (page - 1) * limit;
+
+        // 2. Fetch history from entry_logs
+        // Show ALL history regardless of status (inside/out)
+        // Order by check_in_time DESC (newest first)
+        const [rows] = await db.promise().query(
+            `SELECT el.*, u.unit_number 
+             FROM entry_logs el 
+             JOIN units u ON el.target_unit_id = u.id
+             WHERE el.target_unit_id = ? 
+             ORDER BY el.check_in_time DESC
+             LIMIT ? OFFSET ?`,
+            [unit_id, parseInt(limit), parseInt(offset)]
+        );
+
+        // Get total count for pagination
+        const [countResult] = await db.promise().query(
+            "SELECT COUNT(*) as total FROM entry_logs WHERE target_unit_id = ?",
+            [unit_id]
+        );
+
+        res.status(200).json({
+            status: "success",
+            data: rows,
+            pagination: {
+                total: countResult[0].total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                pages: Math.ceil(countResult[0].total / limit)
+            }
+        });
+
+    } catch (error) {
+        console.error("Error in getUnitEntryHistory:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};

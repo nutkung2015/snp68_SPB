@@ -9,11 +9,13 @@ import {
     Alert,
     Linking,
     Platform,
+    Modal,
+    StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as WebBrowser from "expo-web-browser";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { WebView } from 'react-native-webview';
 // import { getApiBaseUrl } from '../../utils/config'; // ย้ายไปใช้ใน Service แทน
@@ -28,6 +30,7 @@ export default function HouseDetailScreen({ navigation }) {
     const [error, setError] = useState(null);
     const [userData, setUserData] = useState(null);
     const [viewerUrl, setViewerUrl] = useState(null);
+    const [showFullscreen, setShowFullscreen] = useState(false);
 
     // โหลดข้อมูล user จาก AsyncStorage
     useEffect(() => {
@@ -80,23 +83,14 @@ export default function HouseDetailScreen({ navigation }) {
                 if (response?.status === "success" && response.data?.house_model) {
                     setHouseModelData(response.data);
 
-                    // Prepare Viewer URL immediately (ใช้ getStreamPdfUrl สำหรับ pdf-stream endpoint)
+                    // Prepare Viewer URL immediately - ใช้ Google Drive Viewer
                     if (response.data.house_model.detail_file_url) {
                         try {
-                            const filename = `${response.data.house_model.model_name} - รายละเอียด.pdf`;
-                            const authUrl = await ProjectDocumentsService.getStreamPdfUrl(
-                                projectId,
-                                response.data.house_model.detail_file_url,
-                                filename,
-                                'inline'
-                            );
+                            const firebaseUrl = response.data.house_model.detail_file_url;
 
-                            if (Platform.OS === 'android') {
-                                // Android WebView workaround using Google Docs Viewer
-                                setViewerUrl(`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(authUrl)}`);
-                            } else {
-                                setViewerUrl(authUrl);
-                            }
+                            // ใช้ Google Drive Viewer (ทำงานได้ดีกว่า PDF.js บน Android WebView)
+                            const googleDriveViewerUrl = `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(firebaseUrl)}`;
+                            setViewerUrl(googleDriveViewerUrl);
                         } catch (e) {
                             console.error("Failed to set viewer url", e);
                         }
@@ -138,38 +132,25 @@ export default function HouseDetailScreen({ navigation }) {
         return `${houseModelData.house_model.model_name} - รายละเอียด`;
     };
 
-    // เปิด PDF (ดูรายละเอียดบ้าน)
-    const handleViewPdf = async () => {
+    // เปิด PDF (ดูรายละเอียดบ้าน) - เปิด Modal Fullscreen
+    const handleViewPdf = () => {
         const detailFileUrl = getDetailFileUrl();
-        const projectId = getProjectId();
 
-        if (!detailFileUrl || !projectId) {
+        if (!detailFileUrl) {
             Alert.alert("ไม่พบไฟล์", "ยังไม่มีไฟล์รายละเอียดบ้านสำหรับดู");
             return;
         }
 
-        try {
-            // ใช้ getStreamPdfUrl สำหรับ /pdf-stream endpoint (มี Cache support)
-            const finalViewUrl = await ProjectDocumentsService.getStreamPdfUrl(
-                projectId,
-                detailFileUrl,
-                `${getDetailTitle()}.pdf`,
-                'inline'
-            );
-            await WebBrowser.openBrowserAsync(finalViewUrl);
-        } catch (err) {
-            console.error("Error opening PDF view:", err);
-            Alert.alert("เกิดข้อผิดพลาด", "ไม่สามารถเปิดดูไฟล์ได้");
-        }
+        // เปิด Modal Fullscreen แทนการเปิด browser ภายนอก
+        setShowFullscreen(true);
     };
 
-    // ดาวน์โหลด PDF (รายละเอียดบ้าน)
+    // ดาวน์โหลด PDF (รายละเอียดบ้าน) - ใช้ Firebase URL ตรงๆ
     const handleDownloadPdf = async () => {
         const detailFileUrl = getDetailFileUrl();
-        const projectId = getProjectId();
         const fileName = `${getDetailTitle()}.pdf`;
 
-        if (!detailFileUrl || !projectId) {
+        if (!detailFileUrl) {
             Alert.alert("ไม่พบไฟล์", "ยังไม่มีไฟล์ PDF สำหรับดาวน์โหลด");
             return;
         }
@@ -177,28 +158,15 @@ export default function HouseDetailScreen({ navigation }) {
         try {
             setDownloading(true);
 
-            // ใช้ getStreamPdfUrl สำหรับ /pdf-stream endpoint (มี Cache support)
-            const finalUrl = await ProjectDocumentsService.getStreamPdfUrl(
-                projectId,
-                detailFileUrl,
-                fileName,
-                'attachment'
-            );
-
-            if (!finalUrl) {
-                Alert.alert("ผิดพลาด", "ไม่สามารถสร้างลิงก์ดาวน์โหลดได้");
-                return;
-            }
-
-            console.log("Downloading from (pdf-stream):", finalUrl);
+            console.log("Downloading from Firebase:", detailFileUrl);
 
             const isAvailable = await Sharing.isAvailableAsync();
 
             if (Platform.OS === "web" || !isAvailable) {
-                await Linking.openURL(finalUrl);
+                await Linking.openURL(detailFileUrl);
             } else {
                 const fileUri = FileSystem.documentDirectory + fileName.replace(/\s/g, "_");
-                const downloadResult = await FileSystem.downloadAsync(finalUrl, fileUri);
+                const downloadResult = await FileSystem.downloadAsync(detailFileUrl, fileUri);
 
                 if (downloadResult.status === 200) {
                     await Sharing.shareAsync(downloadResult.uri, {
@@ -335,11 +303,11 @@ export default function HouseDetailScreen({ navigation }) {
             <View style={styles.centerContainer}>
                 {/* Info */}
                 <View style={styles.houseInfoContainer}>
-                    <Text style={styles.titleText}>{getDetailTitle()}</Text>
-                    <Text style={[styles.subtitleText, { marginBottom: 0 }]}>
-                        {houseModelData?.unit_number && `บ้านเลขที่ ${houseModelData.unit_number} `}
-                        {houseModelData?.zone && ` • ${houseModelData.zone} `}
-                    </Text>
+                    {/* <Text style={styles.titleText}>{getDetailTitle()}</Text>
+                        <Text style={[styles.subtitleText, { marginBottom: 0 }]}>
+                            {houseModelData?.unit_number && `บ้านเลขที่ ${houseModelData.unit_number} `}
+                            {houseModelData?.zone && ` • ${houseModelData.zone} `}
+                        </Text> */}
                 </View>
 
                 {/* Embedded PDF Viewer */}
@@ -412,6 +380,53 @@ export default function HouseDetailScreen({ navigation }) {
                     </TouchableOpacity>
                 </View>
             </View>
+
+            {/* Fullscreen PDF Modal */}
+            <Modal
+                visible={showFullscreen}
+                animationType="slide"
+                onRequestClose={() => setShowFullscreen(false)}
+            >
+                <SafeAreaView style={styles.modalContainer}>
+                    <StatusBar barStyle="light-content" backgroundColor={primaryColor} />
+                    {/* Modal Header */}
+                    <View style={[styles.modalHeader, { backgroundColor: primaryColor }]}>
+                        <TouchableOpacity
+                            onPress={() => setShowFullscreen(false)}
+                            style={styles.modalCloseButton}
+                        >
+                            <Ionicons name="close" size={28} color="white" />
+                        </TouchableOpacity>
+                        <Text style={styles.modalTitle} numberOfLines={1}>
+                            {getDetailTitle()}
+                        </Text>
+                        <View style={{ width: 40 }} />
+                    </View>
+
+                    {/* PDF Viewer */}
+                    {viewerUrl ? (
+                        <WebView
+                            source={{ uri: viewerUrl }}
+                            style={{ flex: 1 }}
+                            originWhitelist={['*']}
+                            useWebKit={true}
+                            startInLoadingState={true}
+                            renderLoading={() => (
+                                <View style={styles.loadingOverlay}>
+                                    <ActivityIndicator size="large" color={primaryColor} />
+                                    <Text style={{ marginTop: 10, color: '#666', fontFamily: 'Kanit_400Regular' }}>
+                                        กำลังโหลดเอกสาร...
+                                    </Text>
+                                </View>
+                            )}
+                        />
+                    ) : (
+                        <View style={styles.loadingOverlay}>
+                            <ActivityIndicator size="large" color={primaryColor} />
+                        </View>
+                    )}
+                </SafeAreaView>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -608,5 +623,29 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "bold",
         fontFamily: "Kanit_600SemiBold",
+    },
+    // Modal Styles
+    modalContainer: {
+        flex: 1,
+        backgroundColor: '#000',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
+        paddingVertical: 12,
+    },
+    modalCloseButton: {
+        padding: 5,
+        width: 40,
+    },
+    modalTitle: {
+        flex: 1,
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        fontFamily: 'Kanit_600SemiBold',
     },
 });

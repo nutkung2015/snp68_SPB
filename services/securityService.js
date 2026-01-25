@@ -45,6 +45,15 @@ const SecurityService = {
         return ApiService.get(url, token);
     },
 
+    // ดึงประวัติรถเข้า-ออก แบบกรองตามวัน
+    getEntryHistory: async (projectId, date) => {
+        const token = await ApiService.getToken();
+        return ApiService.get(
+            `/api/security/entry/history?project_id=${projectId}&date=${date}`,
+            token
+        );
+    },
+
     // รถที่ลูกบ้านแจ้งล่วงหน้า (Tab รถเข้า)
     getScheduledVisitors: async (projectId) => {
         const token = await ApiService.getToken();

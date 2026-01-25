@@ -166,13 +166,9 @@ const SecurityProfileScreen = ({ recheckLoginStatus }) => {
     return (
         <SafeAreaView style={styles.safeArea}>
             <ImageBackground
-                source={require("../../assets/mockup_banner_header_2.svg")}
+                source={require("../../assets/baner_new_r5.png")}
                 style={styles.headerBackground}
                 resizeMode="cover"
-                imageStyle={{
-                    width: "100%",
-                    height: "100%",
-                }}
             >
                 {/* Color Overlay from primaryColor */}
                 <View
@@ -299,10 +295,12 @@ const styles = StyleSheet.create({
     headerBackground: {
         width: "100%",
         paddingBottom: 30,
+        justifyContent: 'center',
+        overflow: 'hidden',
     },
     colorOverlay: {
         ...StyleSheet.absoluteFillObject,
-        opacity: 0.85,
+        opacity: 0.3,
     },
     headerContent: {
         flexDirection: "row",
@@ -321,7 +319,7 @@ const styles = StyleSheet.create({
     },
     profileHeaderCard: {
         alignItems: "center",
-        paddingVertical: 20,
+        paddingVertical: 15,
     },
     avatarContainer: {
         marginBottom: 15,

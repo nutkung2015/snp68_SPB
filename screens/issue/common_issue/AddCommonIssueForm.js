@@ -61,6 +61,7 @@ export default function AddCommonIssueForm({ navigation }) {
         houseNumber: "",
         zone: "",
         reporterName: "",
+        reportDate: new Date(),
         location: "",
         issueType: "",
         description: "",
@@ -200,6 +201,18 @@ export default function AddCommonIssueForm({ navigation }) {
         </View>
     );
 
+    // เพิ่มฟังก์ชัน formatDate
+    const formatDate = (date) => {
+        if (!date) return "";
+        return date.toLocaleDateString("th-TH", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -235,6 +248,14 @@ export default function AddCommonIssueForm({ navigation }) {
                 <View style={styles.inputGroup_normalText}>
                     <Text style={styles.label_normalText}>ชื่อผู้แจ้ง</Text>
                     <Text style={styles.valueText_normalText}>{formData.reporterName}</Text>
+                </View>
+
+                {/* วันที่ยื่น (อัตโนมัติ) */}
+                <View style={styles.inputGroup_normalText}>
+                    <Text style={styles.label_normalText}>วันที่ยื่น</Text>
+                    <Text style={styles.valueText_normalText}>
+                        {formatDate(formData.reportDate)}
+                    </Text>
                 </View>
 
                 {/* สถานที่พบปัญหา */}

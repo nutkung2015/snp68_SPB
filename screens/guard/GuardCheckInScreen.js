@@ -32,6 +32,10 @@ const GuardCheckInScreen = ({ navigation }) => {
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [quickCheckInLoading, setQuickCheckInLoading] = useState(false);
 
+    // Re-confirmation Modal State
+    const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+    const [confirmPlateInput, setConfirmPlateInput] = useState("");
+
     // Form Data
     const [formData, setFormData] = useState({
         plate_number: "",
@@ -94,30 +98,115 @@ const GuardCheckInScreen = ({ navigation }) => {
         }
     };
 
-    // Quick check-in for registered vehicles
-    const handleQuickCheckIn = async () => {
-        if (!selectedVehicle) return;
+    // 1. Proceed from Vehicle details to Confirmation Input
+    const handleProceedToConfirmation = () => {
+        setQuickCheckInModal(false);
+        setConfirmPlateInput("");
+        setConfirmModalVisible(true);
+    };
 
-        setQuickCheckInLoading(true);
+    // 2. Validate and Submit (Quick or Form)
+    const handleFinalSubmit = async () => {
+        if (!confirmPlateInput) {
+            Alert.alert("แจ้งเตือน", "กรุณากรอกเลขทะเบียนเพื่อยืนยัน");
+            return;
+        }
+
+        // Determine target plate based on flow
+        let targetPlate = "";
+        if (step === 'form') {
+            targetPlate = formData.plate_number;
+        } else if (selectedVehicle) {
+            targetPlate = selectedVehicle.plate_number;
+        }
+
+        // Validation: Verify if input matches target plate
+        const inputClean = confirmPlateInput.replace(/\s+/g, '').toLowerCase();
+        const targetClean = targetPlate.replace(/\s+/g, '').toLowerCase();
+
+        // Allow partial match if input is at least 2 chars
+        const isMatch = targetClean.includes(inputClean) && inputClean.length >= 2;
+
+        if (!isMatch) {
+            Alert.alert(
+                "ข้อมูลไม่ถูกต้อง",
+                `เลขทะเบียนที่ระบุ "${confirmPlateInput}" ไม่ตรงกับรายการ "${targetPlate}"`
+            );
+            return;
+        }
+
+        // Proceed based on flow
+        if (step === 'form') {
+            await performFormCheckIn();
+        } else {
+            // Quick Check-in logic
+            setQuickCheckInLoading(true);
+            try {
+                const checkInPayload = {
+                    plate_number: selectedVehicle.plate_number,
+                    province: selectedVehicle.province || "กรุงเทพมหานคร",
+                    target_unit_id: selectedVehicle.unit_id || "",
+                    unit_number: selectedVehicle.unit_number || "",
+                    visitor_name: selectedVehicle.visitor_name || "",
+                    project_id: formData.project_id,
+                    id_card_consent: 1,
+                    is_quick_checkin: true,
+                };
+
+                const response = await SecurityService.checkIn(checkInPayload);
+                if (response.status === "success") {
+                    setConfirmModalVisible(false);
+                    navigation.goBack();
+                    Alert.alert("สำเร็จ", `บันทึกรถเข้าเรียบร้อย\n${selectedVehicle.plate_number}`);
+                }
+            } catch (error) {
+                console.error(error);
+                Alert.alert("Error", "บันทึกข้อมูลไม่สำเร็จ");
+            } finally {
+                setQuickCheckInLoading(false);
+            }
+        }
+    };
+
+    // Actual API Call for Form Check-in
+    const performFormCheckIn = async () => {
+        setQuickCheckInLoading(true); // Reuse loading state for modal button
         try {
+            let driverUrl = null;
+            let carUrl = null;
+
+            // Note: If we want to show progress, we might need to handle it better, 
+            // but for now reusing the modal loading state.
+
+            if (driverImage) {
+                const res = await SecurityService.uploadVisitorImage(formData.project_id, driverImage);
+                if (res.status === 'success') {
+                    driverUrl = res.data.url;
+                }
+            }
+
+            if (carImage) {
+                const res = await SecurityService.uploadVisitorImage(formData.project_id, carImage);
+                if (res.status === 'success') {
+                    carUrl = res.data.url;
+                }
+            }
+
             const checkInPayload = {
-                plate_number: selectedVehicle.plate_number,
-                province: selectedVehicle.province || "กรุงเทพมหานคร",
-                target_unit_id: selectedVehicle.unit_id || "",
-                unit_number: selectedVehicle.unit_number || "",
-                visitor_name: selectedVehicle.visitor_name || "",
-                project_id: formData.project_id,
-                id_card_consent: 1,
-                is_quick_checkin: true, // Flag for backend
+                ...formData,
+                image_driver_url: driverUrl,
+                image_car_url: carUrl,
+                id_card_consent: formData.id_card_consent ? 1 : 0
             };
 
             const response = await SecurityService.checkIn(checkInPayload);
             if (response.status === "success") {
-                setQuickCheckInModal(false);
-                // Navigate back immediately after success
+                setConfirmModalVisible(false);
+                Alert.alert("Success", response.message);
                 navigation.goBack();
-                // Show success message (will appear on previous screen briefly)
-                Alert.alert("สำเร็จ", `บันทึกรถเข้าเรียบร้อย\n${selectedVehicle.plate_number}`);
+            } else if (response.status === 'require_unit') {
+                setConfirmModalVisible(false);
+                Alert.alert("Required", "กรุณาระบุบ้านเลขที่ที่มาติดต่อ");
             }
         } catch (error) {
             console.error(error);
@@ -127,20 +216,18 @@ const GuardCheckInScreen = ({ navigation }) => {
         }
     };
 
-    // Go to full form instead of quick check-in
-    const handleGoToForm = () => {
-        if (selectedVehicle) {
-            setFormData(prev => ({
-                ...prev,
-                plate_number: selectedVehicle.plate_number,
-                province: selectedVehicle.province || "กรุงเทพมหานคร",
-                visitor_name: selectedVehicle.visitor_name || "",
-                target_unit_id: selectedVehicle.unit_id || "",
-                unit_number: selectedVehicle.unit_number || "",
-            }));
+    const handleSubmitCheckIn = () => {
+        if (!formData.plate_number) {
+            Alert.alert("Missing Info", "กรุณาระบุเลขทะเบียน");
+            return;
         }
-        setQuickCheckInModal(false);
-        setStep("form");
+        // Open Re-confirmation Modal
+        setConfirmPlateInput("");
+        setConfirmModalVisible(true);
+    };
+
+    const handleGoToForm = () => {
+        navigation.navigate('GuardCheckInForm', { formData });
     };
 
     const takePhoto = async (type) => {
@@ -170,53 +257,6 @@ const GuardCheckInScreen = ({ navigation }) => {
         } catch (error) {
             console.error(error);
             Alert.alert("Error", "ไม่สามารถเปิดกล้องได้");
-        }
-    };
-
-    const handleSubmitCheckIn = async () => {
-        if (!formData.plate_number) {
-            Alert.alert("Missing Info", "กรุณาระบุเลขทะเบียน");
-            return;
-        }
-
-        setUploading(true);
-        try {
-            let driverUrl = null;
-            let carUrl = null;
-
-            if (driverImage) {
-                const res = await SecurityService.uploadVisitorImage(formData.project_id, driverImage);
-                if (res.status === 'success') {
-                    driverUrl = res.data.url;
-                }
-            }
-
-            if (carImage) {
-                const res = await SecurityService.uploadVisitorImage(formData.project_id, carImage);
-                if (res.status === 'success') {
-                    carUrl = res.data.url;
-                }
-            }
-
-            const checkInPayload = {
-                ...formData,
-                image_driver_url: driverUrl,
-                image_car_url: carUrl,
-                id_card_consent: formData.id_card_consent ? 1 : 0
-            };
-
-            const response = await SecurityService.checkIn(checkInPayload);
-            if (response.status === "success") {
-                Alert.alert("Success", response.message);
-                navigation.goBack();
-            } else if (response.status === 'require_unit') {
-                Alert.alert("Required", "กรุณาระบุบ้านเลขที่ที่มาติดต่อ");
-            }
-        } catch (error) {
-            console.error(error);
-            Alert.alert("Error", "บันทึกข้อมูลไม่สำเร็จ");
-        } finally {
-            setUploading(false);
         }
     };
 
@@ -314,7 +354,7 @@ const GuardCheckInScreen = ({ navigation }) => {
                     <View style={styles.quickModalButtons}>
                         <TouchableOpacity
                             style={styles.quickConfirmButton}
-                            onPress={handleQuickCheckIn}
+                            onPress={handleProceedToConfirmation}
                             disabled={quickCheckInLoading}
                         >
                             {quickCheckInLoading ? (
@@ -322,7 +362,7 @@ const GuardCheckInScreen = ({ navigation }) => {
                             ) : (
                                 <>
                                     <Icon name="check" size={16} color="#fff" style={{ marginRight: 8 }} />
-                                    <Text style={styles.quickConfirmText}>ยืนยันเข้าหมู่บ้าน</Text>
+                                    <Text style={styles.quickConfirmText}>ยืนยันข้อมูลถูกต้อง</Text>
                                 </>
                             )}
                         </TouchableOpacity>
@@ -344,6 +384,70 @@ const GuardCheckInScreen = ({ navigation }) => {
                     </View>
                 </View>
             </View>
+        </Modal>
+    );
+
+    // Re-confirmation Logic Modal
+    const renderConfirmModal = () => (
+        <Modal
+            visible={confirmModalVisible}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setConfirmModalVisible(false)}
+        >
+            {/* Wrap with KeyboardAvoidingView for iOS */}
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.quickModalOverlay}
+            >
+                <View style={styles.quickModalContainer}>
+                    <View style={styles.quickModalHeader}>
+                        <View style={[styles.quickModalIconCircle, { backgroundColor: '#F59E0B20' }]}>
+                            <Icon name="shield-alt" size={32} color="#F59E0B" />
+                        </View>
+                        <Text style={styles.quickModalTitle}>ยืนยันเลขทะเบียนรถ</Text>
+                        <Text style={styles.quickModalSubtitle}>
+                            กรุณากรอกเลขทะเบียนเพื่อยืนยันความถูกต้อง
+                        </Text>
+                    </View>
+
+                    <Text style={[styles.label, { textAlign: 'center', marginTop: 10 }]}>
+                        ทะเบียนรถที่เลือก: {selectedVehicle?.plate_number || formData.plate_number}
+                    </Text>
+
+                    <TextInput
+                        style={[styles.searchInput, { textAlign: 'center', marginVertical: 20 }]}
+                        placeholder="กรอกทะเบียนรถอีกครั้ง"
+                        value={confirmPlateInput}
+                        onChangeText={setConfirmPlateInput}
+                        autoFocus={true}
+                    />
+
+                    <View style={styles.quickModalButtons}>
+                        <TouchableOpacity
+                            style={[styles.quickConfirmButton, { backgroundColor: '#1F4E46' }]}
+                            onPress={handleFinalSubmit}
+                            disabled={quickCheckInLoading}
+                        >
+                            {quickCheckInLoading ? (
+                                <ActivityIndicator color="#fff" size="small" />
+                            ) : (
+                                <Text style={styles.quickConfirmText}>ยืนยันรถเข้า (Check-in)</Text>
+                            )}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.quickCancelButton}
+                            onPress={() => {
+                                setConfirmModalVisible(false);
+                                setQuickCheckInModal(true); // Back to previous
+                            }}
+                        >
+                            <Text style={styles.quickCancelText}>ย้อนกลับ</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </KeyboardAvoidingView>
         </Modal>
     );
 
@@ -584,7 +688,7 @@ const GuardCheckInScreen = ({ navigation }) => {
                 {uploading ? (
                     <Text style={styles.submitButtonText}>กำลังบันทึก...</Text>
                 ) : (
-                    <Text style={styles.submitButtonText}>บันทึก (Check-in)</Text>
+                    <Text style={styles.submitButtonText}>บันทึกรถเข้า</Text>
                 )}
             </TouchableOpacity>
         </KeyboardAwareScrollView>
@@ -605,6 +709,8 @@ const GuardCheckInScreen = ({ navigation }) => {
 
             {/* Quick Check-in Modal */}
             {renderQuickCheckInModal()}
+            {/* Re-confirm Modal */}
+            {renderConfirmModal()}
         </>
     );
 };

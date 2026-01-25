@@ -10,6 +10,7 @@ router.post('/entry/check-out', protect, securityController.checkOut);
 router.get('/vehicles/search', protect, securityController.searchVehicles);
 router.get('/entry/logs', protect, securityController.getEntryLogs);
 router.get('/entry/logs/:id', protect, securityController.getEntryLogById);
+router.get('/entry/history', protect, securityController.getEntryHistory);
 router.get('/visitors/scheduled', protect, securityController.getScheduledVisitors);
 router.post('/visitors/confirm-entry', protect, securityController.confirmVisitorEntry);
 router.get('/stats', protect, securityController.getStats);

@@ -430,6 +430,47 @@ exports.getStats = async (req, res) => {
     }
 };
 
+// @desc    Get Entry History with Date Filter
+// @route   GET /api/security/entry/history?project_id=xxx&date=YYYY-MM-DD
+// @access  Private (Security)
+exports.getEntryHistory = async (req, res) => {
+    try {
+        const { project_id, date } = req.query;
+
+        if (!project_id) {
+            return res.status(400).json({ message: "Project ID is required" });
+        }
+
+        let query = `
+            SELECT el.*, u.unit_number 
+            FROM entry_logs el 
+            LEFT JOIN units u ON el.target_unit_id = u.id 
+            WHERE el.project_id = ?
+        `;
+        const params = [project_id];
+
+        // Filter by date if provided
+        if (date) {
+            query += ` AND DATE(el.check_in_time) = ?`;
+            params.push(date);
+        }
+
+        query += ` ORDER BY el.check_in_time DESC LIMIT 100`;
+
+        const [rows] = await db.promise().query(query, params);
+
+        res.status(200).json({
+            status: "success",
+            data: rows,
+            count: rows.length
+        });
+
+    } catch (error) {
+        console.error("Error in getEntryHistory:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
 // @desc    Get Single Entry Log by ID
 // @route   GET /api/security/entry/logs/:id
 // @access  Private (Security)
@@ -465,6 +506,7 @@ module.exports = {
     checkOut: exports.checkOut,
     searchVehicles: exports.searchVehicles,
     getEntryLogs: exports.getEntryLogs,
+    getEntryHistory: exports.getEntryHistory,
     getScheduledVisitors: exports.getScheduledVisitors,
     confirmVisitorEntry: exports.confirmVisitorEntry,
     getStats: exports.getStats,

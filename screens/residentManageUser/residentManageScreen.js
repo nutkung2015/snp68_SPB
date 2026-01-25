@@ -356,11 +356,11 @@ const ResidentManageScreen = ({ navigation }) => {
 
                 <TouchableOpacity
                     style={[styles.actionButton, { backgroundColor: primaryColor }]}
-                    onPress={handleViewVehicles}
+                    onPress={() => navigation.navigate("UnitEntryHistory")}
                 >
-                    <Ionicons name="car" size={24} color="#fff" />
+                    <Ionicons name="time" size={24} color="#fff" />
                     <View style={styles.actionTextContainer}>
-                        <Text style={styles.actionButtonText}>รถที่ผูกกับบ้าน</Text>
+                        <Text style={styles.actionButtonText}>ประวัติการเข้า Unit</Text>
                     </View>
                 </TouchableOpacity>
             </View>

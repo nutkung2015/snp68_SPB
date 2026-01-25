@@ -92,6 +92,16 @@ exports.register = async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    // Set HttpOnly Cookie
+    const cookieOptions = {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    };
+
+    res.cookie('token', token, cookieOptions);
+
     res.status(201).json({
       status: "success",
       message: "ลงทะเบียนสำเร็จ",
@@ -166,6 +176,41 @@ exports.login = async (req, res) => {
       });
     }
 
+    // ดึงข้อมูลการเป็นสมาชิกโครงการและยูนิต เพื่อใส่ใน Token
+    const [projectMembershipsRaw] = await db
+      .promise()
+      .query(
+        "SELECT pm.project_id, pm.role, p.name AS project_name FROM project_members pm JOIN projects p ON pm.project_id = p.id WHERE pm.user_id = ?",
+        [existingUser.id]
+      );
+
+    const projectMemberships = projectMembershipsRaw.map(pm => ({
+      ...pm,
+      role: pm.role || existingUser.role
+    }));
+
+    const [unitMemberships] = await db
+      .promise()
+      .query(
+        "SELECT um.unit_id, um.role, u.unit_number FROM unit_members um JOIN units u ON um.unit_id = u.id WHERE um.user_id = ?",
+        [existingUser.id]
+      );
+
+    // ดึง Customization สำหรับ Project แรก
+    let projectCustomizationsForToken = null;
+    if (projectMemberships.length > 0) {
+      const projectId = projectMemberships[0].project_id;
+      const [customRows] = await db
+        .promise()
+        .query(
+          "SELECT primary_color, secondary_color, logo_url, project_id FROM projectcustomizations WHERE project_id = ? LIMIT 1",
+          [projectId]
+        );
+      if (customRows.length > 0) {
+        projectCustomizationsForToken = customRows[0];
+      }
+    }
+
     // สร้าง JWT Token
     const token = jwt.sign(
       {
@@ -174,6 +219,9 @@ exports.login = async (req, res) => {
         role: existingUser.role,
         full_name: existingUser.full_name,
         phone: existingUser.phone,
+        projectMemberships: projectMemberships, // ใส่ข้อมูลการเป็นสมาชิกโครงการ
+        unitMemberships: unitMemberships,       // ใส่ข้อมูลการเป็นสมาชิกยูนิต
+        projectCustomizations: projectCustomizationsForToken, // ใส่ข้อมูล Customization
       },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
@@ -181,6 +229,16 @@ exports.login = async (req, res) => {
 
     // ใช้ helper function เพื่อสร้าง response
     const responseData = await generateUserResponse(existingUser, token);
+
+    // Set HttpOnly Cookie
+    const cookieOptions = {
+      expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // 1 hour
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    };
+
+    res.cookie('token', token, cookieOptions);
 
     res.status(200).json({
       status: "success",
@@ -445,6 +503,16 @@ exports.loginWithFirebasePhone = async (req, res) => {
 
     // ใช้ helper function เพื่อสร้าง response
     const responseData = await generateUserResponse(existingUser, token);
+
+    // Set HttpOnly Cookie
+    const cookieOptions = {
+      expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // 1 hour
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    };
+
+    res.cookie('token', token, cookieOptions);
 
     res.status(200).json({
       status: "success",

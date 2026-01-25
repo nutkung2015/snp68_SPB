@@ -3,9 +3,9 @@ require('dotenv').config();
 
 module.exports = ({ config }) => {
     // Debug: Log to verify config is loaded
-    console.log('🔥 Firebase Config Loading...');
-    console.log('   API Key:', process.env.FIREBASE_API_KEY ? '✅ Found' : '❌ Missing');
-    console.log('   Project ID:', process.env.FIREBASE_PROJECT_ID || 'Missing');
+    // console.log('🔥 Firebase Config Loading...');
+    // console.log('   API Key:', process.env.FIREBASE_API_KEY ? '✅ Found' : '❌ Missing');
+    // console.log('   Project ID:', process.env.FIREBASE_PROJECT_ID || 'Missing');
 
     return {
         ...config,

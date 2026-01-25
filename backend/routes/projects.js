@@ -92,11 +92,10 @@ router.get('/:project_id/member/my-house-model', authMiddleware, houseModelContr
 // สำหรับใช้กับ getStreamPdfUrl() และ pdf-stream endpoint
 router.get('/:project_id/member/my-house-model-v2', authMiddleware, houseModelController.getMyHouseModelV2);
 
-// Route สำหรับดาวน์โหลด PDF ผ่าน Proxy (แก้ 401 Untrusted) - Verify token ใน controller
-router.get("/:project_id/member/download-pdf", houseModelController.proxyPdfDownload);
+// Route สำหรับดาวน์โหลด PDF ผ่าน Proxy (ยกเลิกการใช้งานแล้ว เนื่องจาก Firebase URL เป็น Public)
+// router.get("/:project_id/member/download-pdf", houseModelController.proxyPdfDownload);
 
-// NEW: Optimized PDF streaming with Cache support - ดีกว่า download-pdf
-// มี Cache-Control, ETag, 304 support สำหรับ performance ที่ดีขึ้น
-router.get("/:project_id/member/pdf-stream", houseModelController.streamPdfProxy);
+// NEW: Optimized PDF streaming with Cache support (ยกเลิกการใช้งานแล้ว)
+// router.get("/:project_id/member/pdf-stream", houseModelController.streamPdfProxy);
 
 module.exports = router;

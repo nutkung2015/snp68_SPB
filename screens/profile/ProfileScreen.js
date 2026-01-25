@@ -156,10 +156,6 @@ const ProfileScreen = ({ recheckLoginStatus }) => {
         source={require("../../assets/banner_header_3.png")}
         style={styles.headerBackground}
         resizeMode="cover"
-        imageStyle={{
-          width: "100%",
-          height: "100%",
-        }}
       >
         {/* Color Overlay from primaryColor */}
         <View

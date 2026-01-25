@@ -292,7 +292,7 @@ const GuardDashboardScreen = ({ navigation }) => {
                     <Icon name="search" size={20} color="#fff" style={{ marginRight: 10 }} />
                     <Text style={styles.actionBtnTextPrimary}>ตรวจสอบทะเบียน</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtnPrimary}>
+                <TouchableOpacity style={styles.actionBtnPrimary} onPress={() => navigation.navigate("EntryHistory")}>
                     <Icon name="history" size={20} color="#fff" style={{ marginRight: 10 }} />
                     <Text style={styles.actionBtnTextPrimary}>ประวัติการเข้าเยี่ยม</Text>
                 </TouchableOpacity>

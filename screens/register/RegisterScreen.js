@@ -210,10 +210,6 @@ export default function RegisterScreen({ navigation }) {
         source={require("../../assets/baner_new_r5.png")}
         style={styles.headerBackground}
         resizeMode="cover"
-        imageStyle={{
-          width: "100%",
-          height: "100%",
-        }}
       >
         <View style={styles.header}>
           <View style={styles.headerContent}>

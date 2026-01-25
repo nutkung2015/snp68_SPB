@@ -72,11 +72,6 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
         source={require("../../assets/baner_new_r5.png")}
         style={styles.headerBackground}
         resizeMode="cover"
-        imageStyle={{
-          // เพิ่ม style สำหรับรูปภาพ
-          width: "100%",
-          height: "100%",
-        }}
       >
         {/* Header */}
         <View style={styles.header}>

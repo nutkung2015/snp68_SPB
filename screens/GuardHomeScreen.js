@@ -153,7 +153,7 @@ const GuardHomeScreen = ({ navigation }) => {
             {/* แจ้งปัญหา */}
             <TouchableOpacity
               style={[styles.menuCard, { opacity: 0.75, borderColor: primaryColor || "#205248" }]}
-              onPress={() => navigation.navigate("ReportIssue")}
+              onPress={() => navigation.navigate("IssueMenu")}
             >
               <View style={[styles.menuGradient, { backgroundColor: primaryColor || "#4DB59F" }]}>
                 <View style={styles.menuIconWrapper}>
@@ -166,7 +166,7 @@ const GuardHomeScreen = ({ navigation }) => {
             {/* เบอร์ฉุกเฉิน */}
             <TouchableOpacity
               style={[styles.menuCard, { opacity: 0.75, borderColor: primaryColor || "#205248" }]}
-              onPress={() => navigation.navigate("EmergencyContact")}
+              onPress={() => navigation.navigate("NumberEmergency")}
             >
               <View style={[styles.menuGradient, { backgroundColor: primaryColor || "#4DB59F" }]}>
                 <View style={styles.menuIconWrapper}>

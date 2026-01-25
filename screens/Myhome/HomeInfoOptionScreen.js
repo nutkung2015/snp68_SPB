@@ -93,15 +93,15 @@ export default function HomeInfoOptionScreen({ navigation }) {
                 </TouchableOpacity>
             </View>
             <View style={styles.headerSecond}>
-                <Text style={styles.headerTitle}>ข้อมูลบ้าน</Text>
+                <Text style={styles.headerTitle}>เอกสารตัวบ้าน</Text>
             </View>
 
             {/* Content */}
             <View style={styles.content}>
-                <Text style={styles.sectionTitle}>เลือกดูข้อมูล</Text>
+                {/* <Text style={styles.sectionTitle}>เลือกดูข้อมูล</Text>
                 <Text style={styles.sectionSubtitle}>
                     เลือกประเภทเอกสารที่ต้องการดู
-                </Text>
+                </Text> */}
 
                 {/* Option Cards */}
                 <View style={styles.cardsContainer}>

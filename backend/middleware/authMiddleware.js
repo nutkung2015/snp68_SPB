@@ -3,15 +3,20 @@ const db = require("../config/db"); // Assuming you have a db connection here
 
 const authMiddleware = async (req, res, next) => {
   try {
+    let token;
+
+    // 1. Check Authorization Header
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: "No token provided or token format is invalid." });
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(" ")[1];
     }
-    const token = authHeader.split(" ")[1];
+    // 2. Check Cookie (for Web)
+    else if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+    }
+
     if (!token) {
-      return res
-        .status(401)
-        .json({ message: "No token, authorization denied" });
+      return res.status(401).json({ message: "No token, authorization denied" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
