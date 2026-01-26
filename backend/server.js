@@ -169,11 +169,22 @@ app.use(helmet({
   permittedCrossDomainPolicies: { permittedPolicies: "none" },
 }));
 
+// Helper function to get clean Client IP
+// Prioritize Cloudflare header -> X-Forwarded-For -> req.ip
+const getClientIp = (req) => {
+  if (req.headers['cf-connecting-ip']) {
+    return req.headers['cf-connecting-ip'];
+  }
+  // กรณี X-Forwarded-For อาจจะมาเป็น list เช่น "client, proxy1, proxy2"
+  if (req.headers['x-forwarded-for']) {
+    return req.headers['x-forwarded-for'].split(',')[0].trim();
+  }
+  return req.ip;
+};
+
 // Logging Middleware
 app.use(morgan((tokens, req, res) => {
-  // เลือกใช้ IP จาก req.ip (ซึ่งจะถูกต้องเมื่อตั้ง trust proxy แล้ว) 
-  // หรือ fallback ไปที่ remote-addr ปกติ
-  const clientIP = req.ip || tokens['remote-addr'](req, res);
+  const clientIP = getClientIp(req);
 
   return [
     clientIP,
@@ -211,18 +222,20 @@ app.use(cookieParser()); // Use cookie-parser middleware
 // Rate Limiting
 const apiLimiter = rateLimit({
   windowMs: 3 * 60 * 1000, // 3 minutes
-  max: 50, // Limit each IP to 50 requests per 3 minutes (~250 req/15 min equivalent)
+  max: 50, // Limit each IP to 50 requests per 3 minutes
   message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => getClientIp(req) // Use correct IP for rate limiting
 });
 
 const authLimiter = rateLimit({
   windowMs: 3 * 60 * 1000, // 3 minutes
-  max: 5, // Limit each IP to 5 login requests per 3 minutes (prevents brute force)
+  max: 5, // Limit each IP to 5 login requests per 3 minutes
   message: 'Too many login attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => getClientIp(req) // Use correct IP for rate limiting
 });
 
 // Apply rate limiters
