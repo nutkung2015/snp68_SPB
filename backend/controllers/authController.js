@@ -4,8 +4,41 @@ const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const { verifyIdToken } = require("../config/firebase");
 
-// Helper function to generate user response with memberships
-const generateUserResponse = async (existingUser, token) => {
+// Helper function to generate tokens
+const generateTokens = async (user) => {
+  const accessToken = jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      full_name: user.full_name,
+      phone: user.phone,
+      projectMemberships: user.projectMemberships,
+      unitMemberships: user.unitMemberships,
+      projectCustomizations: user.projectCustomizations,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+
+  const refreshToken = jwt.sign(
+    { id: user.id },
+    process.env.JWT_SECRET, // In a real prod app, use a different secret for refresh tokens
+    { expiresIn: "7d" }
+  );
+
+  // Save refresh token to DB
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+  await db.promise().execute(
+    "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)",
+    [user.id, refreshToken, expiresAt]
+  );
+
+  return { accessToken, refreshToken };
+};
+
+// Helper function to generate user response with memberships and set cookies
+const generateUserResponse = async (existingUser, res) => {
   // ดึงข้อมูลการเป็นสมาชิกโครงการ
   const [projectMembershipsRaw] = await db
     .promise()
@@ -42,13 +75,44 @@ const generateUserResponse = async (existingUser, token) => {
     }
   }
 
+  // Prepare user object for token generation
+  const userForToken = {
+    ...existingUser,
+    projectMemberships,
+    unitMemberships,
+    projectCustomizations,
+  };
+
+  // Generate Tokens
+  const { accessToken, refreshToken } = await generateTokens(userForToken);
+
+  // Set Access Token Cookie
+  const accessTokenOptions = {
+    expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // 1 hour
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  };
+  res.cookie('token', accessToken, accessTokenOptions);
+
+  // Set Refresh Token Cookie
+  const refreshTokenOptions = {
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    path: '/api/auth/refresh' // Limit scope of refresh token
+  };
+  res.cookie('refreshToken', refreshToken, refreshTokenOptions);
+
   return {
     id: existingUser.id,
     full_name: existingUser.full_name,
     email: existingUser.email,
     phone: existingUser.phone,
     role: existingUser.role,
-    token,
+    token: accessToken, // Return access token in JSON
+    refreshToken: refreshToken, // Return refresh token in JSON (for mobile/AsyncStorage)
     projectMemberships,
     unitMemberships,
     projectCustomizations,
@@ -85,33 +149,13 @@ exports.register = async (req, res) => {
         [userId, full_name, phone, email, hashedPassword, role]
       );
 
-    // สร้าง JWT Token
-    const token = jwt.sign(
-      { id: userId, email, role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    // Set HttpOnly Cookie
-    const cookieOptions = {
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    };
-
-    res.cookie('token', token, cookieOptions);
+    // ใช้ helper function เพื่อสร้าง response และ set cookies
+    const responseData = await generateUserResponse({ id: userId, full_name, phone, email, role }, res);
 
     res.status(201).json({
       status: "success",
       message: "ลงทะเบียนสำเร็จ",
-      data: {
-        id: userId,
-        full_name,
-        email,
-        role,
-        token,
-      },
+      data: responseData,
     });
   } catch (error) {
     console.error("Error in register:", error);
@@ -176,69 +220,8 @@ exports.login = async (req, res) => {
       });
     }
 
-    // ดึงข้อมูลการเป็นสมาชิกโครงการและยูนิต เพื่อใส่ใน Token
-    const [projectMembershipsRaw] = await db
-      .promise()
-      .query(
-        "SELECT pm.project_id, pm.role, p.name AS project_name FROM project_members pm JOIN projects p ON pm.project_id = p.id WHERE pm.user_id = ?",
-        [existingUser.id]
-      );
-
-    const projectMemberships = projectMembershipsRaw.map(pm => ({
-      ...pm,
-      role: pm.role || existingUser.role
-    }));
-
-    const [unitMemberships] = await db
-      .promise()
-      .query(
-        "SELECT um.unit_id, um.role, u.unit_number FROM unit_members um JOIN units u ON um.unit_id = u.id WHERE um.user_id = ?",
-        [existingUser.id]
-      );
-
-    // ดึง Customization สำหรับ Project แรก
-    let projectCustomizationsForToken = null;
-    if (projectMemberships.length > 0) {
-      const projectId = projectMemberships[0].project_id;
-      const [customRows] = await db
-        .promise()
-        .query(
-          "SELECT primary_color, secondary_color, logo_url, project_id FROM projectcustomizations WHERE project_id = ? LIMIT 1",
-          [projectId]
-        );
-      if (customRows.length > 0) {
-        projectCustomizationsForToken = customRows[0];
-      }
-    }
-
-    // สร้าง JWT Token
-    const token = jwt.sign(
-      {
-        id: existingUser.id,
-        email: existingUser.email,
-        role: existingUser.role,
-        full_name: existingUser.full_name,
-        phone: existingUser.phone,
-        projectMemberships: projectMemberships, // ใส่ข้อมูลการเป็นสมาชิกโครงการ
-        unitMemberships: unitMemberships,       // ใส่ข้อมูลการเป็นสมาชิกยูนิต
-        projectCustomizations: projectCustomizationsForToken, // ใส่ข้อมูล Customization
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    // ใช้ helper function เพื่อสร้าง response
-    const responseData = await generateUserResponse(existingUser, token);
-
-    // Set HttpOnly Cookie
-    const cookieOptions = {
-      expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // 1 hour
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    };
-
-    res.cookie('token', token, cookieOptions);
+    // ใช้ helper function เพื่อสร้าง response และ set cookies
+    const responseData = await generateUserResponse(existingUser, res);
 
     res.status(200).json({
       status: "success",
@@ -488,31 +471,8 @@ exports.loginWithFirebasePhone = async (req, res) => {
 
     const existingUser = user[0];
 
-    // สร้าง JWT Token
-    const token = jwt.sign(
-      {
-        id: existingUser.id,
-        email: existingUser.email,
-        role: existingUser.role,
-        full_name: existingUser.full_name,
-        phone: existingUser.phone,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    // ใช้ helper function เพื่อสร้าง response
-    const responseData = await generateUserResponse(existingUser, token);
-
-    // Set HttpOnly Cookie
-    const cookieOptions = {
-      expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // 1 hour
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    };
-
-    res.cookie('token', token, cookieOptions);
+    // ใช้ helper function เพื่อสร้าง response และ set cookies
+    const responseData = await generateUserResponse(existingUser, res);
 
     res.status(200).json({
       status: "success",
@@ -569,5 +529,96 @@ exports.verifyFirebaseToken = async (req, res) => {
       status: "error",
       message: "เกิดข้อผิดพลาดในการตรวจสอบ token",
     });
+  }
+};
+
+// @desc    Refresh Access Token using Refresh Token
+// @route   POST /api/auth/refresh
+// @access  Public (matches via Cookie)
+exports.refreshToken = async (req, res) => {
+  try {
+    // รับ Refresh Token จาก Cookie (Web) หรือ Body (Mobile)
+    const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Refresh token not found" });
+    }
+
+    // 1. ตรวจสอบใน DB ว่ามี Token นี้ไหมและยังไม่หมดอายุ
+    const [rows] = await db.promise().query(
+      "SELECT * FROM refresh_tokens WHERE token = ? AND expires_at > NOW()",
+      [refreshToken]
+    );
+
+    if (rows.length === 0) {
+      // Token ไม่ถูกต้อง หรือหมดอายุ หรือถูก Revoke แล้ว -> ล้าง Cookie ทิ้ง
+      res.clearCookie('token');
+      res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+      return res.status(403).json({ message: "Invalid refresh token (not found or expired)" });
+    }
+
+    const currentRefreshTokenRecord = rows[0];
+    const user_id = currentRefreshTokenRecord.user_id;
+
+    // 2. Verify JWT signature (เผื่อ DB ยังไม่ลบแต่ Token ปลอม)
+    try {
+      jwt.verify(refreshToken, process.env.JWT_SECRET);
+    } catch (err) {
+      // ลบออกจาก DB ด้วยถ้า Token เสีย
+      await db.promise().query("DELETE FROM refresh_tokens WHERE id = ?", [currentRefreshTokenRecord.id]);
+      res.clearCookie('token');
+      res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+      return res.status(403).json({ message: "Refresh token expired or invalid" });
+    }
+
+    // 3. ดึงข้อมูล User ล่าสุด
+    const [userRows] = await db.promise().query("SELECT * FROM users WHERE id = ?", [user_id]);
+    if (userRows.length === 0) {
+      return res.status(403).json({ message: "User not found" });
+    }
+    const user = userRows[0];
+
+    // 4. Generate New Tokens (Refresh Rotation)
+    // ส่ง response เป็นตัวจัดการดึง membership และสร้าง token ใหม่ให้ทั้งหมด
+    // แต่ generateUserResponse มันสร้าง Refresh Token ใหม่และบันทึกลง DB ให้ด้วย
+    // ดังนั้นเราต้องลบ Refresh Token เก่าทิ้งก่อน (Rotation)
+    await db.promise().query("DELETE FROM refresh_tokens WHERE id = ?", [currentRefreshTokenRecord.id]);
+
+    const responseData = await generateUserResponse(user, res);
+
+    res.status(200).json({
+      status: "success",
+      message: "Token refreshed",
+      data: responseData,
+      // Note: responseData already contains new access/refresh tokens in JSON
+    });
+
+  } catch (error) {
+    console.error("Error in refreshToken:", error);
+    res.status(500).json({ message: "Server error during refresh" });
+  }
+};
+
+// @desc    Logout user / Clear tokens
+// @route   POST /api/auth/logout
+// @access  Public
+exports.logout = async (req, res) => {
+  try {
+    // รับ Refresh Token จาก Cookie (Web) หรือ Body (Mobile)
+    const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+
+    if (refreshToken) {
+      // ลบออกจาก DB
+      await db.promise().query("DELETE FROM refresh_tokens WHERE token = ?", [refreshToken]);
+    }
+
+    // Clear Cookies
+    res.clearCookie('token');
+    res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Error in logout:", error);
+    res.status(500).json({ message: "Server error during logout" });
   }
 };

@@ -32,5 +32,11 @@ router.post("/login-firebase-phone", validateFirebaseToken, authController.login
 // Route สำหรับ verify Firebase token
 router.post("/verify-firebase-token", validateFirebaseToken, authController.verifyFirebaseToken);
 
+// Route สำหรับ refresh Access Token (ด้วย HttpOnly Cookie)
+router.post("/refresh", authController.refreshToken);
+
+// Route สำหรับ logout (ลบ Token จาก DB และ Clear Cookie)
+router.post("/logout", authController.logout);
+
 module.exports = router;
 

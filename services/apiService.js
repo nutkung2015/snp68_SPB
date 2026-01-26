@@ -5,17 +5,82 @@ const API_BASE_URL = getApiBaseUrl();
 
 // Base API Service สำหรับจัดการ API calls กลาง
 class ApiService {
+  static isRefreshing = false;
+  static refreshPromise = null;
+
+  static async tryRefreshToken() {
+    if (this.isRefreshing) {
+      return this.refreshPromise;
+    }
+
+    this.isRefreshing = true;
+    this.refreshPromise = (async () => {
+      try {
+        const refreshToken = await AsyncStorage.getItem("refreshToken");
+        if (!refreshToken) {
+          throw new Error("No refresh token available");
+        }
+
+        // Use fetch directly to avoid infinite loop
+        const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        if (response.status === 200) {
+          const data = await response.json();
+          const newAccessToken = data.data.token;
+          const newRefreshToken = data.data.refreshToken;
+
+          if (newAccessToken) {
+            await AsyncStorage.setItem("authToken", newAccessToken);
+          }
+          if (newRefreshToken) {
+            await AsyncStorage.setItem("refreshToken", newRefreshToken);
+          }
+
+          console.log("Token refreshed successfully");
+          return newAccessToken;
+        } else {
+          throw new Error("Refresh token returned non-200");
+        }
+      } catch (error) {
+        console.error("Refresh token failed:", error);
+        return null;
+      } finally {
+        this.isRefreshing = false;
+        this.refreshPromise = null;
+      }
+    })();
+
+    return this.refreshPromise;
+  }
+
   // Generic GET request
   static async get(endpoint, token = null) {
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      let currentToken = token;
+      let response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "GET",
-        headers: getApiHeaders(token),
+        headers: getApiHeaders(currentToken),
       });
 
       if (response.status === 401) {
-        await this.handleUnauthorized();
-        throw new Error("Unauthorized");
+        console.log("Access token expired, attempting refresh...");
+        const newToken = await this.tryRefreshToken();
+        if (newToken) {
+          // Retry with new token
+          response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: "GET",
+            headers: getApiHeaders(newToken),
+          });
+        } else {
+          await this.handleUnauthorized();
+          throw new Error("Unauthorized");
+        }
       }
 
       // Handle rate limiting (429)
@@ -59,25 +124,49 @@ class ApiService {
         headers: isMultipart ? 'Multipart Headers' : getApiHeaders(token)
       });
 
-      const headers = isMultipart
-        ? { Authorization: `Bearer ${token}` } // Content-Type is auto-set by boundary for FormData
-        : getApiHeaders(token);
+      let currentToken = token;
+      let headers = isMultipart
+        ? { Authorization: `Bearer ${currentToken}` } // Content-Type is auto-set by boundary for FormData
+        : getApiHeaders(currentToken);
 
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      let response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
         headers: headers,
         body: isMultipart ? body : JSON.stringify(body),
       });
 
+      if (response.status === 401) {
+        // Skip refresh logic for login/refresh/logout endpoints to prevent loops
+        if (endpoint.includes("/login") || endpoint.includes("/refresh") || endpoint.includes("/logout")) {
+          // For login, 401 is valid (wrong password)
+          await this.handleUnauthorized();
+          throw new Error("Unauthorized");
+        }
+
+        console.log("Access token expired during POST, attempting refresh...");
+        const newToken = await this.tryRefreshToken();
+
+        if (newToken) {
+          // Retry
+          const retryHeaders = isMultipart
+            ? { Authorization: `Bearer ${newToken}` }
+            : getApiHeaders(newToken);
+
+          response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: "POST",
+            headers: retryHeaders,
+            body: isMultipart ? body : JSON.stringify(body),
+          });
+        } else {
+          await this.handleUnauthorized();
+          throw new Error("Unauthorized");
+        }
+      }
+
       console.log('API Response:', {
         status: response.status,
         statusText: response.statusText
       });
-
-      if (response.status === 401) {
-        await this.handleUnauthorized();
-        throw new Error("Unauthorized");
-      }
 
       const data = await response.json();
       console.log('API Data:', data);
@@ -96,15 +185,26 @@ class ApiService {
   // Generic PUT request
   static async put(endpoint, body, token = null) {
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      let currentToken = token;
+      let response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "PUT",
-        headers: getApiHeaders(token),
+        headers: getApiHeaders(currentToken),
         body: JSON.stringify(body),
       });
 
       if (response.status === 401) {
-        await this.handleUnauthorized();
-        throw new Error("Unauthorized");
+        console.log("Access token expired during PUT, attempting refresh...");
+        const newToken = await this.tryRefreshToken();
+        if (newToken) {
+          response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: "PUT",
+            headers: getApiHeaders(newToken),
+            body: JSON.stringify(body),
+          });
+        } else {
+          await this.handleUnauthorized();
+          throw new Error("Unauthorized");
+        }
       }
 
       const data = await response.json();
@@ -123,14 +223,24 @@ class ApiService {
   // Generic DELETE request
   static async delete(endpoint, token = null) {
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      let currentToken = token;
+      let response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "DELETE",
-        headers: getApiHeaders(token),
+        headers: getApiHeaders(currentToken),
       });
 
       if (response.status === 401) {
-        await this.handleUnauthorized();
-        throw new Error("Unauthorized");
+        console.log("Access token expired during DELETE, attempting refresh...");
+        const newToken = await this.tryRefreshToken();
+        if (newToken) {
+          response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: "DELETE",
+            headers: getApiHeaders(newToken),
+          });
+        } else {
+          await this.handleUnauthorized();
+          throw new Error("Unauthorized");
+        }
       }
 
       const data = await response.json();
@@ -149,6 +259,7 @@ class ApiService {
   // Handle unauthorized access
   static async handleUnauthorized() {
     await AsyncStorage.removeItem("authToken");
+    await AsyncStorage.removeItem("refreshToken"); // Ensure refresh token is also removed
     await AsyncStorage.removeItem("userData");
     // Trigger logout callback if set
     if (this.onLogoutCallback) {

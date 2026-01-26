@@ -40,6 +40,11 @@ export const login = async (email, password) => {
       await AsyncStorage.setItem("authToken", data.data.token);
     }
 
+    // Store the refresh token
+    if (data.data?.refreshToken) {
+      await AsyncStorage.setItem("refreshToken", data.data.refreshToken);
+    }
+
     // Store user data if available
     if (data.data) {
       await AsyncStorage.setItem("userData", JSON.stringify(data.data));
@@ -90,8 +95,21 @@ export const login = async (email, password) => {
 
 export const logout = async (navigation) => {
   try {
+    const refreshToken = await AsyncStorage.getItem("refreshToken");
+
+    // Call backend to revoke token if it exists
+    if (refreshToken) {
+      try {
+        await ApiService.post("/api/auth/logout", { refreshToken });
+      } catch (apiError) {
+        console.warn("Logout API failed, proceeding with local cleanup", apiError);
+      }
+    }
+
     await AsyncStorage.removeItem("authToken");
+    await AsyncStorage.removeItem("refreshToken");
     await AsyncStorage.removeItem("userData");
+
     if (navigation) {
       navigation.navigate("LoginScreen");
     }
@@ -100,6 +118,10 @@ export const logout = async (navigation) => {
     }
   } catch (error) {
     console.error("Error during logout:", error);
+    // Ensure navigation happens even if error
+    if (navigation) {
+      navigation.navigate("LoginScreen");
+    }
   }
 };
 
