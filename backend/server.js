@@ -13,6 +13,13 @@ dotenv.config();
 const app = express();
 
 // ===========================================
+// Trust Proxy Configuration (For Render/Cloud)
+// ===========================================
+// จำเป็นต้องเปิดเพื่อให้ express-rate-limit และ morgan 
+// สามารถอ่าน IP จริงของ User ผ่าน Load Balancer (Proxy) ได้
+
+
+// ===========================================
 // Security Middleware: Helmet Configuration
 // ===========================================
 // 
@@ -27,6 +34,10 @@ const app = express();
 // ===========================================
 
 const isProduction = process.env.NODE_ENV === 'production';
+
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
 
 // อ่านค่า Allowed Frame Origins จาก ENV (ถ้าไม่มีใช้ค่า Default)
 const allowedFrameOrigins = process.env.ALLOWED_FRAME_ORIGINS
@@ -157,7 +168,21 @@ app.use(helmet({
 }));
 
 // Logging Middleware
-app.use(morgan(':remote-addr - :method :url :status :res[content-length] - :response-time ms'));
+app.use(morgan((tokens, req, res) => {
+  // เลือกใช้ IP จาก req.ip (ซึ่งจะถูกต้องเมื่อตั้ง trust proxy แล้ว) 
+  // หรือ fallback ไปที่ remote-addr ปกติ
+  const clientIP = req.ip || tokens['remote-addr'](req, res);
+
+  return [
+    clientIP,
+    '-',
+    tokens.method(req, res),
+    tokens.url(req, res),
+    tokens.status(req, res),
+    tokens['res'](req, res, 'content-length'), '-',
+    tokens['response-time'](req, res), 'ms'
+  ].join(' ');
+}));
 
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
