@@ -11,22 +11,55 @@ const getStorageBucket = () => {
     // Check if Firebase Admin is already initialized
     if (!admin.apps.length) {
         try {
-            const serviceAccount = require('./serviceAccountKey.json');
+            let serviceAccount;
 
-            admin.initializeApp({
-                credential: admin.credential.cert(serviceAccount),
-                storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-                projectId: serviceAccount.project_id
-            });
+            // ตรวจสอบว่ามีข้อมูลใน Environment Variable หรือไม่ (สำหรับ Production)
+            if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+                try {
+                    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+                } catch (parseError) {
+                    console.error('❌ Error parsing FIREBASE_SERVICE_ACCOUNT env:', parseError.message);
+                }
+            }
 
-            console.log('✅ Firebase Admin SDK initialized for Storage');
+            // ถ้าไม่มีข้อมูลใน Env ให้ลองโหลดจากไฟล์ (สำหรับ Local Development)
+            if (!serviceAccount) {
+                try {
+                    serviceAccount = require('./serviceAccountKey.json');
+                } catch (fileError) {
+                    console.error('❌ Service account key file not found at ./serviceAccountKey.json');
+                }
+            }
+
+            if (serviceAccount) {
+                // ตัด gs:// ออกถ้ามี (เพราะ Firebase SDK ต้องการแค่ชื่อ bucket)
+                let bucketName = process.env.FIREBASE_STORAGE_BUCKET;
+                if (bucketName && bucketName.startsWith('gs://')) {
+                    bucketName = bucketName.replace('gs://', '');
+                }
+
+                admin.initializeApp({
+                    credential: admin.credential.cert(serviceAccount),
+                    storageBucket: bucketName,
+                    projectId: serviceAccount.project_id
+                });
+                console.log('✅ Firebase Admin SDK initialized for Storage');
+            } else {
+                throw new Error('No service account credentials found (ENV or File)');
+            }
         } catch (error) {
             console.error('❌ Error initializing Firebase for Storage:', error.message);
             throw error;
         }
     }
 
-    return admin.storage().bucket(process.env.FIREBASE_STORAGE_BUCKET);
+    // ตัด gs:// ออกที่นี่ด้วยเพื่อให้แน่ใจว่า bucket() ได้ชื่อที่ถูกต้อง
+    let bucketName = process.env.FIREBASE_STORAGE_BUCKET;
+    if (bucketName && bucketName.startsWith('gs://')) {
+        bucketName = bucketName.replace('gs://', '');
+    }
+
+    return admin.storage().bucket(bucketName);
 };
 
 /**

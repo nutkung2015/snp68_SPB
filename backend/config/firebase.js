@@ -9,18 +9,37 @@ const path = require('path');
 // ตรวจสอบว่า Firebase Admin ถูก initialize แล้วหรือยัง
 if (!admin.apps.length) {
     try {
-        // โหลด service account key
-        const serviceAccount = require('./serviceAccountKey.json');
+        let serviceAccount;
 
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-            projectId: serviceAccount.project_id
-        });
+        // ตรวจสอบว่ามีข้อมูลใน Environment Variable หรือไม่ (สำหรับ Production)
+        if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+            try {
+                serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+            } catch (parseError) {
+                console.error('❌ Error parsing FIREBASE_SERVICE_ACCOUNT env:', parseError.message);
+            }
+        }
 
-        console.log('✅ Firebase Admin SDK initialized successfully');
+        // ถ้าไม่มีข้อมูลใน Env ให้ลองโหลดจากไฟล์ (สำหรับ Local Development)
+        if (!serviceAccount) {
+            try {
+                serviceAccount = require('./serviceAccountKey.json');
+            } catch (fileError) {
+                console.error('❌ Service account key file not found at ./serviceAccountKey.json');
+            }
+        }
+
+        if (serviceAccount) {
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount),
+                projectId: serviceAccount.project_id
+            });
+            console.log('✅ Firebase Admin SDK initialized successfully');
+        } else {
+            throw new Error('No service account credentials found (ENV or File)');
+        }
     } catch (error) {
         console.error('❌ Error initializing Firebase Admin SDK:', error.message);
-        console.error('Please ensure serviceAccountKey.json exists in backend/config/');
     }
 }
 
