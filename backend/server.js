@@ -36,7 +36,9 @@ const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
 
 if (isProduction) {
-  app.set('trust proxy', 1);
+  // ใช้ 'loopback, linklocal, uniquelocal' เพื่อบอกให้ Express เชื่อถือ IP ที่เป็น Internal Network ทั้งหมด (เช่น 10.x.x.x ของ Render)
+  // Express จะข้าม IP พวกนี้ไปเรื่อยๆ จนกว่าจะเจอ Public IP จริงๆ ของ User (Internet IP)
+  app.set('trust proxy', 'loopback, linklocal, uniquelocal');
 }
 
 // อ่านค่า Allowed Frame Origins จาก ENV (ถ้าไม่มีใช้ค่า Default)
