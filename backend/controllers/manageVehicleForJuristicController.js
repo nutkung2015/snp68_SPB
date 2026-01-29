@@ -174,6 +174,9 @@ exports.getAllProjectVehicles = async (req, res) => {
 
         // Get vehicles with unit info
         const sortColumn = sortField === "unit_number" ? "u.unit_number" : `v.${sortField}`;
+
+        // Note: TiDB doesn't support placeholders for LIMIT/OFFSET in prepared statements
+        // We need to interpolate values directly (values are already sanitized as integers)
         const dataQuery = `
             SELECT 
                 v.id,
@@ -194,10 +197,10 @@ exports.getAllProjectVehicles = async (req, res) => {
             LEFT JOIN zones z ON u.zone_id = z.id
             ${whereClause}
             ORDER BY ${sortColumn} ${sortDirection}
-            LIMIT ? OFFSET ?
+            LIMIT ${parseInt(limitNum, 10)} OFFSET ${parseInt(offset, 10)}
         `;
 
-        const [vehicles] = await db.promise().execute(dataQuery, [...params, Number(limitNum), Number(offset)]);
+        const [vehicles] = await db.promise().execute(dataQuery, params);
 
         res.status(200).json({
             status: "success",
@@ -723,6 +726,7 @@ exports.searchVehicles = async (req, res) => {
         const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
         const searchTerm = `%${q.trim()}%`;
 
+        // Note: TiDB doesn't support placeholders for LIMIT in prepared statements
         const [vehicles] = await db.promise().execute(
             `SELECT 
                 v.id,
@@ -746,8 +750,8 @@ exports.searchVehicles = async (req, res) => {
             ORDER BY 
                 CASE WHEN v.plate_number LIKE ? THEN 0 ELSE 1 END,
                 v.plate_number ASC
-            LIMIT ?`,
-            [project_id, searchTerm, searchTerm, searchTerm, searchTerm, Number(limitNum)]
+            LIMIT ${parseInt(limitNum, 10)}`,
+            [project_id, searchTerm, searchTerm, searchTerm, searchTerm]
         );
 
         res.status(200).json({
