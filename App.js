@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { NavigationContainer, useNavigation } from "@react-navigation/native";
+import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
   View,
@@ -49,7 +49,6 @@ import JointByQRcode from "./screens/่joint-unit/jointByQRcode";
 import HomeOptionScreen from "./screens/Myhome/HomeOptionScreen";
 import VilageOptionScreen from "./screens/MyVilage/VilageOption";
 import NumberEmergencyScreen from "./screens/number_emergency/list_number_emergency";
-import ChatScreen from "./screens/ChatScreen";
 import IssueMenuScreen from "./screens/issue/issue_menu";
 import PersonalIssueScreen from "./screens/issue/personal_issue/personal_issue";
 import AddIssueForm from "./screens/issue/personal_issue/AddIssueForm";
@@ -193,6 +192,9 @@ if (getApps().length === 0) {
 }
 export const db = getFirestore(app);
 
+// Create navigation ref for navigation outside components
+const navigationRef = createNavigationContainerRef();
+
 export default function App() {
 
   // โหลด fonts
@@ -209,25 +211,16 @@ export default function App() {
 
   // Define RootNavigator as an inner component
   function RootNavigator() {
-    const navigation = useNavigation(); // ได้รับ navigation object ที่นี่
-
-    useEffect(() => {
-      if (navigation) {
-        setNavigation(navigation);
-      }
-    }, [navigation]);
+    // Note: Don't use useNavigation() here as it can cause timing issues
+    // Instead, we use navigationRef with onReady callback in NavigationContainer
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [loading, setLoading] = useState(true);
     const [initialRoute, setInitialRoute] = useState("Login"); // Default initial route
     const [userRole, setUserRole] = useState(null); // Track user role
 
-    // Auto-navigate when initialRoute changes and navigation is ready
-    useEffect(() => {
-      if (navigation && initialRoute) {
-        navigation.navigate(initialRoute);
-      }
-    }, [navigation, initialRoute]);
+    // NOTE: Removed auto-navigate useEffect that caused "navigation not initialized" error
+    // Stack.Navigator already handles initial route via initialRouteName prop
 
     const recheckLoginStatus = async () => {
       try {
@@ -316,7 +309,9 @@ export default function App() {
         setUserRole(null); // Clear user role
         // When logging out, reset initialRoute to Login and navigate
         setInitialRoute("Login");
-        navigation.navigate("Login");
+        if (navigationRef.isReady()) {
+          navigationRef.navigate("Login");
+        }
       });
     }, []);
 
@@ -344,7 +339,6 @@ export default function App() {
             )}
           </Stack.Screen>
           <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-          <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="Login">
             {(props) => (
               <LoginScreen {...props} recheckLoginStatus={recheckLoginStatus} />
@@ -427,7 +421,6 @@ export default function App() {
           <Stack.Screen name="VilageOption" component={VilageOptionScreen} />
           {/* number emergency */}
           <Stack.Screen name="NumberEmergency" component={NumberEmergencyScreen} />
-          <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="IssueMenu" component={IssueMenuScreen} />
           <Stack.Screen
             name="PersonalIssue"
@@ -498,7 +491,13 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="auto" />
       <SafeAreaView style={{ flex: 1 }}>
-        <NavigationContainer>
+        <NavigationContainer
+          ref={navigationRef}
+          onReady={() => {
+            // Set navigation only when NavigationContainer is ready
+            setNavigation(navigationRef);
+          }}
+        >
           <RootNavigator />
         </NavigationContainer>
       </SafeAreaView>

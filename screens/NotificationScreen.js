@@ -159,9 +159,15 @@ const NotificationScreen = ({ navigation }) => {
                 }
                 break;
             case 'issue':
-                // Navigate to issue detail
+                // Navigate to issue detail - check prefix to determine personal vs common
                 if (reference_id) {
-                    navigation.navigate('IssueDetail', { issueId: reference_id });
+                    if (reference_id.startsWith('CI-')) {
+                        // Common Issue
+                        navigation.navigate('CommonIssueDetail', { issueId: reference_id });
+                    } else {
+                        // Personal Issue (PI- prefix or default)
+                        navigation.navigate('IssueDetail', { issueId: reference_id });
+                    }
                 }
                 break;
             case 'visitor':

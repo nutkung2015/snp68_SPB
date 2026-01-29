@@ -150,9 +150,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   headerBackground: {
-    height: "25%",
-    backgroundColor: "#666",
-    paddingBottom: 16,
+    height: 200,  // หรือค่าที่เหมาะสม
+    width: "100%",
+    // ลบ backgroundColor: "#666" ออก
   },
   header: {
     paddingHorizontal: 16,

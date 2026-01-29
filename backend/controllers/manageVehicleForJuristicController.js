@@ -197,7 +197,7 @@ exports.getAllProjectVehicles = async (req, res) => {
             LIMIT ? OFFSET ?
         `;
 
-        const [vehicles] = await db.promise().execute(dataQuery, [...params, String(limitNum), String(offset)]);
+        const [vehicles] = await db.promise().execute(dataQuery, [...params, Number(limitNum), Number(offset)]);
 
         res.status(200).json({
             status: "success",
@@ -747,7 +747,7 @@ exports.searchVehicles = async (req, res) => {
                 CASE WHEN v.plate_number LIKE ? THEN 0 ELSE 1 END,
                 v.plate_number ASC
             LIMIT ?`,
-            [project_id, searchTerm, searchTerm, searchTerm, searchTerm, String(limitNum)]
+            [project_id, searchTerm, searchTerm, searchTerm, searchTerm, Number(limitNum)]
         );
 
         res.status(200).json({
