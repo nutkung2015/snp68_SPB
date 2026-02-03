@@ -1,6 +1,8 @@
 const express = require("express");
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
+const authMiddleware = require("../middleware/authMiddleware");
+const { requireJuristicRoleFromParams, requireJuristicRole } = require("../middleware/roleMiddleware");
 const {
   getProjectCustomizations,
   getProjectCustomizationById,
@@ -15,19 +17,23 @@ const router = express.Router();
 router.get("/", getProjectCustomizations);
 
 // Route to get a specific project customization by project ID
-router.get("/:projectId", getProjectCustomizationById);
+// Protected: requires authentication and juristic role in the project
+router.get("/:projectId", authMiddleware, requireJuristicRoleFromParams, getProjectCustomizationById);
 
 // Route to create a new project customization (with logo upload support)
-router.post("/", upload.fields([
+// Protected: requires authentication and juristic role in the project
+router.post("/", authMiddleware, upload.fields([
   { name: 'logo', maxCount: 1 }
-]), createProjectCustomization);
+]), requireJuristicRole, createProjectCustomization);
 
 // Route to update a project customization by project ID (with logo upload support)
-router.put("/:projectId", upload.fields([
+// Protected: requires authentication and juristic role in the project
+router.put("/:projectId", authMiddleware, requireJuristicRoleFromParams, upload.fields([
   { name: 'logo', maxCount: 1 }
 ]), updateProjectCustomization);
 
 // Route to delete a project customization by project ID
-router.delete("/:projectId", deleteProjectCustomization);
+// Protected: requires authentication and juristic role in the project
+router.delete("/:projectId", authMiddleware, requireJuristicRoleFromParams, deleteProjectCustomization);
 
 module.exports = router;

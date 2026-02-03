@@ -105,6 +105,20 @@ exports.createPersonalRepair = async (req, res) => {
         priority,
       ]);
 
+    // ✅ Send notification to juristic staff
+    try {
+      await pushNotificationService.notifyJuristicNewRepair(
+        id,                // repairId
+        project_id,        // projectId
+        repair_category,   // repairCategory
+        reporter_name,     // reporterName
+        zone               // unitAddress (zone)
+      );
+      console.log(`[Notification] Sent new repair notification to juristic for ${id}`);
+    } catch (notifyError) {
+      console.error("[Notification] Error sending new repair notification:", notifyError);
+    }
+
     res.status(201).json({
       status: "success",
       message: "บันทึกการแจ้งซ่อมเรียบร้อยแล้ว",
@@ -678,6 +692,20 @@ exports.createCommonIssue = async (req, res) => {
         imageUrlsJson,
         priority,
       ]);
+
+    // ✅ Send notification to juristic staff
+    try {
+      await pushNotificationService.notifyJuristicNewIssue(
+        id,              // issueId
+        project_id,      // projectId
+        issue_type,      // issueType
+        reporter_name,   // reporterName
+        location         // location
+      );
+      console.log(`[Notification] Sent new issue notification to juristic for ${id}`);
+    } catch (notifyError) {
+      console.error("[Notification] Error sending new issue notification:", notifyError);
+    }
 
     res.status(201).json({
       status: "success",

@@ -16,7 +16,12 @@ const NOTIFICATION_TYPES = {
     ISSUE_STATUS_UPDATE: 'issue_status_update',
     VISITOR_EXIT_STAMP: 'visitor_exit_stamp',
     ANNOUNCEMENT: 'announcement',
-    SYSTEM: 'system'
+    SYSTEM: 'system',
+    // New types for juristic notifications
+    NEW_REPAIR_REQUEST: 'new_repair_request',
+    NEW_COMMON_ISSUE: 'new_common_issue',
+    ANNOUNCEMENT_EXPIRING: 'announcement_expiring',
+    DAILY_REPORT: 'daily_report'
 };
 
 // Reference Types
@@ -25,6 +30,7 @@ const REFERENCE_TYPES = {
     ISSUE: 'issue',
     VISITOR: 'visitor',
     ANNOUNCEMENT: 'announcement',
+    REPORT: 'report',
     NONE: 'none'
 };
 
@@ -403,6 +409,262 @@ async function notifyAnnouncement(projectId, title, body, announcementId = null)
     }
 }
 
+// =============================================
+// NEW: Juristic Staff Notification Functions
+// =============================================
+
+/**
+ * Get juristic staff IDs for a project
+ * @param {string} projectId - Project ID
+ * @returns {Promise<Array>} - Array of juristic user IDs
+ */
+async function getJuristicStaffIds(projectId) {
+    const [staffMembers] = await db.promise().query(
+        `SELECT DISTINCT u.id 
+         FROM users u
+         JOIN project_members pm ON u.id = pm.user_id
+         WHERE pm.project_id = ? 
+         AND (u.role = 'juristic' OR u.role = 'juristicLeader' OR pm.role IN ('juristic', 'juristicLeader'))`,
+        [projectId]
+    );
+    return staffMembers.map(s => s.id);
+}
+
+/**
+ * ส่ง Notification ให้นิติบุคคลเมื่อมีการแจ้งซ่อมใหม่
+ * @param {string} repairId - Repair request ID
+ * @param {string} projectId - Project ID
+ * @param {string} repairCategory - Category of repair
+ * @param {string} reporterName - Name of reporter
+ * @param {string} unitAddress - Unit address/zone
+ */
+async function notifyJuristicNewRepair(repairId, projectId, repairCategory, reporterName, unitAddress) {
+    const title = '🔧 แจ้งซ่อมใหม่';
+    const body = `${reporterName} (${unitAddress}) แจ้งซ่อม: ${repairCategory}`;
+
+    try {
+        // ดึง juristic staff ของโปรเจกต์
+        const staffIds = await getJuristicStaffIds(projectId);
+
+        if (staffIds.length === 0) {
+            console.log('[Notification] No juristic staff found for project:', projectId);
+            return { success: false, error: 'No juristic staff found' };
+        }
+
+        // สร้าง notification สำหรับแต่ละ staff
+        const notificationIds = [];
+        for (const staffId of staffIds) {
+            const notificationId = await saveNotification({
+                user_id: staffId,
+                project_id: projectId,
+                type: NOTIFICATION_TYPES.NEW_REPAIR_REQUEST,
+                title: title,
+                body: body,
+                reference_type: REFERENCE_TYPES.REPAIR,
+                reference_id: repairId,
+                data: {
+                    repair_id: repairId,
+                    category: repairCategory,
+                    reporter: reporterName
+                }
+            });
+            notificationIds.push({ staffId, notificationId });
+        }
+
+        // ดึง push tokens และส่ง
+        const tokens = await getMultipleUsersPushTokens(staffIds);
+        const pushTokens = tokens.map(t => t.push_token);
+
+        const result = await sendPushNotifications(pushTokens, title, body, {
+            type: NOTIFICATION_TYPES.NEW_REPAIR_REQUEST,
+            reference_type: REFERENCE_TYPES.REPAIR,
+            reference_id: repairId
+        });
+
+        // อัพเดต status
+        for (const { notificationId } of notificationIds) {
+            await updatePushStatus(notificationId, result.sent > 0, result.errors.join(', ') || null);
+        }
+
+        console.log(`[Notification] Sent new repair notification to ${staffIds.length} juristic staff`);
+        return { success: true, notificationIds, pushResult: result };
+    } catch (error) {
+        console.error('Error in notifyJuristicNewRepair:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * ส่ง Notification ให้นิติบุคคลเมื่อมีการแจ้งปัญหาส่วนกลางใหม่
+ * @param {string} issueId - Issue ID
+ * @param {string} projectId - Project ID
+ * @param {string} issueType - Type of issue
+ * @param {string} reporterName - Name of reporter
+ * @param {string} location - Location of issue
+ */
+async function notifyJuristicNewIssue(issueId, projectId, issueType, reporterName, location) {
+    const title = '📋 แจ้งปัญหาส่วนกลางใหม่';
+    const body = `${reporterName} แจ้งปัญหา: ${issueType}${location ? ` ที่ ${location}` : ''}`;
+
+    try {
+        const staffIds = await getJuristicStaffIds(projectId);
+
+        if (staffIds.length === 0) {
+            console.log('[Notification] No juristic staff found for project:', projectId);
+            return { success: false, error: 'No juristic staff found' };
+        }
+
+        const notificationIds = [];
+        for (const staffId of staffIds) {
+            const notificationId = await saveNotification({
+                user_id: staffId,
+                project_id: projectId,
+                type: NOTIFICATION_TYPES.NEW_COMMON_ISSUE,
+                title: title,
+                body: body,
+                reference_type: REFERENCE_TYPES.ISSUE,
+                reference_id: issueId,
+                data: {
+                    issue_id: issueId,
+                    issue_type: issueType,
+                    location: location,
+                    reporter: reporterName
+                }
+            });
+            notificationIds.push({ staffId, notificationId });
+        }
+
+        const tokens = await getMultipleUsersPushTokens(staffIds);
+        const pushTokens = tokens.map(t => t.push_token);
+
+        const result = await sendPushNotifications(pushTokens, title, body, {
+            type: NOTIFICATION_TYPES.NEW_COMMON_ISSUE,
+            reference_type: REFERENCE_TYPES.ISSUE,
+            reference_id: issueId
+        });
+
+        for (const { notificationId } of notificationIds) {
+            await updatePushStatus(notificationId, result.sent > 0, result.errors.join(', ') || null);
+        }
+
+        console.log(`[Notification] Sent new issue notification to ${staffIds.length} juristic staff`);
+        return { success: true, notificationIds, pushResult: result };
+    } catch (error) {
+        console.error('Error in notifyJuristicNewIssue:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * ส่ง Notification เตือนประกาศใกล้หมดอายุ
+ * @param {string} announcementId - Announcement ID
+ * @param {string} projectId - Project ID
+ * @param {string} announcementTitle - Announcement title
+ * @param {Date} expiresAt - Expiry date
+ */
+async function notifyAnnouncementExpiring(announcementId, projectId, announcementTitle, expiresAt) {
+    const title = '📢 ประกาศใกล้หมดอายุ';
+    const expiryDate = new Date(expiresAt).toLocaleDateString('th-TH');
+    const body = `"${announcementTitle}" จะหมดอายุในวันที่ ${expiryDate}`;
+
+    try {
+        const staffIds = await getJuristicStaffIds(projectId);
+
+        if (staffIds.length === 0) {
+            return { success: false, error: 'No juristic staff found' };
+        }
+
+        const notificationIds = [];
+        for (const staffId of staffIds) {
+            const notificationId = await saveNotification({
+                user_id: staffId,
+                project_id: projectId,
+                type: NOTIFICATION_TYPES.ANNOUNCEMENT_EXPIRING,
+                title: title,
+                body: body,
+                reference_type: REFERENCE_TYPES.ANNOUNCEMENT,
+                reference_id: announcementId,
+                data: {
+                    announcement_id: announcementId,
+                    expires_at: expiresAt
+                }
+            });
+            notificationIds.push({ staffId, notificationId });
+        }
+
+        const tokens = await getMultipleUsersPushTokens(staffIds);
+        const pushTokens = tokens.map(t => t.push_token);
+
+        const result = await sendPushNotifications(pushTokens, title, body, {
+            type: NOTIFICATION_TYPES.ANNOUNCEMENT_EXPIRING,
+            reference_type: REFERENCE_TYPES.ANNOUNCEMENT,
+            reference_id: announcementId
+        });
+
+        for (const { notificationId } of notificationIds) {
+            await updatePushStatus(notificationId, result.sent > 0, result.errors.join(', ') || null);
+        }
+
+        console.log(`[Notification] Sent expiring announcement notification`);
+        return { success: true, notificationIds, pushResult: result };
+    } catch (error) {
+        console.error('Error in notifyAnnouncementExpiring:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * ส่ง Daily Report Summary ให้นิติบุคคล
+ * @param {string} projectId - Project ID
+ * @param {Object} summary - Daily summary data
+ */
+async function notifyDailyReport(projectId, summary) {
+    const title = '📊 รายงานประจำวัน';
+    const body = `งานแจ้งซ่อมใหม่: ${summary.newRepairs || 0} | ปัญหาส่วนกลาง: ${summary.newIssues || 0} | รอดำเนินการ: ${summary.pendingTotal || 0}`;
+
+    try {
+        const staffIds = await getJuristicStaffIds(projectId);
+
+        if (staffIds.length === 0) {
+            return { success: false, error: 'No juristic staff found' };
+        }
+
+        const notificationIds = [];
+        for (const staffId of staffIds) {
+            const notificationId = await saveNotification({
+                user_id: staffId,
+                project_id: projectId,
+                type: NOTIFICATION_TYPES.DAILY_REPORT,
+                title: title,
+                body: body,
+                reference_type: REFERENCE_TYPES.REPORT,
+                reference_id: null,
+                data: summary
+            });
+            notificationIds.push({ staffId, notificationId });
+        }
+
+        const tokens = await getMultipleUsersPushTokens(staffIds);
+        const pushTokens = tokens.map(t => t.push_token);
+
+        const result = await sendPushNotifications(pushTokens, title, body, {
+            type: NOTIFICATION_TYPES.DAILY_REPORT,
+            reference_type: REFERENCE_TYPES.REPORT,
+            data: summary
+        });
+
+        for (const { notificationId } of notificationIds) {
+            await updatePushStatus(notificationId, result.sent > 0, result.errors.join(', ') || null);
+        }
+
+        console.log(`[Notification] Sent daily report to ${staffIds.length} juristic staff`);
+        return { success: true, notificationIds, pushResult: result };
+    } catch (error) {
+        console.error('Error in notifyDailyReport:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 module.exports = {
     // Types
     NOTIFICATION_TYPES,
@@ -419,5 +681,12 @@ module.exports = {
     notifyRepairStatusUpdate,
     notifyIssueStatusUpdate,
     notifyVisitorExitStamp,
-    notifyAnnouncement
+    notifyAnnouncement,
+
+    // New: Juristic notification functions
+    getJuristicStaffIds,
+    notifyJuristicNewRepair,
+    notifyJuristicNewIssue,
+    notifyAnnouncementExpiring,
+    notifyDailyReport
 };

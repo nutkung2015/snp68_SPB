@@ -319,7 +319,8 @@ exports.createAnnouncement = async (req, res) => {
             type,
             posted_by,
             audience = 'all',
-            status = 'draft'
+            status = 'draft',
+            expires_at = null  // New: expiry date for announcement
         } = req.body;
 
         let attachment_urls = [];
@@ -342,8 +343,8 @@ exports.createAnnouncement = async (req, res) => {
         // ใช้ NOW() ของ MySQL แทนการรับค่าจาก frontend
         const query = `
             INSERT INTO announcements 
-            (id, project_id, title, content, type, attachment_urls, posted_by, audience, status, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            (id, project_id, title, content, type, attachment_urls, posted_by, audience, status, expires_at, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         `;
 
         const attachmentUrlsJson = attachment_urls.length > 0 ? JSON.stringify(attachment_urls) : null;
@@ -357,7 +358,8 @@ exports.createAnnouncement = async (req, res) => {
             attachmentUrlsJson,
             posted_by,
             audience,
-            status
+            status,
+            expires_at  // New: add expires_at
         ], (err, results) => {
             if (err) {
                 console.error('Error creating announcement:', err);
@@ -403,7 +405,8 @@ exports.updateAnnouncement = async (req, res) => {
             content,
             type,
             audience,
-            status
+            status,
+            expires_at  // New: expiry date for announcement
         } = req.body;
 
         // Validate type enum if provided
@@ -509,6 +512,14 @@ exports.updateAnnouncement = async (req, res) => {
         if (status !== undefined) {
             updateFields.push('status = ?');
             updateValues.push(status);
+        }
+
+        // New: Handle expires_at field
+        if (expires_at !== undefined) {
+            updateFields.push('expires_at = ?');
+            updateValues.push(expires_at);
+            // Reset expiry notification flag when expiry date changes
+            updateFields.push('expiry_notified = FALSE');
         }
 
         if (updateFields.length === 0 && new_attachment_urls.length === 0) {

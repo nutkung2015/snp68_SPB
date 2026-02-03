@@ -318,6 +318,9 @@ app.use("/api/super-admin", require("./routes/superAdmin"));
 // Note: This endpoint is for normal users to fetch announcements, handled by the same controller
 app.get("/api/global-announcements", require("./middleware/authMiddleware"), require("./controllers/globalAnnouncementController").getAnnouncementsForProject);
 
+// Cron Jobs Admin Routes (for manual testing)
+app.use("/api/admin/cron", require("./routes/cronAdminRoutes"));
+
 // Error handling middleware
 app.use(require("./middleware/errorMiddleware"));
 
@@ -328,6 +331,14 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 API URL: http://localhost:${PORT}`);
+
+  // Initialize Cron Jobs for scheduled notifications
+  try {
+    const cronJobsService = require('./services/cronJobsService');
+    cronJobsService.initializeCronJobs();
+  } catch (cronError) {
+    console.error('❌ Failed to initialize cron jobs:', cronError.message);
+  }
 });
 
 // Handle server errors
