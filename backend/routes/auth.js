@@ -23,6 +23,9 @@ router.put("/push-token", authMiddleware, authController.updatePushToken);
 // Route สำหรับเช็คว่าเบอร์โทรมีในระบบหรือไม่ (ก่อน reset password)
 router.post("/check-phone", validateCheckPhone, authController.checkPhoneExists);
 
+// Route สำหรับตรวจสอบความเป็นเจ้าของเบอร์โทรศัพท์ (ต้อง Login แล้ว)
+router.post("/verify-phone-ownership", authMiddleware, authController.verifyUserPhone);
+
 // Route สำหรับ reset password ด้วย Firebase OTP
 router.post("/reset-password-firebase", validateResetPassword, authController.resetPasswordWithFirebase);
 

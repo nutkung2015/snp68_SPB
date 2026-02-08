@@ -622,3 +622,68 @@ exports.logout = async (req, res) => {
     res.status(500).json({ message: "Server error during logout" });
   }
 };
+
+// @desc    Verify if the provided phone matches the authenticated user's phone
+// @route   POST /api/auth/verify-user-phone
+// @access  Private
+exports.verifyUserPhone = async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    // User info is attached by authMiddleware after token verification
+    if (!req.user || !req.user.phone) {
+      return res.status(401).json({
+        status: "error",
+        message: "ไม่พบข้อมูลผู้ใช้งาน หรือ Token ไม่ถูกต้อง",
+      });
+    }
+
+    const userPhone = req.user.phone;
+
+    if (!phone) {
+      return res.status(400).json({
+        status: "error",
+        message: "กรุณาระบุเบอร์โทรศัพท์ที่ต้องการตรวจสอบ",
+      });
+    }
+
+    // Helper function to normalize phone number
+    const normalizePhone = (p) => {
+      let normalized = p.replace(/\s/g, ''); // Remove spaces
+      if (normalized.startsWith('+66')) {
+        normalized = '0' + normalized.slice(3);
+      } else if (normalized.startsWith('66')) {
+        normalized = '0' + normalized.slice(2);
+      }
+      return normalized;
+    };
+
+    const inputPhoneNormalized = normalizePhone(phone);
+    const userPhoneNormalized = normalizePhone(userPhone);
+
+    if (inputPhoneNormalized === userPhoneNormalized) {
+      return res.status(200).json({
+        status: "success",
+        isOwner: true,
+        message: "เบอร์โทรศัพท์ถูกต้องและเป็นของผู้ใช้งานนี้",
+        data: {
+          phone: userPhone,
+          userId: req.user.id
+        }
+      });
+    } else {
+      return res.status(400).json({
+        status: "error",
+        isOwner: false,
+        message: "เบอร์โทรศัพท์ที่ระบุไม่ตรงกับข้อมูลในระบบของผู้ใช้งานปัจจุบัน",
+      });
+    }
+
+  } catch (error) {
+    console.error("Error in verifyUserPhone:", error);
+    res.status(500).json({
+      status: "error",
+      message: "เกิดข้อผิดพลาดในการตรวจสอบเบอร์โทรศัพท์",
+    });
+  }
+};
