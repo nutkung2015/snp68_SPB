@@ -13,8 +13,8 @@
       "eas": {
         "projectId": "7c6d8598-fa21-4f26-ab88-eb019a0d52b7"
       },
-      "APP_ENV": "development",
-      "DEBUG": true,
+      "APP_ENV": "production",
+      "DEBUG": false,
       "PROD_API_BASE_URL": "https://snp68-spb.onrender.com",
       "DEV_API_BASE_URL": "http://10.0.2.2:5000",
       "API_VERSION": "v1",

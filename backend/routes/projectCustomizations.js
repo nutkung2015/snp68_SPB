@@ -18,7 +18,7 @@ router.get("/", getProjectCustomizations);
 
 // Route to get a specific project customization by project ID
 // Protected: requires authentication and juristic role in the project
-router.get("/:projectId", authMiddleware, requireJuristicRoleFromParams, getProjectCustomizationById);
+router.get("/:projectId", authMiddleware, getProjectCustomizationById);
 
 // Route to create a new project customization (with logo upload support)
 // Protected: requires authentication and juristic role in the project
