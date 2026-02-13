@@ -15,8 +15,8 @@ const authMiddleware = require("../middleware/authMiddleware");
 // POST /api/notifications/register-token - ลงทะเบียน push token
 router.post("/register-token", authMiddleware, notificationController.registerPushToken);
 
-// DELETE /api/notifications/unregister-token - ยกเลิก push token (logout)
-router.delete("/unregister-token", authMiddleware, notificationController.unregisterPushToken);
+// POST /api/notifications/unregister-token - ยกเลิก push token (logout)
+router.post("/unregister-token", authMiddleware, notificationController.unregisterPushToken);
 
 // =============================================
 // Notification List & Actions

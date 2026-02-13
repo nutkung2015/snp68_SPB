@@ -20,6 +20,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import moment from "moment";
 import VisitorService from "../../services/visitorService";
+import ProjectCustomizationsService from "../../services/projectCustomizationsService";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const EstampScreen = ({ navigation }) => {
@@ -38,6 +39,7 @@ const EstampScreen = ({ navigation }) => {
     const [inviteName, setInviteName] = useState("");
     const [inviteDate, setInviteDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [primaryColor, setPrimaryColor] = useState("#2A405E");
 
     const fetchVisitors = async () => {
         try {
@@ -52,6 +54,19 @@ const EstampScreen = ({ navigation }) => {
                 const response = await VisitorService.getPendingVisitorsByUnit(unitId);
                 if (response.status === "success") {
                     setVisitors(response.data);
+                }
+            }
+
+            // Fetch project customizations
+            const projectId = user.projectMemberships?.[0]?.project_id || user.unitMemberships?.[0]?.project_id;
+            if (projectId) {
+                try {
+                    const customizations = await ProjectCustomizationsService.getProjectCustomizations(projectId);
+                    if (customizations && customizations.primary_color) {
+                        setPrimaryColor(customizations.primary_color);
+                    }
+                } catch (err) {
+                    console.error("Error fetching customizations:", err);
                 }
             }
         } catch (error) {
@@ -184,9 +199,9 @@ const EstampScreen = ({ navigation }) => {
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
                             <TouchableOpacity onPress={closeDetailModal}>
-                                <Text style={styles.cancelText}>ยกเลิก</Text>
+                                <Text style={[styles.cancelText, { color: primaryColor }]}>ยกเลิก</Text>
                             </TouchableOpacity>
-                            <Text style={styles.modalTitle}>ผู้มาเยี่ยม</Text>
+                            <Text style={[styles.modalTitle, { color: primaryColor }]}>ผู้มาเยี่ยม</Text>
                             <View style={{ width: 30 }} />
                         </View>
 
@@ -194,12 +209,12 @@ const EstampScreen = ({ navigation }) => {
                             <View style={styles.detailRow}>
                                 <View style={styles.detailItemHalf}>
                                     <Text style={styles.detailLabel}>ชื่อ:</Text>
-                                    <Text style={styles.detailValue}>{selectedVisitor.visitor_name || "-"}</Text>
+                                    <Text style={[styles.detailValue, { color: primaryColor }]}>{selectedVisitor.visitor_name || "-"}</Text>
                                 </View>
                                 <View style={styles.verticalDivider} />
                                 <View style={styles.detailItemHalf}>
                                     <Text style={styles.detailLabel}>ทะเบียน:</Text>
-                                    <Text style={styles.detailValue}>{selectedVisitor.plate_number}</Text>
+                                    <Text style={[styles.detailValue, { color: primaryColor }]}>{selectedVisitor.plate_number}</Text>
                                 </View>
                             </View>
 
@@ -208,12 +223,12 @@ const EstampScreen = ({ navigation }) => {
                             <View style={styles.detailRow}>
                                 <View style={styles.detailItemHalf}>
                                     <Text style={styles.detailLabel}>เวลาเข้า:</Text>
-                                    <Text style={styles.detailValue}>{moment(selectedVisitor.check_in_time).format("HH:mm")}</Text>
+                                    <Text style={[styles.detailValue, { color: primaryColor }]}>{moment(selectedVisitor.check_in_time).format("HH:mm")}</Text>
                                 </View>
                                 <View style={styles.verticalDivider} />
                                 <View style={styles.detailItemHalf}>
                                     <Text style={styles.detailLabel}>เวลาออก:</Text>
-                                    <Text style={styles.detailValue}>-</Text>
+                                    <Text style={[styles.detailValue, { color: primaryColor }]}>-</Text>
                                 </View>
                             </View>
 
@@ -221,14 +236,14 @@ const EstampScreen = ({ navigation }) => {
 
                             <View style={styles.detailSection}>
                                 <Text style={styles.detailLabel}>หมายเหตุการเข้าเยี่ยม:</Text>
-                                <Text style={styles.detailSubValue}>ขอเข้ามาติดต่อคุยธุรกิจ</Text>
+                                <Text style={[styles.detailSubValue, { color: primaryColor }]}>ขอเข้ามาติดต่อคุยธุรกิจ</Text>
                             </View>
                         </View>
 
                         <View style={styles.modalFooter}>
                             {selectedVisitor.estamp_status === 'pending' && (
                                 <TouchableOpacity
-                                    style={styles.fullButton}
+                                    style={[styles.fullButton, { backgroundColor: primaryColor }]}
                                     onPress={() => handleEstamp(selectedVisitor.id)}
                                 >
                                     <Text style={styles.fullButtonText}>ประทับตรา</Text>
@@ -258,15 +273,15 @@ const EstampScreen = ({ navigation }) => {
                             <View style={styles.modalContent}>
                                 <View style={styles.modalHeader}>
                                     <TouchableOpacity onPress={closeInviteModal}>
-                                        <Text style={styles.cancelText}>ยกเลิก</Text>
+                                        <Text style={[styles.cancelText, { color: primaryColor }]}>ยกเลิก</Text>
                                     </TouchableOpacity>
-                                    <Text style={styles.modalTitle}>แจ้งรถเข้า</Text>
+                                    <Text style={[styles.modalTitle, { color: primaryColor }]}>แจ้งรถเข้า</Text>
                                     <View style={{ width: 30 }} />
                                 </View>
 
                                 <View style={styles.detailCard}>
                                     <View style={styles.inputGroup}>
-                                        <Text style={styles.inputLabel}>
+                                        <Text style={[styles.inputLabel, { color: primaryColor }]}>
                                             ทะเบียนรถ <Text style={{ color: "red" }}>*</Text>
                                         </Text>
                                         <TextInput
@@ -279,7 +294,7 @@ const EstampScreen = ({ navigation }) => {
                                     </View>
 
                                     <View style={styles.inputGroup}>
-                                        <Text style={styles.inputLabel}>ชื่อผู้มาติดต่อ (ถ้ามี)</Text>
+                                        <Text style={[styles.inputLabel, { color: primaryColor }]}>ชื่อผู้มาติดต่อ (ถ้ามี)</Text>
                                         <TextInput
                                             style={styles.input}
                                             placeholder="ระบุชื่อผู้มาติดต่อ"
@@ -290,7 +305,7 @@ const EstampScreen = ({ navigation }) => {
                                     </View>
 
                                     <View style={styles.inputGroup}>
-                                        <Text style={styles.inputLabel}>วันที่คาดว่าจะเข้า</Text>
+                                        <Text style={[styles.inputLabel, { color: primaryColor }]}>วันที่คาดว่าจะเข้า</Text>
                                         <TouchableOpacity
                                             style={styles.dateDisplay}
                                             onPress={() => setShowDatePicker(true)}
@@ -315,7 +330,7 @@ const EstampScreen = ({ navigation }) => {
 
                                 <View style={styles.modalFooter}>
                                     <TouchableOpacity
-                                        style={styles.fullButton}
+                                        style={[styles.fullButton, { backgroundColor: primaryColor }]}
                                         onPress={handleInviteSubmit}
                                     >
                                         <Text style={styles.fullButtonText}>ยืนยัน</Text>
@@ -343,10 +358,10 @@ const EstampScreen = ({ navigation }) => {
             >
                 <View style={styles.cardLeft}>
                     <View style={styles.iconContainer}>
-                        <Icon name="car" size={24} color="#003049" />
+                        <Icon name="car" size={24} color={primaryColor} />
                     </View>
                     <View style={styles.textContainer}>
-                        <Text style={styles.plateText}>ทะเบียน: {item.plate_number}</Text>
+                        <Text style={[styles.plateText, { color: primaryColor }]}>ทะเบียน: {item.plate_number}</Text>
                         <Text style={styles.subText}>
                             {item.visitor_name || "ขอเข้ามาติดต่อธุระ"}
                         </Text>
@@ -372,22 +387,22 @@ const EstampScreen = ({ navigation }) => {
 
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Icon name="chevron-left" size={20} color="#003049" />
-                    <Text style={styles.backText}>ย้อนกลับ</Text>
+                    <Icon name="chevron-left" size={20} color={primaryColor} />
+                    <Text style={[styles.backText, { color: primaryColor }]}>ย้อนกลับ</Text>
                 </TouchableOpacity>
             </View>
 
-            <Text style={styles.title}>ผู้มาเยี่ยม</Text>
+            <Text style={[styles.title, { color: primaryColor }]}>ผู้มาเยี่ยม</Text>
 
             <TouchableOpacity style={styles.addButton} onPress={() => setInviteModalVisible(true)}>
                 <Icon name="plus" size={16} color="#6B7280" style={{ marginRight: 8 }} />
                 <Text style={styles.addButtonText}>แจ้งรายการรถเข้าหมู่บ้าน</Text>
             </TouchableOpacity>
 
-            <Text style={styles.sectionTitle}>รายการผู้มาเยี่ยม</Text>
+            <Text style={[styles.sectionTitle, { color: primaryColor }]}>รายการผู้มาเยี่ยม</Text>
 
             {loading && !refreshing ? (
-                <ActivityIndicator size="large" color="#003049" style={{ marginTop: 20 }} />
+                <ActivityIndicator size="large" color={primaryColor} style={{ marginTop: 20 }} />
             ) : (
                 <FlatList
                     data={visitors}
@@ -427,13 +442,11 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     cancelText: {
-        color: '#003049',
         fontSize: 16,
     },
     modalTitle: {
         fontSize: 18,
         fontFamily: 'Kanit_700Bold',
-        color: '#003049',
     },
     detailCard: {
         backgroundColor: '#fff',
@@ -457,11 +470,9 @@ const styles = StyleSheet.create({
     detailValue: {
         fontSize: 16,
         fontFamily: 'Kanit_700Bold',
-        color: '#003049',
     },
     detailSubValue: {
         fontSize: 16,
-        color: '#003049',
     },
     verticalDivider: {
         width: 1,
@@ -481,7 +492,6 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     fullButton: {
-        backgroundColor: '#003049',
         padding: 16,
         borderRadius: 12,
         alignItems: 'center',
@@ -510,13 +520,11 @@ const styles = StyleSheet.create({
     },
     backText: {
         fontSize: 16,
-        color: '#003049',
         marginLeft: 5,
     },
     title: {
         fontSize: 24,
         fontFamily: "Kanit_700Bold",
-        color: "#023e3a",
         marginBottom: 20,
     },
     addButton: {
@@ -540,7 +548,6 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 16,
         fontFamily: "Kanit_700Bold",
-        color: "#023e3a",
         marginBottom: 10,
     },
     card: {
@@ -571,7 +578,6 @@ const styles = StyleSheet.create({
     plateText: {
         fontSize: 18,
         fontFamily: "Kanit_700Bold",
-        color: "#003049",
     },
     subText: {
         fontSize: 12,
@@ -608,7 +614,6 @@ const styles = StyleSheet.create({
     },
     inputLabel: {
         fontSize: 14,
-        color: '#003049',
         marginBottom: 8,
         fontFamily: 'Kanit_700Bold',
     },

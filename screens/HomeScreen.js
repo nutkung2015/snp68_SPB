@@ -48,7 +48,7 @@ const HomeScreen = ({ navigation }) => {
   const [callGuardModalVisible, setCallGuardModalVisible] = useState(false); // State for CallGuardModal
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0); // Unread notification count
 
-  // Fetch unread count when screen is focused
+  // Fetch unread count and register push token when screen is focused
   useFocusEffect(
     React.useCallback(() => {
       const fetchUnreadCount = async () => {
@@ -56,6 +56,16 @@ const HomeScreen = ({ navigation }) => {
         setUnreadNotificationCount(count);
       };
       fetchUnreadCount();
+
+      // Register push token (in case it wasn't registered during login)
+      const registerPush = async () => {
+        try {
+          await NotificationService.registerForPushNotifications();
+        } catch (err) {
+          console.log('[Home] Push registration skipped:', err.message);
+        }
+      };
+      registerPush();
     }, [])
   );
 

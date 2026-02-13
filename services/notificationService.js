@@ -128,7 +128,10 @@ class NotificationService {
 
             const token = await ApiService.getToken();
             if (token) {
-                await ApiService.delete('/api/notifications/unregister-token', token);
+                // Use POST instead of DELETE to send body with push_token
+                await ApiService.post('/api/notifications/unregister-token', {
+                    push_token: pushToken
+                }, token);
             }
 
             await AsyncStorage.removeItem(PUSH_TOKEN_KEY);

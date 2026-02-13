@@ -43,16 +43,18 @@ export default function LoginScreen({ navigation, recheckLoginStatus }) {
     try {
       const response = await login(email, password);
       if (response.status === "success") {
-        // Register for push notifications after successful login
-        try {
-          const pushToken = await NotificationService.registerForPushNotifications();
-          if (pushToken) {
-            console.log("[Login] Push token registered:", pushToken);
+        // Register for push notifications after successful login (non-blocking)
+        // Use setTimeout to ensure it runs after navigation completes
+        setTimeout(async () => {
+          try {
+            const pushToken = await NotificationService.registerForPushNotifications();
+            if (pushToken) {
+              console.log("[Login] Push token registered:", pushToken);
+            }
+          } catch (pushError) {
+            console.error("[Login] Push notification registration error:", pushError);
           }
-        } catch (pushError) {
-          // Don't block login if push registration fails
-          console.error("[Login] Push notification registration error:", pushError);
-        }
+        }, 1000);
 
         await recheckLoginStatus(); // Trigger recheck to navigate to Home
       } else {

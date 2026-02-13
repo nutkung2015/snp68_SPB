@@ -12,7 +12,7 @@ const repairTypes = [
     { id: 7, value: 'other', name: 'อื่นๆ', icon: 'more-horiz' },
 ];
 
-export default function RepairTypeModal({ visible, onClose, onSelectType }) {
+export default function RepairTypeModal({ visible, onClose, onSelectType, primaryColor = "#2A405E" }) {
     return (
         <Modal
             animationType="slide"
@@ -38,8 +38,8 @@ export default function RepairTypeModal({ visible, onClose, onSelectType }) {
                                 style={styles.typeItem}
                                 onPress={() => onSelectType(type)}
                             >
-                                <View style={styles.typeIconContainer}>
-                                    <MaterialIcons name={type.icon} size={24} color="#205248" />
+                                <View style={[styles.typeIconContainer, { backgroundColor: primaryColor + '20' }]}>
+                                    <MaterialIcons name={type.icon} size={24} color={primaryColor} />
                                 </View>
                                 <Text style={styles.typeName}>{type.name}</Text>
                             </TouchableOpacity>
@@ -108,7 +108,6 @@ const styles = StyleSheet.create({
         fontFamily: "Kanit_500Medium",
     },
     typeIconContainer: {
-        backgroundColor: '#e0f2f1',
         width: 36,
         height: 36,
         borderRadius: 18,

@@ -15,6 +15,7 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import BottomNavigation from "../../../components/BottomNavigation";
 import RepairTypeModal from "./RepairTypeModal";
 import IssueService from "../../../services/issueService";
+import ProjectCustomizationsService from "../../../services/projectCustomizationsService";
 
 export default function PersonalIssueScreen({ navigation }) {
   const [userData, setUserData] = useState(null);
@@ -22,6 +23,7 @@ export default function PersonalIssueScreen({ navigation }) {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [primaryColor, setPrimaryColor] = useState("#2A405E");
 
   // Load userData from AsyncStorage
   useEffect(() => {
@@ -59,6 +61,16 @@ export default function PersonalIssueScreen({ navigation }) {
         setLoading(true);
         const projectId = userData.projectMemberships[0].project_id;
         console.log("Fetching personal repairs for Project ID:", projectId);
+
+        // Fetch project customizations
+        try {
+          const customizations = await ProjectCustomizationsService.getProjectCustomizations(projectId);
+          if (customizations && customizations.primary_color) {
+            setPrimaryColor(customizations.primary_color);
+          }
+        } catch (err) {
+          console.error("Error fetching customizations:", err);
+        }
 
         // เรียกใช้ Service ที่เชื่อมต่อกับ API getPersonalRepairsForResident
         // Backend จะจัดการกรอง reporter_id จาก Token เอง
@@ -201,6 +213,7 @@ export default function PersonalIssueScreen({ navigation }) {
         visible={isModalVisible}
         onClose={handleCloseModal}
         onSelectType={handleSelectRepairType}
+        primaryColor={primaryColor}
       />
 
       {/* <BottomNavigation navigation={navigation} activeScreen="PersonalIssue" /> */}

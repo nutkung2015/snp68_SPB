@@ -19,6 +19,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import IssueService from "../../../services/issueService";
+import ProjectCustomizationsService from "../../../services/projectCustomizationsService";
 
 const ISSUE_TYPES = [
     { id: "1", name: "ทรัพย์สินและสาธารณูปโภค", value: "AssetsFacilities" },
@@ -28,6 +29,7 @@ const ISSUE_TYPES = [
 export default function AddCommonIssueForm({ navigation }) {
     const [userData, setUserData] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [primaryColor, setPrimaryColor] = useState("#2A405E");
 
     // Load user data from AsyncStorage
     useEffect(() => {
@@ -48,6 +50,19 @@ export default function AddCommonIssueForm({ navigation }) {
                         zone: user.projectMemberships?.[0]?.project_name || "",
                         reporterName: user.full_name || "",
                     }));
+
+                    // Fetch project customizations
+                    const projectId = user.projectMemberships?.[0]?.project_id;
+                    if (projectId) {
+                        try {
+                            const customizations = await ProjectCustomizationsService.getProjectCustomizations(projectId);
+                            if (customizations && customizations.primary_color) {
+                                setPrimaryColor(customizations.primary_color);
+                            }
+                        } catch (err) {
+                            console.error("Error fetching customizations:", err);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error("Error loading user data:", error);
@@ -347,6 +362,7 @@ export default function AddCommonIssueForm({ navigation }) {
                 <TouchableOpacity
                     style={[
                         styles.submitButton,
+                        { backgroundColor: primaryColor },
                         isSubmitting && styles.submitButtonDisabled,
                     ]}
                     onPress={handleSubmit}
@@ -402,13 +418,13 @@ export default function AddCommonIssueForm({ navigation }) {
             >
                 <View style={styles.successModalOverlay}>
                     <View style={styles.successModalContent}>
-                        <Ionicons name="checkmark-circle" size={60} color="#205248" />
+                        <Ionicons name="checkmark-circle" size={60} color={primaryColor} />
                         <Text style={styles.successTitle}>บันทึกสำเร็จ</Text>
                         <Text style={styles.successMessage}>
                             ส่งแบบฟอร์มแจ้งปัญหาเรียบร้อยแล้ว
                         </Text>
                         <TouchableOpacity
-                            style={styles.successButton}
+                            style={[styles.successButton, { backgroundColor: primaryColor }]}
                             onPress={() => {
                                 setShowSuccessModal(false);
                                 navigation.goBack();
@@ -548,7 +564,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     submitButton: {
-        backgroundColor: "#205248",
         borderRadius: 8,
         padding: 16,
         alignItems: "center",
@@ -654,7 +669,6 @@ const styles = StyleSheet.create({
     successTitle: {
         fontSize: 20,
         fontWeight: "bold",
-        color: "#205248",
         marginTop: 15,
         marginBottom: 10,
         fontFamily: "Kanit_600SemiBold",
@@ -667,7 +681,6 @@ const styles = StyleSheet.create({
         fontFamily: "Kanit_400Regular",
     },
     successButton: {
-        backgroundColor: "#205248",
         paddingHorizontal: 30,
         paddingVertical: 12,
         borderRadius: 25,
