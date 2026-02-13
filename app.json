@@ -35,7 +35,8 @@
     },
     "android": {
       "package": "com.nutkung2015.livlink",
-      "usesCleartextTraffic": true
+      "usesCleartextTraffic": true,
+      "googleServicesFile": "./google-services.json"
     },
     "plugins": [
       "expo-font",

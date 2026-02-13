@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "340838499264",
+    "project_id": "livlink-a45f4",
+    "storage_bucket": "livlink-a45f4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:340838499264:android:3b29e3dbfbd73c0ee43e25",
+        "android_client_info": {
+          "package_name": "com.livlink.snp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB0a8z15O8EAx8CUIMs3MoSFLpbFaS-JbE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:340838499264:android:d29c94f4267e110ae43e25",
+        "android_client_info": {
+          "package_name": "com.nutkung2015.livlink"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB0a8z15O8EAx8CUIMs3MoSFLpbFaS-JbE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

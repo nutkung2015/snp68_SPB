@@ -40,42 +40,61 @@ class NotificationService {
      */
     static async registerForPushNotifications() {
         try {
+            console.log('[Notification] Step 1: Checking if physical device...');
             // ตรวจสอบว่าเป็นอุปกรณ์จริง (ไม่ใช่ Simulator)
             if (!Device.isDevice) {
-                console.log('[Notification] Push notifications only work on physical devices');
+                console.log('[Notification] STOP - Push notifications only work on physical devices');
                 return null;
             }
+            console.log('[Notification] Step 1: OK - Is physical device');
 
             // ขอ Permission
+            console.log('[Notification] Step 2: Checking permissions...');
             const { status: existingStatus } = await Notifications.getPermissionsAsync();
             let finalStatus = existingStatus;
+            console.log('[Notification] Step 2: Existing permission status:', existingStatus);
 
             if (existingStatus !== 'granted') {
+                console.log('[Notification] Step 2b: Requesting permissions...');
                 const { status } = await Notifications.requestPermissionsAsync();
                 finalStatus = status;
+                console.log('[Notification] Step 2b: Requested permission status:', status);
             }
 
             if (finalStatus !== 'granted') {
-                console.log('[Notification] Permission denied');
+                console.log('[Notification] STOP - Permission denied, finalStatus:', finalStatus);
                 return null;
             }
+            console.log('[Notification] Step 2: OK - Permission granted');
 
             // ดึง Expo Push Token
+            console.log('[Notification] Step 3: Getting Expo Push Token...');
             const projectId = Constants.expoConfig?.extra?.eas?.projectId
                 || Constants.easConfig?.projectId;
+            console.log('[Notification] Step 3: projectId =', projectId);
+
+            if (!projectId) {
+                console.log('[Notification] STOP - No projectId found!');
+                console.log('[Notification] expoConfig:', JSON.stringify(Constants.expoConfig?.extra));
+                console.log('[Notification] easConfig:', JSON.stringify(Constants.easConfig));
+                return null;
+            }
 
             const tokenData = await Notifications.getExpoPushTokenAsync({
                 projectId: projectId,
             });
 
             const pushToken = tokenData.data;
-            console.log('[Notification] Push Token:', pushToken);
+            console.log('[Notification] Step 3: OK - Push Token:', pushToken);
 
             // บันทึก token ลง AsyncStorage
             await AsyncStorage.setItem(PUSH_TOKEN_KEY, pushToken);
+            console.log('[Notification] Step 4: Token saved to AsyncStorage');
 
             // ส่ง token ไป Backend
+            console.log('[Notification] Step 5: Saving token to backend...');
             await this.savePushTokenToBackend(pushToken);
+            console.log('[Notification] Step 5: OK - Token saved to backend');
 
             // Setup notification channel for Android
             if (Platform.OS === 'android') {
@@ -85,11 +104,14 @@ class NotificationService {
                     vibrationPattern: [0, 250, 250, 250],
                     lightColor: '#FF231F7C',
                 });
+                console.log('[Notification] Step 6: Android notification channel set');
             }
 
             return pushToken;
         } catch (error) {
-            console.error('[Notification] Error registering push token:', error);
+            console.error('[Notification] ERROR registering push token:', error);
+            console.error('[Notification] Error name:', error.name);
+            console.error('[Notification] Error message:', error.message);
             return null;
         }
     }
