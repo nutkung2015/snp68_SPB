@@ -115,6 +115,7 @@ async function saveNotification(notification) {
  */
 async function sendPushNotifications(pushTokens, title, body, data = {}) {
     if (!pushTokens || pushTokens.length === 0) {
+        console.log('[Push] No push tokens to send to');
         return { sent: 0, errors: [] };
     }
 
@@ -124,9 +125,11 @@ async function sendPushNotifications(pushTokens, title, body, data = {}) {
     );
 
     if (validTokens.length === 0) {
-        console.log('No valid Expo push tokens found');
+        console.log('[Push] No valid Expo push tokens found. Tokens received:', pushTokens);
         return { sent: 0, errors: ['No valid tokens'] };
     }
+
+    console.log(`[Push] Sending to ${validTokens.length} valid tokens`);
 
     // สร้าง messages
     const messages = validTokens.map(token => ({
@@ -148,14 +151,24 @@ async function sendPushNotifications(pushTokens, title, body, data = {}) {
         try {
             const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
             tickets.push(...ticketChunk);
+
+            // Log each ticket result
+            ticketChunk.forEach((ticket, index) => {
+                if (ticket.status === 'ok') {
+                    console.log(`[Push] Ticket ${index}: OK (id: ${ticket.id})`);
+                } else {
+                    console.error(`[Push] Ticket ${index}: ERROR -`, ticket.message, ticket.details);
+                    errors.push(ticket.message);
+                }
+            });
         } catch (error) {
-            console.error('Error sending push notification chunk:', error);
+            console.error('[Push] Error sending push notification chunk:', error);
             errors.push(error.message);
         }
     }
 
     // Log results
-    console.log(`[Push] Sent ${tickets.length} notifications`);
+    console.log(`[Push] Sent ${tickets.length} notifications, Errors: ${errors.length}`);
 
     return {
         sent: tickets.length,
