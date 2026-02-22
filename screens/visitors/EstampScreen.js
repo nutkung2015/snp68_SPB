@@ -152,7 +152,7 @@ const EstampScreen = ({ navigation }) => {
                 unit_id: unitId,
                 plate_number: invitePlate,
                 visitor_name: inviteName,
-                expected_date: inviteDate, // Date object or ISO string
+                expected_date: moment(inviteDate).format("YYYY-MM-DD"), // Send as date string to avoid timezone issues
             };
 
             const res = await VisitorService.inviteVisitor(payload);

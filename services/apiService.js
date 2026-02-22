@@ -136,9 +136,14 @@ class ApiService {
       });
 
       if (response.status === 401) {
-        // Skip refresh logic for login/refresh/logout endpoints to prevent loops
-        if (endpoint.includes("/login") || endpoint.includes("/refresh") || endpoint.includes("/logout")) {
-          // For login, 401 is valid (wrong password)
+        // For login endpoint, 401 means wrong credentials - NOT session expiry
+        if (endpoint.includes("/login")) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+        }
+
+        // Skip refresh logic for refresh/logout endpoints to prevent loops
+        if (endpoint.includes("/refresh") || endpoint.includes("/logout")) {
           await this.handleUnauthorized();
           throw new Error("Unauthorized");
         }

@@ -72,7 +72,8 @@ const SecurityProfileScreen = ({ recheckLoginStatus }) => {
         try {
             await AsyncStorage.removeItem("userData");
             await AsyncStorage.removeItem("authToken");
-            navigation.navigate("Login");
+            await AsyncStorage.removeItem("refreshToken");
+            await recheckLoginStatus();
         } catch (error) {
             console.error("Error during logout:", error);
             Alert.alert("Error", "Failed to logout.");

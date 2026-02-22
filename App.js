@@ -218,6 +218,7 @@ export default function App() {
     const [loading, setLoading] = useState(true);
     const [initialRoute, setInitialRoute] = useState("Login"); // Default initial route
     const [userRole, setUserRole] = useState(null); // Track user role
+    const pendingRouteRef = React.useRef(null); // Store route to navigate after role change
 
     // NOTE: Removed auto-navigate useEffect that caused "navigation not initialized" error
     // Stack.Navigator already handles initial route via initialRouteName prop
@@ -229,31 +230,15 @@ export default function App() {
         const token = parsedUserData?.token;
         setIsLoggedIn(!!token);
 
+        let targetRoute = "Login";
+        let targetRole = null;
+
         if (token) {
           console.log("Token exists, checking user data...");
-          // console.log("Retrieved parsedUserData:", parsedUserData);
           if (parsedUserData) {
-            // console.log("Parsed userData:", parsedUserData);
-            // console.log(
-            //   "parsedUserData.projectMemberships:",
-            //   parsedUserData.projectMemberships,
-            //   "length:",
-            //   parsedUserData.projectMemberships
-            //     ? parsedUserData.projectMemberships.length
-            //     : 0
-            // );
-            // console.log(
-            //   "parsedUserData.unitMemberships:",
-            //   parsedUserData.unitMemberships,
-            //   "length:",
-            //   parsedUserData.unitMemberships
-            //     ? parsedUserData.unitMemberships.length
-            //     : 0
-            // );
-
             // Check user role for Security
             const role = parsedUserData.role || parsedUserData.roles?.[0];
-            setUserRole(role); // Store user role
+            targetRole = role;
 
             // Check memberships for all users
             const hasProjectMembership =
@@ -264,41 +249,75 @@ export default function App() {
               parsedUserData.unitMemberships.length > 0;
 
             if (role === "security") {
-              // Security users - only need projectMembership (not unitMembership)
               if (hasProjectMembership) {
                 console.log("Security user has project membership. Setting route to GuardHome");
-                setInitialRoute("GuardHome");
+                targetRoute = "GuardHome";
               } else {
                 console.log("Security user missing project membership. Setting route to JoinUnitScreen");
-                setInitialRoute("JoinUnitScreen");
+                targetRoute = "JoinUnitScreen";
               }
             } else {
-              // Regular users - check project and unit memberships
               if (hasProjectMembership && hasUnitMembership) {
-                setInitialRoute("Home");
+                targetRoute = "Home";
               } else {
-                setInitialRoute("JoinUnitScreen");
+                targetRoute = "JoinUnitScreen";
               }
             }
           } else {
-            // Token exists but no user data, might be an incomplete login or corrupted storage
             console.warn("Token exists but no userData found in AsyncStorage.");
-            setInitialRoute("Login");
+            targetRoute = "Login";
           }
         } else {
-          setInitialRoute("Login");
+          targetRoute = "Login";
+          targetRole = null;
         }
+
+        setInitialRoute(targetRoute);
+
+        // If role is changing, we need to wait for the correct Stack to render first
+        // Store pending route and let useEffect handle navigation after re-render
+        if (targetRole !== userRole) {
+          pendingRouteRef.current = targetRoute;
+          setUserRole(targetRole);
+          // Navigation will happen in the useEffect below after Stack re-renders
+        } else {
+          // Same role - navigator already has the correct routes, navigate now
+          if (navigationRef.isReady()) {
+            navigationRef.reset({
+              index: 0,
+              routes: [{ name: targetRoute }],
+            });
+          }
+        }
+
       } catch (e) {
         console.error(
           "Failed to load auth token or user data from AsyncStorage",
           e
         );
         setIsLoggedIn(false);
-        setInitialRoute("Login"); // Fallback to Login on error
+        setInitialRoute("Login");
       } finally {
         setLoading(false);
       }
     };
+
+    // Navigate after userRole changes and the correct Stack Navigator has rendered
+    useEffect(() => {
+      if (pendingRouteRef.current && navigationRef.isReady()) {
+        // Small delay to ensure the new Stack Navigator is mounted
+        const timer = setTimeout(() => {
+          if (pendingRouteRef.current && navigationRef.isReady()) {
+            navigationRef.reset({
+              index: 0,
+              routes: [{ name: pendingRouteRef.current }],
+            });
+            pendingRouteRef.current = null;
+          }
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+    }, [userRole]);
 
     useEffect(() => {
       recheckLoginStatus(); // Call it once on mount

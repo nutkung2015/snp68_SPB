@@ -80,8 +80,8 @@ const GuardCheckInScreen = ({ navigation }) => {
 
     // Handle selecting a registered vehicle - show quick check-in dialog
     const handleSelectVehicle = (item) => {
-        // Check if this is a registered vehicle (resident or pre-registered visitor)
-        if (item.type === 'resident' || item.type === 'visitor_pre_registered' || item.unit_id) {
+        // Check if this is a registered vehicle (resident or pre-registered/appointment visitor)
+        if (item.type === 'resident' || item.type === 'visitor_pre_registered' || item.type === 'visitor' || item.unit_id) {
             // Show quick check-in confirmation dialog
             setSelectedVehicle(item);
             setQuickCheckInModal(true);
@@ -98,27 +98,43 @@ const GuardCheckInScreen = ({ navigation }) => {
         }
     };
 
-    // 1. Proceed from Vehicle details to Confirmation Input
-    const handleProceedToConfirmation = () => {
-        setQuickCheckInModal(false);
-        setConfirmPlateInput("");
-        setConfirmModalVisible(true);
+    // Quick Check-in: ยืนยันเข้าได้เลยโดยไม่ต้องกรอกข้อมูลซ้ำ
+    const handleQuickCheckIn = async () => {
+        setQuickCheckInLoading(true);
+        try {
+            const checkInPayload = {
+                plate_number: selectedVehicle.plate_number,
+                province: selectedVehicle.province || "กรุงเทพมหานคร",
+                target_unit_id: selectedVehicle.unit_id || "",
+                unit_number: selectedVehicle.unit_number || "",
+                visitor_name: selectedVehicle.visitor_name || "",
+                project_id: formData.project_id,
+                id_card_consent: 1,
+                is_quick_checkin: true,
+            };
+
+            const response = await SecurityService.checkIn(checkInPayload);
+            if (response.status === "success") {
+                setQuickCheckInModal(false);
+                navigation.goBack();
+                Alert.alert("สำเร็จ", `บันทึกรถเข้าเรียบร้อย\n${selectedVehicle.plate_number}`);
+            }
+        } catch (error) {
+            console.error(error);
+            Alert.alert("Error", "บันทึกข้อมูลไม่สำเร็จ");
+        } finally {
+            setQuickCheckInLoading(false);
+        }
     };
 
-    // 2. Validate and Submit (Quick or Form)
-    const handleFinalSubmit = async () => {
+    // Form flow: Validate plate re-entry and submit
+    const handleFormConfirmSubmit = async () => {
         if (!confirmPlateInput) {
             Alert.alert("แจ้งเตือน", "กรุณากรอกเลขทะเบียนเพื่อยืนยัน");
             return;
         }
 
-        // Determine target plate based on flow
-        let targetPlate = "";
-        if (step === 'form') {
-            targetPlate = formData.plate_number;
-        } else if (selectedVehicle) {
-            targetPlate = selectedVehicle.plate_number;
-        }
+        const targetPlate = formData.plate_number;
 
         // Validation: Verify if input matches target plate
         const inputClean = confirmPlateInput.replace(/\s+/g, '').toLowerCase();
@@ -135,37 +151,7 @@ const GuardCheckInScreen = ({ navigation }) => {
             return;
         }
 
-        // Proceed based on flow
-        if (step === 'form') {
-            await performFormCheckIn();
-        } else {
-            // Quick Check-in logic
-            setQuickCheckInLoading(true);
-            try {
-                const checkInPayload = {
-                    plate_number: selectedVehicle.plate_number,
-                    province: selectedVehicle.province || "กรุงเทพมหานคร",
-                    target_unit_id: selectedVehicle.unit_id || "",
-                    unit_number: selectedVehicle.unit_number || "",
-                    visitor_name: selectedVehicle.visitor_name || "",
-                    project_id: formData.project_id,
-                    id_card_consent: 1,
-                    is_quick_checkin: true,
-                };
-
-                const response = await SecurityService.checkIn(checkInPayload);
-                if (response.status === "success") {
-                    setConfirmModalVisible(false);
-                    navigation.goBack();
-                    Alert.alert("สำเร็จ", `บันทึกรถเข้าเรียบร้อย\n${selectedVehicle.plate_number}`);
-                }
-            } catch (error) {
-                console.error(error);
-                Alert.alert("Error", "บันทึกข้อมูลไม่สำเร็จ");
-            } finally {
-                setQuickCheckInLoading(false);
-            }
-        }
+        await performFormCheckIn();
     };
 
     // Actual API Call for Form Check-in
@@ -266,6 +252,7 @@ const GuardCheckInScreen = ({ navigation }) => {
             case 'resident':
                 return { text: 'รถลูกบ้าน', color: '#10B981', icon: 'home' };
             case 'visitor_pre_registered':
+            case 'visitor':
                 return { text: 'ลงทะเบียนล่วงหน้า', color: '#3B82F6', icon: 'calendar-check' };
             default:
                 return { text: 'รถภายนอก', color: '#F59E0B', icon: 'car' };
@@ -354,7 +341,7 @@ const GuardCheckInScreen = ({ navigation }) => {
                     <View style={styles.quickModalButtons}>
                         <TouchableOpacity
                             style={styles.quickConfirmButton}
-                            onPress={handleProceedToConfirmation}
+                            onPress={handleQuickCheckIn}
                             disabled={quickCheckInLoading}
                         >
                             {quickCheckInLoading ? (
@@ -362,7 +349,7 @@ const GuardCheckInScreen = ({ navigation }) => {
                             ) : (
                                 <>
                                     <Icon name="check" size={16} color="#fff" style={{ marginRight: 8 }} />
-                                    <Text style={styles.quickConfirmText}>ยืนยันข้อมูลถูกต้อง</Text>
+                                    <Text style={styles.quickConfirmText}>ยืนยันรถเข้า (Check-in)</Text>
                                 </>
                             )}
                         </TouchableOpacity>
@@ -412,7 +399,7 @@ const GuardCheckInScreen = ({ navigation }) => {
                     </View>
 
                     <Text style={[styles.label, { textAlign: 'center', marginTop: 10 }]}>
-                        ทะเบียนรถที่เลือก: {selectedVehicle?.plate_number || formData.plate_number}
+                        ทะเบียนรถที่เลือก: {formData.plate_number}
                     </Text>
 
                     <TextInput
@@ -426,7 +413,7 @@ const GuardCheckInScreen = ({ navigation }) => {
                     <View style={styles.quickModalButtons}>
                         <TouchableOpacity
                             style={[styles.quickConfirmButton, { backgroundColor: '#1F4E46' }]}
-                            onPress={handleFinalSubmit}
+                            onPress={handleFormConfirmSubmit}
                             disabled={quickCheckInLoading}
                         >
                             {quickCheckInLoading ? (
@@ -440,10 +427,9 @@ const GuardCheckInScreen = ({ navigation }) => {
                             style={styles.quickCancelButton}
                             onPress={() => {
                                 setConfirmModalVisible(false);
-                                setQuickCheckInModal(true); // Back to previous
                             }}
                         >
-                            <Text style={styles.quickCancelText}>ย้อนกลับ</Text>
+                            <Text style={styles.quickCancelText}>ยกเลิก</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -509,7 +495,7 @@ const GuardCheckInScreen = ({ navigation }) => {
                             </View>
                             <View style={[styles.resultBadge, { backgroundColor: typeInfo.color }]}>
                                 <Text style={styles.resultBadgeText}>
-                                    {item.type === 'resident' ? 'ลูกบ้าน' : 'จอง'}
+                                    {item.type === 'resident' ? 'ลูกบ้าน' : 'แจ้งล่วงหน้า'}
                                 </Text>
                             </View>
                             <Icon name="chevron-right" size={16} color="#9CA3AF" style={{ marginLeft: 8 }} />
