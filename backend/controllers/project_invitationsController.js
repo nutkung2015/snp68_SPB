@@ -1,12 +1,21 @@
 const db = require("../config/db");
 const { v4: uuidv4 } = require("uuid");
 
+function generateInviteCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
 exports.createInvitation = async (req, res) => {
   try {
     console.log('Request Body:', req.body);
     const { project_id, role } = req.body; // Get role from req.body
     const sender_id = req.user.id; // Get sender_id from authenticated user
-    const invitation_code = uuidv4(); // Generate a unique invitation code
+    const invitation_code = generateInviteCode(); // Generate a 6-character invitation code
     const expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000); // Expires in 24 hours
 
     // Validate the role for the invitation
