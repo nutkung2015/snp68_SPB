@@ -20,21 +20,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { HomeOptionScreen } from "./Myhome/HomeOptionScreen";
 import apiService from "../services/apiService"; // Import API service
 
-import {
-  useFonts,
-  Kanit_400Regular,
-  Kanit_700Bold,
-} from "@expo-google-fonts/kanit";
+
 import { AnnouncementsService } from "../services";
 import ProjectCustomizationsService from "../services/projectCustomizationsService";
 import NotificationService from "../services/notificationService";
 import { useFocusEffect } from "@react-navigation/native";
 
 const HomeScreen = ({ navigation }) => {
-  const [fontsLoaded] = useFonts({
-    Kanit_400Regular,
-    Kanit_700Bold,
-  });
+
 
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -234,16 +227,7 @@ const HomeScreen = ({ navigation }) => {
     fetchData();
   }, [userData]);
 
-  // ในตัว component (นอก useEffect)
-  console.log("Render primaryColor:", primaryColor);
 
-  <TouchableOpacity
-    style={[styles.menuButton, { backgroundColor: primaryColor }]} // ใช้ primaryColor
-    onPress={() => navigation.navigate("HomeOption")}
-  >
-    <Ionicons name="home-outline" size={24} color="#fff" />
-    <Text style={styles.menuText}>บ้านของฉัน</Text>
-  </TouchableOpacity>;
 
   const renderMenuItem = (icon, label, onPress) => (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
@@ -701,7 +685,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 11,
     fontWeight: "bold",
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
     textAlign: "center",
   },
   profileCircle: {
@@ -720,7 +704,7 @@ const styles = StyleSheet.create({
     color: "#205248",
     fontWeight: "bold",
     fontSize: 16,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
   },
   headerRowBottom: {
     flexDirection: "row",
@@ -743,13 +727,13 @@ const styles = StyleSheet.create({
   headerUserName: {
     color: "#fff",
     fontSize: 16,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
     marginBottom: 1,
   },
   headerUserAddress: {
     color: "#fff",
     fontSize: 13.5,
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
   },
   section: {
     paddingHorizontal: 20,
@@ -771,17 +755,17 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
     color: "#000000ff",
   },
   sectionTitleHome: {
     fontSize: 20,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
     color: "#fff",
   },
   seeAllText: {
     color: "#666",
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
   },
   menuGrid: {
     flexDirection: "row",
@@ -800,7 +784,7 @@ const styles = StyleSheet.create({
   menuText: {
     marginLeft: 8,
     color: "#fff",
-    fontFamily: "Kanit_600SemiBold",
+    fontFamily: "NotoSansThai_600SemiBold",
   },
   favoriteGrid: {
     flexDirection: "row",
@@ -825,7 +809,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#205248",
     textAlign: "center",
-    fontFamily: "Kanit_500Medium",
+    fontFamily: "NotoSansThai_500Medium",
   },
   newsListContainer: {
     paddingHorizontal: 4,
@@ -868,7 +852,7 @@ const styles = StyleSheet.create({
   noImageText: {
     marginTop: 8,
     fontSize: 14,
-    fontFamily: 'Kanit_400Regular',
+    fontFamily: 'NotoSansThai_400Regular',
     color: '#9CA3AF',
   },
   imageGradient: {
@@ -897,7 +881,7 @@ const styles = StyleSheet.create({
   },
   typeBadgeText: {
     fontSize: 12,
-    fontFamily: 'Kanit_700Bold',
+    fontFamily: 'NotoSansThai_700Bold',
     color: '#fff',
   },
   globalBadge: {
@@ -919,7 +903,7 @@ const styles = StyleSheet.create({
   },
   globalBadgeText: {
     fontSize: 11,
-    fontFamily: 'Kanit_700Bold',
+    fontFamily: 'NotoSansThai_700Bold',
     color: '#fff',
   },
   newsContent: {
@@ -927,7 +911,7 @@ const styles = StyleSheet.create({
   },
   newsTitle: {
     fontSize: 16,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
     marginBottom: 8,
     color: "#1F2937",
     lineHeight: 24,
@@ -943,14 +927,14 @@ const styles = StyleSheet.create({
   },
   newsDate: {
     fontSize: 13,
-    fontFamily: 'Kanit_400Regular',
+    fontFamily: 'NotoSansThai_400Regular',
     color: '#6B7280',
   },
   newsDescription: {
     fontSize: 14,
     color: "#205248",
     lineHeight: 20,
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
   },
   loadingContainer: {
     flexDirection: "row",
@@ -961,7 +945,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginLeft: 8,
     color: "#666",
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
   },
   errorContainer: {
     alignItems: "center",
@@ -969,7 +953,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: "#ff6b6b",
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
     marginBottom: 8,
   },
   retryButton: {
@@ -980,7 +964,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: "#666",
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
   },
   emptyContainer: {
     alignItems: "center",
@@ -988,7 +972,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: "#666",
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
   },
 });
 

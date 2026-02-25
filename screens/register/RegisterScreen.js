@@ -406,9 +406,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   headerBackground: {
-    height: "20%",
-    backgroundColor: "#666",
-    paddingBottom: 16,
+    height: 200,
+    width: "100%",
   },
   header: {
     paddingHorizontal: 16,
@@ -433,15 +432,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 16,
     padding: 24,
-    marginBottom: 12,
-    marginTop: 40,
+    marginBottom: 24,
+    marginTop: 70, // Matches LoginScreen to overlap header exactly the same
     zIndex: 1,
   },
   registerTitle: {
     fontSize: 18,
     color: "#222",
     marginBottom: 16,
-    fontFamily: "Kanit_600SemiBold",
+    fontFamily: "NotoSansThai_600SemiBold",
   },
   input: {
     width: "100%",
@@ -453,7 +452,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 12,
     color: "#205248",
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
     backgroundColor: "#fff",
   },
   inputVerified: {
@@ -478,7 +477,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     color: "#205248",
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
     backgroundColor: "#fff",
   },
   otpButton: {
@@ -497,7 +496,7 @@ const styles = StyleSheet.create({
   otpButtonText: {
     color: "#fff",
     fontSize: 14,
-    fontFamily: "Kanit_500Medium",
+    fontFamily: "NotoSansThai_500Medium",
   },
   verifiedBadge: {
     marginLeft: 8,
@@ -517,7 +516,7 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 12,
     textAlign: "center",
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
   },
   otpInputContainer: {
     flexDirection: "row",
@@ -531,7 +530,7 @@ const styles = StyleSheet.create({
     borderColor: "#205248",
     borderRadius: 8,
     fontSize: 24,
-    fontFamily: "Kanit_600SemiBold",
+    fontFamily: "NotoSansThai_600SemiBold",
     color: "#205248",
     backgroundColor: "#fff",
   },
@@ -549,7 +548,7 @@ const styles = StyleSheet.create({
   verifyOtpButtonText: {
     color: "#fff",
     fontSize: 16,
-    fontFamily: "Kanit_500Medium",
+    fontFamily: "NotoSansThai_500Medium",
   },
   verifiedMessage: {
     flexDirection: "row",
@@ -564,7 +563,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     color: "#4CAF50",
     fontSize: 14,
-    fontFamily: "Kanit_500Medium",
+    fontFamily: "NotoSansThai_500Medium",
   },
   registerButton: {
     width: "100%",
@@ -581,12 +580,12 @@ const styles = StyleSheet.create({
   registerButtonText: {
     color: "#fff",
     fontSize: 18,
-    fontFamily: "Kanit_600SemiBold",
+    fontFamily: "NotoSansThai_600SemiBold",
   },
   errorText: {
     color: "red",
     marginBottom: 8,
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
   },
   loginLink: {
     marginTop: 16,
@@ -594,6 +593,6 @@ const styles = StyleSheet.create({
   loginText: {
     color: "#222",
     fontSize: 14,
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
   },
 });

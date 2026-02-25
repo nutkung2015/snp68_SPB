@@ -18,12 +18,7 @@ import { useNavigation } from "@react-navigation/native";
 import { onLogoutCallback, setNavigation } from "../../services/authService";
 import { LinearGradient } from "expo-linear-gradient";
 import ProjectCustomizationsService from "../../services/projectCustomizationsService";
-import {
-  useFonts,
-  Kanit_400Regular,
-  Kanit_700Bold,
-  Kanit_500Medium,
-} from "@expo-google-fonts/kanit";
+
 import { UserService } from "../../services";
 import NotificationService from "../../services/notificationService";
 
@@ -33,11 +28,7 @@ const ProfileScreen = ({ recheckLoginStatus }) => {
   const navigation = useNavigation();
   const [primaryColor, setPrimaryColor] = useState("#1F7EFF"); // Default color
 
-  const [fontsLoaded] = useFonts({
-    Kanit_400Regular,
-    Kanit_500Medium,
-    Kanit_700Bold,
-  });
+
 
   useEffect(() => {
     setNavigation(navigation);
@@ -104,7 +95,7 @@ const ProfileScreen = ({ recheckLoginStatus }) => {
     fetchUserProfile();
   }, []);
 
-  if (!fontsLoaded || loading) {
+  if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2A405E" />
@@ -271,12 +262,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
     color: "#666",
   },
   errorText: {
     fontSize: 16,
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
     color: "#666",
     marginBottom: 20,
   },
@@ -301,7 +292,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
     color: "#fff",
   },
   profileHeaderCard: {
@@ -323,7 +314,7 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: 22,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
     color: "#fff",
     marginBottom: 8,
   },
@@ -337,7 +328,7 @@ const styles = StyleSheet.create({
   },
   roleText: {
     fontSize: 14,
-    fontFamily: "Kanit_500Medium",
+    fontFamily: "NotoSansThai_500Medium",
     color: "#fff",
     marginLeft: 5,
   },
@@ -366,13 +357,13 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 12,
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
     color: "#999",
     marginBottom: 2,
   },
   infoValue: {
     fontSize: 16,
-    fontFamily: "Kanit_500Medium",
+    fontFamily: "NotoSansThai_500Medium",
     color: "#333",
   },
   divider: {
@@ -415,7 +406,7 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     fontSize: 16,
-    fontFamily: "Kanit_500Medium",
+    fontFamily: "NotoSansThai_500Medium",
     color: "#333",
   },
   logoutButton: {
@@ -433,7 +424,7 @@ const styles = StyleSheet.create({
   logoutButtonText: {
     color: "#666",
     fontSize: 18,
-    fontFamily: "Kanit_500Medium",
+    fontFamily: "NotoSansThai_500Medium",
     marginLeft: 10,
   },
 });

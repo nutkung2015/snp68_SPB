@@ -313,7 +313,7 @@ export default function VilageRuleScreen({ navigation }) {
                     ) : (
                         <View style={styles.loadingOverlay}>
                             <ActivityIndicator size="small" color={primaryColor} />
-                            <Text style={{ marginTop: 10, color: '#666', fontFamily: 'Kanit_400Regular' }}>
+                            <Text style={{ marginTop: 10, color: '#666', fontFamily: 'NotoSansThai_400Regular' }}>
                                 กำลังโหลดเอกสาร...
                             </Text>
                         </View>
@@ -391,7 +391,7 @@ export default function VilageRuleScreen({ navigation }) {
                             renderLoading={() => (
                                 <View style={styles.loadingOverlay}>
                                     <ActivityIndicator size="large" color={primaryColor} />
-                                    <Text style={{ marginTop: 10, color: '#666', fontFamily: 'Kanit_400Regular' }}>
+                                    <Text style={{ marginTop: 10, color: '#666', fontFamily: 'NotoSansThai_400Regular' }}>
                                         กำลังโหลดเอกสาร...
                                     </Text>
                                 </View>
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
         marginTop: 16,
         fontSize: 16,
         color: "#666",
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     header: {
         flexDirection: "row",
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: "black",
         marginLeft: 4,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     headerTitleContainer: {
         flex: 1,
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         color: "#000",
         textAlign: "left",
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     centerContainer: {
         flex: 1,
@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
         fontSize: 12,
         textAlign: 'center',
         marginBottom: 10,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     actionButtons: {
         flexDirection: 'row',
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
         borderColor: 'transparent'
     },
     actionButtonText: {
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
         fontSize: 14,
         marginLeft: 8,
         fontWeight: 'bold'
@@ -517,14 +517,14 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         color: "#333",
         textAlign: "center",
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
         marginBottom: 4,
     },
     subtitleText: {
         fontSize: 14,
         color: "#666",
         textAlign: "center",
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     errorText: {
         fontSize: 18,
@@ -532,14 +532,14 @@ const styles = StyleSheet.create({
         color: "#333",
         marginTop: 16,
         textAlign: "center",
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     errorSubtext: {
         fontSize: 14,
         color: "#666",
         marginTop: 8,
         textAlign: "center",
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     button: {
         marginTop: 24,
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "bold",
         color: "white",
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     // Modal Styles
     modalContainer: {
@@ -575,6 +575,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         textAlign: 'center',
-        fontFamily: 'Kanit_600SemiBold',
+        fontFamily: 'NotoSansThai_600SemiBold',
     },
 });

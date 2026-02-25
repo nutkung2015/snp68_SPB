@@ -12,17 +12,10 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import SecurityBottomNavigation from "../../components/SecurityBottomNavigation";
 import { LinearGradient } from "expo-linear-gradient";
-import {
-    useFonts,
-    Kanit_400Regular,
-    Kanit_700Bold,
-} from "@expo-google-fonts/kanit";
+
 
 const SecurityServiceScreen = ({ navigation }) => {
-    const [fontsLoaded] = useFonts({
-        Kanit_400Regular,
-        Kanit_700Bold,
-    });
+    
 
     const services = [
         {
@@ -83,9 +76,7 @@ const SecurityServiceScreen = ({ navigation }) => {
         },
     ];
 
-    if (!fontsLoaded) {
-        return null;
-    }
+    
 
     const renderServiceItem = ({ id, title, icon, colors, onPress }) => (
         <TouchableOpacity
@@ -165,7 +156,7 @@ const styles = StyleSheet.create({
     backButtonText: {
         color: "#000",
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         marginLeft: 4,
     },
     titleContainer: {
@@ -174,7 +165,7 @@ const styles = StyleSheet.create({
     },
     headerTitle: {
         fontSize: 24,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         color: "#000",
     },
     content: {
@@ -211,7 +202,7 @@ const styles = StyleSheet.create({
     },
     serviceText: {
         fontSize: 14,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         color: "#fff",
         textAlign: "center",
     },

@@ -19,22 +19,13 @@ import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { UnitsService } from "../../services";
 import SuccessDialog from "../../components/SuccessDialog";
-import {
-    useFonts,
-    Kanit_400Regular,
-    Kanit_500Medium,
-    Kanit_700Bold,
-} from "@expo-google-fonts/kanit";
+
 
 const { width, height } = Dimensions.get("window");
 const PRIMARY_COLOR = "#2A405E";
 
 const JointByCode = () => {
-    const [fontsLoaded] = useFonts({
-        Kanit_400Regular,
-        Kanit_500Medium,
-        Kanit_700Bold,
-    });
+    
 
     const [invitationCode, setInvitationCode] = useState("");
     const [userData, setUserData] = useState(null);
@@ -182,9 +173,7 @@ const JointByCode = () => {
         }
     };
 
-    if (!fontsLoaded) {
-        return null;
-    }
+    
 
     return (
         <SafeAreaView style={styles.container}>
@@ -305,7 +294,7 @@ const styles = StyleSheet.create({
     backText: {
         marginLeft: 4,
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#000",
     },
     keyboardAvoidingView: {
@@ -318,7 +307,7 @@ const styles = StyleSheet.create({
     },
     pageTitle: {
         fontSize: 24,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         color: PRIMARY_COLOR,
         textAlign: "center",
         marginBottom: 16,
@@ -329,7 +318,7 @@ const styles = StyleSheet.create({
     },
     instructionText: {
         fontSize: 14,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#888",
         textAlign: "center",
         lineHeight: 22,
@@ -345,7 +334,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         paddingHorizontal: 20,
         fontSize: 22,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         color: PRIMARY_COLOR,
         textAlign: "center",
         letterSpacing: 4,
@@ -359,7 +348,7 @@ const styles = StyleSheet.create({
     },
     exampleText: {
         fontSize: 13,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#888",
         marginLeft: 6,
     },
@@ -383,7 +372,7 @@ const styles = StyleSheet.create({
     },
     submitButtonText: {
         fontSize: 18,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
     footerNote: {
@@ -394,7 +383,7 @@ const styles = StyleSheet.create({
     },
     footerNoteText: {
         fontSize: 14,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#888",
         textAlign: "center",
         lineHeight: 22,

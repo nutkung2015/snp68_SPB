@@ -9,12 +9,7 @@ import {
     ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {
-    useFonts,
-    Kanit_400Regular,
-    Kanit_500Medium,
-    Kanit_700Bold,
-} from "@expo-google-fonts/kanit";
+
 
 const { width } = Dimensions.get("window");
 const PRIMARY_COLOR = "#2A405E";
@@ -30,15 +25,9 @@ const SuccessDialog = ({
     icon = "checkmark-circle",
     iconColor = "#4CAF50",
 }) => {
-    const [fontsLoaded] = useFonts({
-        Kanit_400Regular,
-        Kanit_500Medium,
-        Kanit_700Bold,
-    });
+    
 
-    if (!fontsLoaded) {
-        return null;
-    }
+    
 
     return (
         <Modal
@@ -117,14 +106,14 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         color: "#333",
         textAlign: "center",
         marginBottom: 12,
     },
     message: {
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
         textAlign: "center",
         lineHeight: 24,
@@ -145,7 +134,7 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         fontSize: 18,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
     loadingContent: {
@@ -155,7 +144,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 20,
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
     },
 });

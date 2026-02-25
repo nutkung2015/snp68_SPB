@@ -14,20 +14,11 @@ import { useFocusEffect } from "@react-navigation/native";
 import { NotificationService } from "../services";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  useFonts,
-  Kanit_400Regular,
-  Kanit_700Bold,
-  Kanit_600SemiBold,
-  Kanit_500Medium,
-} from "@expo-google-fonts/kanit";
+
 import ProjectCustomizationsService from "../services/projectCustomizationsService";
 
 const GuardHomeScreen = ({ navigation }) => {
-  const [fontsLoaded] = useFonts({
-    Kanit_400Regular,
-    Kanit_700Bold,
-  });
+  
 
   const [userData, setUserData] = useState(null);
   const [secondaryColor, setSecondaryColor] = useState("#155B5B");
@@ -76,9 +67,7 @@ const GuardHomeScreen = ({ navigation }) => {
     }, [])
   );
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -275,7 +264,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 11,
     fontWeight: "bold",
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
     textAlign: "center",
   },
   profileCircle: {
@@ -294,7 +283,7 @@ const styles = StyleSheet.create({
     color: "#205248",
     fontWeight: "bold",
     fontSize: 16,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
   },
   headerRowBottom: {
     flexDirection: "row",
@@ -317,13 +306,13 @@ const styles = StyleSheet.create({
   headerUserName: {
     color: "#fff",
     fontSize: 16,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
     marginBottom: 1,
   },
   headerUserAddress: {
     color: "#fff",
     fontSize: 13.5,
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
   },
   content: {
     flex: 1,
@@ -335,7 +324,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
     color: "#333",
     marginBottom: 15,
   },
@@ -371,7 +360,7 @@ const styles = StyleSheet.create({
   },
   menuCardText: {
     fontSize: 16,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
     color: "#fff",
     textAlign: "center",
   },

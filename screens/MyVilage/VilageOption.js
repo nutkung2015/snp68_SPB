@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "start",
     marginRight: 24,
-    fontFamily: "Kanit_600SemiBold",
+    fontFamily: "NotoSansThai_600SemiBold",
   },
   content: {
     flex: 1,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     color: "#666",
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
   },
   cardGradient: {
     borderRadius: 12,
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginLeft: 16,
     color: "white",
-    fontFamily: "Kanit_600SemiBold",
+    fontFamily: "NotoSansThai_600SemiBold",
   },
   bottomNavigation: {
     flexDirection: "row",

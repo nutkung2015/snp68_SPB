@@ -20,21 +20,12 @@ import * as MediaLibrary from "expo-media-library";
 import ViewShot from "react-native-view-shot";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-    useFonts,
-    Kanit_400Regular,
-    Kanit_500Medium,
-    Kanit_700Bold,
-} from "@expo-google-fonts/kanit";
+
 import ResidentService from "../../services/residentService";
 import ProjectCustomizationsService from "../../services/projectCustomizationsService";
 
 const ResidentManageScreen = ({ navigation }) => {
-    const [fontsLoaded] = useFonts({
-        Kanit_400Regular,
-        Kanit_500Medium,
-        Kanit_700Bold,
-    });
+    
 
     const [residents, setResidents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -321,9 +312,7 @@ const ResidentManageScreen = ({ navigation }) => {
         );
     };
 
-    if (!fontsLoaded) {
-        return null;
-    }
+    
 
     return (
         <SafeAreaView style={styles.container}>
@@ -631,12 +620,12 @@ const styles = StyleSheet.create({
     backText: {
         marginLeft: 4,
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#000",
     },
     pageTitle: {
         fontSize: 28,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         color: "#000",
         paddingHorizontal: 16,
         marginBottom: 16,
@@ -661,17 +650,17 @@ const styles = StyleSheet.create({
     },
     actionButtonText: {
         fontSize: 14,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
     actionButtonSubtext: {
         fontSize: 12,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "rgba(255, 255, 255, 0.8)",
     },
     sectionTitle: {
         fontSize: 16,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#666",
         paddingHorizontal: 16,
         marginBottom: 12,
@@ -721,7 +710,7 @@ const styles = StyleSheet.create({
     },
     viewProfileButtonText: {
         fontSize: 12,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
     avatarPlaceholder: {
@@ -734,12 +723,12 @@ const styles = StyleSheet.create({
     },
     avatarText: {
         fontSize: 16,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         color: "#fff",
     },
     residentName: {
         fontSize: 16,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#333",
         flex: 1,
     },
@@ -758,7 +747,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 12,
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
     },
     errorContainer: {
@@ -769,7 +758,7 @@ const styles = StyleSheet.create({
     },
     errorText: {
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#FF6B6B",
         marginBottom: 16,
         textAlign: "center",
@@ -781,7 +770,7 @@ const styles = StyleSheet.create({
     },
     retryText: {
         fontSize: 16,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
     emptyContainer: {
@@ -792,13 +781,13 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 18,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#999",
         marginTop: 16,
     },
     emptySubtext: {
         fontSize: 14,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#bbb",
         marginTop: 8,
         textAlign: "center",
@@ -827,12 +816,12 @@ const styles = StyleSheet.create({
     },
     modalCancelText: {
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
     },
     modalTitle: {
         fontSize: 18,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         color: "#333",
     },
     modalScrollContent: {
@@ -843,13 +832,13 @@ const styles = StyleSheet.create({
     },
     qrSectionTitle: {
         fontSize: 18,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         textAlign: "center",
         marginBottom: 8,
     },
     qrSubtext: {
         fontSize: 14,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#888",
         textAlign: "center",
     },
@@ -906,7 +895,7 @@ const styles = StyleSheet.create({
     },
     codeText: {
         fontSize: 24,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         textAlign: "center",
         letterSpacing: 4,
     },
@@ -932,7 +921,7 @@ const styles = StyleSheet.create({
     loadingOverlayText: {
         marginTop: 16,
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
     },
     // Resident Detail Modal Styles
@@ -953,12 +942,12 @@ const styles = StyleSheet.create({
     },
     cancelText: {
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#888",
     },
     residentModalTitle: {
         fontSize: 18,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         textAlign: "center",
     },
     residentInfoCard: {
@@ -982,13 +971,13 @@ const styles = StyleSheet.create({
     },
     infoLabel: {
         fontSize: 12,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#888",
         marginBottom: 4,
     },
     infoValue: {
         fontSize: 16,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#333",
     },
     emailRow: {
@@ -1011,7 +1000,7 @@ const styles = StyleSheet.create({
     },
     removeResidentButtonText: {
         fontSize: 18,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     editButton: {
         flex: 1,
@@ -1022,7 +1011,7 @@ const styles = StyleSheet.create({
     },
     editButtonText: {
         fontSize: 18,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
     // Confirmation Dialog Styles
@@ -1053,20 +1042,20 @@ const styles = StyleSheet.create({
     },
     confirmTitle: {
         fontSize: 20,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         color: "#333",
         marginBottom: 12,
     },
     confirmMessage: {
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
         textAlign: "center",
         lineHeight: 24,
         marginBottom: 24,
     },
     confirmHighlight: {
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#333",
     },
     confirmButtons: {
@@ -1086,7 +1075,7 @@ const styles = StyleSheet.create({
     },
     confirmCancelText: {
         fontSize: 16,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#666",
     },
     confirmRemoveButton: {
@@ -1099,7 +1088,7 @@ const styles = StyleSheet.create({
     },
     confirmRemoveText: {
         fontSize: 16,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
 });

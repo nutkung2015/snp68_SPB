@@ -16,23 +16,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { UnitsService } from "../../services";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import SuccessDialog from "../../components/SuccessDialog";
-import {
-    useFonts,
-    Kanit_400Regular,
-    Kanit_500Medium,
-    Kanit_700Bold,
-} from "@expo-google-fonts/kanit";
+
 
 const { width, height } = Dimensions.get("window");
 const PRIMARY_COLOR = "#2A405E";
 const SCAN_AREA_SIZE = width * 0.7;
 
 const JointByQRcode = () => {
-    const [fontsLoaded] = useFonts({
-        Kanit_400Regular,
-        Kanit_500Medium,
-        Kanit_700Bold,
-    });
+    
 
     const [permission, requestPermission] = useCameraPermissions();
     const [scanned, setScanned] = useState(false);
@@ -190,9 +181,7 @@ const JointByQRcode = () => {
         }
     };
 
-    if (!fontsLoaded) {
-        return null;
-    }
+    
 
     // Permission not determined yet
     if (!permission) {
@@ -349,7 +338,7 @@ const styles = StyleSheet.create({
     backText: {
         marginLeft: 4,
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#000",
     },
     centerContainer: {
@@ -362,18 +351,18 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 16,
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
     },
     permissionTitle: {
         marginTop: 20,
         fontSize: 20,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         color: "#333",
     },
     permissionText: {
         fontSize: 14,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#888",
         textAlign: "center",
     },
@@ -386,7 +375,7 @@ const styles = StyleSheet.create({
     },
     permissionButtonText: {
         fontSize: 16,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
     camera: {
@@ -416,7 +405,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         color: "#fff",
         textShadowColor: "rgba(0, 0, 0, 0.5)",
         textShadowOffset: { width: 0, height: 1 },
@@ -424,7 +413,7 @@ const styles = StyleSheet.create({
     },
     subtitle: {
         fontSize: 14,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#fff",
         marginTop: 4,
         textShadowColor: "rgba(0, 0, 0, 0.5)",
@@ -485,7 +474,7 @@ const styles = StyleSheet.create({
     scanningText: {
         marginTop: 12,
         fontSize: 16,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
     bottomContainer: {
@@ -509,7 +498,7 @@ const styles = StyleSheet.create({
     },
     instructionText: {
         fontSize: 14,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: PRIMARY_COLOR,
     },
     rescanButton: {
@@ -524,7 +513,7 @@ const styles = StyleSheet.create({
     },
     rescanButtonText: {
         fontSize: 14,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
 });

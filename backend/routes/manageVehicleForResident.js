@@ -6,6 +6,7 @@ const {
     updateVehicle,
     removeVehicle,
     getVehicleById,
+    getVehicleHistory,
 } = require("../controllers/manageVehicleForResidentController");
 const protect = require("../middleware/authMiddleware");
 
@@ -22,6 +23,11 @@ router.get("/:unitId", getUnitVehicles);
 // @route   POST /api/resident-vehicles/:unitId
 // @desc    Add a vehicle to a unit
 router.post("/:unitId", addVehicle);
+
+// @route   GET /api/resident-vehicles/:unitId/history
+// @desc    Get vehicle history of a unit
+// ⚠️ Must be placed BEFORE /:unitId/:vehicleId to avoid "history" being matched as vehicleId
+router.get("/:unitId/history", getVehicleHistory);
 
 // @route   GET /api/resident-vehicles/:unitId/:vehicleId
 // @desc    Get a single vehicle by ID

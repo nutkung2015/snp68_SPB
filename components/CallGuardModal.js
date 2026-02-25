@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         color: '#fff',
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
     },
     closeButton: {
         width: 36,
@@ -336,21 +336,21 @@ const styles = StyleSheet.create({
         marginTop: 12,
         fontSize: 14,
         color: '#6B7280',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     errorText: {
         marginTop: 12,
         fontSize: 14,
         color: '#EF4444',
         textAlign: 'center',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     noDataText: {
         marginTop: 12,
         fontSize: 14,
         color: '#6B7280',
         textAlign: 'center',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     retryButton: {
         marginTop: 16,
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 14,
         fontWeight: '600',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     guardInfoCard: {
         flexDirection: 'row',
@@ -387,13 +387,13 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: '#1F2937',
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
     },
     guardZoneName: {
         fontSize: 14,
         color: '#6B7280',
         marginTop: 2,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     unitInfoRow: {
         flexDirection: 'row',
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#6B7280',
         marginLeft: 6,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     phoneButtonsContainer: {
         gap: 12,
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     },
     phoneLabelPrimary: {
         color: 'rgba(255, 255, 255, 0.8)',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     phoneNumber: {
         fontSize: 18,
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     },
     phoneNumberPrimary: {
         color: '#fff',
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
     },
     noPhoneContainer: {
         alignItems: 'center',
@@ -451,13 +451,13 @@ const styles = StyleSheet.create({
         marginTop: 8,
         fontSize: 14,
         color: '#6B7280',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     noPhoneSubText: {
         fontSize: 12,
         color: '#9CA3AF',
         marginTop: 4,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     boothInfoContainer: {
         flexDirection: 'row',
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#6B7280',
         marginLeft: 8,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     cancelButton: {
         padding: 16,
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
     cancelButtonText: {
         fontSize: 16,
         color: '#6B7280',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
 });
 

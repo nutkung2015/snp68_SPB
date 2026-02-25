@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#666',
         marginBottom: 20,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     retryButton: {
         paddingHorizontal: 20,
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     },
     retryButtonText: {
         color: '#fff',
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     backButtonError: {
         marginTop: 20,
@@ -307,14 +307,14 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: "black",
         marginLeft: 4,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     headerTitle: {
         fontSize: 24,
         fontWeight: "bold",
         color: "#000",
         textAlign: "left",
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     content: {
         flex: 1,
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     },
     statusText: {
         fontSize: 16,
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
         marginLeft: 8,
     },
     card: {
@@ -364,13 +364,13 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 12,
         color: '#888',
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         marginBottom: 2,
     },
     value: {
         fontSize: 16,
         color: '#333',
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     divider: {
         height: 1,
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 16,
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
         color: "#333",
         marginBottom: 12,
     },
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: '#555',
         lineHeight: 24,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     imageScroll: {
         marginTop: 8,
@@ -411,12 +411,12 @@ const styles = StyleSheet.create({
     infoLabel: {
         fontSize: 14,
         color: '#666',
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     infoValue: {
         fontSize: 14,
         color: '#333',
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     priorityBadge: {
         paddingHorizontal: 12,
@@ -425,17 +425,17 @@ const styles = StyleSheet.create({
     },
     priorityText: {
         fontSize: 12,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     costValue: {
         fontSize: 16,
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
         color: '#333',
     },
     notesText: {
         fontSize: 14,
         color: '#666',
         fontStyle: 'italic',
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
 });

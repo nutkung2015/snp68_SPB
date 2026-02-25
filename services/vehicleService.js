@@ -126,7 +126,23 @@ const VehicleService = {
             console.error("VehicleService.setActiveVehicle error:", error);
             throw error;
         }
-    }
+    },
+
+    /**
+     * Get vehicle history of a unit
+     * @param {string} unitId - UUID ของ Unit
+     * @returns {Promise<Object>} - { status, data: Vehicle[], count }
+     */
+    getVehicleHistory: async (unitId) => {
+        try {
+            const token = await getToken();
+            const response = await apiService.get(`/api/resident-vehicles/${unitId}/history`, token);
+            return response;
+        } catch (error) {
+            console.error("VehicleService.getVehicleHistory error:", error);
+            throw error;
+        }
+    },
 };
 
 export default VehicleService;

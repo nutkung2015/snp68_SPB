@@ -19,11 +19,11 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Font from "expo-font";
 import {
   useFonts,
-  Kanit_400Regular,
-  Kanit_500Medium,
-  Kanit_600SemiBold,
-  Kanit_700Bold,
-} from "@expo-google-fonts/kanit";
+  NotoSansThai_400Regular,
+  NotoSansThai_500Medium,
+  NotoSansThai_600SemiBold,
+  NotoSansThai_700Bold,
+} from "@expo-google-fonts/noto-sans-thai";
 import * as SplashScreen from "expo-splash-screen";
 import {
   setLogoutCallback,
@@ -84,12 +84,12 @@ import NotificationScreen from "./screens/NotificationScreen";
 // เพิ่ม defaultProps สำหรับ Text component
 Text.defaultProps = {
   ...Text.defaultProps,
-  style: { fontFamily: "Kanit_400Regular" },
+  style: { fontFamily: "NotoSansThai_400Regular" },
 };
 
 TextInput.defaultProps = {
   ...TextInput.defaultProps,
-  style: { fontFamily: "Kanit_400Regular" },
+  style: { fontFamily: "NotoSansThai_400Regular" },
 };
 
 const Stack = createNativeStackNavigator();
@@ -199,10 +199,10 @@ export default function App() {
 
   // โหลด fonts
   let [fontsLoaded] = useFonts({
-    Kanit_400Regular,
-    Kanit_500Medium,
-    Kanit_600SemiBold,
-    Kanit_700Bold,
+    NotoSansThai_400Regular,
+    NotoSansThai_500Medium,
+    NotoSansThai_600SemiBold,
+    NotoSansThai_700Bold,
   });
 
   if (!fontsLoaded) {

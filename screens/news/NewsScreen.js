@@ -15,18 +15,11 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import BottomNavigation from '../../components/BottomNavigation';
-import {
-    useFonts,
-    Kanit_400Regular,
-    Kanit_700Bold,
-} from '@expo-google-fonts/kanit';
+
 import { AnnouncementsService } from '../../services';
 
 const NewsScreen = ({ navigation }) => {
-    const [fontsLoaded] = useFonts({
-        Kanit_400Regular,
-        Kanit_700Bold,
-    });
+    
 
     const [announcements, setAnnouncements] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -434,13 +427,13 @@ const styles = StyleSheet.create({
     },
     backText: {
         fontSize: 16,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         marginLeft: 4,
         color: '#333',
     },
     headerTitle: {
         fontSize: 22,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
         color: '#333',
     },
     filterContainer: {
@@ -463,7 +456,7 @@ const styles = StyleSheet.create({
     },
     filterText: {
         fontSize: 14,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#333',
     },
     content: {
@@ -475,7 +468,7 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 16,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
         marginBottom: 12,
         color: '#333',
     },
@@ -531,7 +524,7 @@ const styles = StyleSheet.create({
     },
     typeBadgeText: {
         fontSize: 12,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
         color: '#fff',
     },
     newsContent: {
@@ -539,7 +532,7 @@ const styles = StyleSheet.create({
     },
     newsTitle: {
         fontSize: 16,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
         color: '#1F2937',
         marginBottom: 8,
         lineHeight: 24,
@@ -556,7 +549,7 @@ const styles = StyleSheet.create({
     },
     newsDate: {
         fontSize: 13,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#6B7280',
     },
     newsStats: {
@@ -579,7 +572,7 @@ const styles = StyleSheet.create({
     },
     statText: {
         fontSize: 13,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#6B7280',
     },
     loadingContainer: {
@@ -591,7 +584,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 12,
         fontSize: 14,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#666',
     },
     errorContainer: {
@@ -602,7 +595,7 @@ const styles = StyleSheet.create({
     },
     errorText: {
         fontSize: 14,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#ff6b6b',
         marginBottom: 16,
         textAlign: 'center',
@@ -615,7 +608,7 @@ const styles = StyleSheet.create({
     },
     retryText: {
         fontSize: 14,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#333',
     },
     emptyContainer: {
@@ -624,7 +617,7 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 14,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#666',
     },
     dropdownContainer: {
@@ -659,12 +652,12 @@ const styles = StyleSheet.create({
     },
     dropdownOptionText: {
         fontSize: 14,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#333',
     },
     dropdownOptionTextSelected: {
         color: '#007AFF',
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
     },
 });
 

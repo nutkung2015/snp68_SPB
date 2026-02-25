@@ -409,9 +409,9 @@ const styles = StyleSheet.create({
     headerTitle: {
         flex: 1,
         fontSize: 18,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
         color: '#1F2937',
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
     },
     markAllButton: {
         paddingHorizontal: 12,
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     markAllText: {
         fontSize: 14,
         color: '#3B82F6',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     unreadBanner: {
         flexDirection: 'row',
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
         marginLeft: 8,
         fontSize: 14,
         color: '#3B82F6',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     loadingContainer: {
         flex: 1,
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
         marginTop: 12,
         fontSize: 14,
         color: '#6B7280',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     listContent: {
         paddingVertical: 8,
@@ -493,30 +493,30 @@ const styles = StyleSheet.create({
     },
     typeLabel: {
         fontSize: 12,
-        fontFamily: 'Kanit_600SemiBold',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_600SemiBold',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     timeText: {
         fontSize: 11,
         color: '#9CA3AF',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     titleText: {
         fontSize: 15,
         color: '#374151',
         marginBottom: 2,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     unreadText: {
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
         color: '#1F2937',
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
     },
     bodyText: {
         fontSize: 13,
         color: '#6B7280',
         lineHeight: 18,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     unreadDot: {
         width: 8,
@@ -534,16 +534,16 @@ const styles = StyleSheet.create({
     emptyTitle: {
         marginTop: 16,
         fontSize: 18,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
         color: '#6B7280',
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
     },
     emptySubtitle: {
         marginTop: 8,
         fontSize: 14,
         color: '#9CA3AF',
         textAlign: 'center',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     footerLoader: {
         paddingVertical: 20,

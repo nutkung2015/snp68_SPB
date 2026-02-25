@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: "white",
-    fontFamily: "Kanit_600SemiBold",
+    fontFamily: "NotoSansThai_600SemiBold",
     fontSize: 18,
     marginBottom: 4,
   },

@@ -15,20 +15,13 @@ import {
     Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import {
-    useFonts,
-    Kanit_400Regular,
-    Kanit_700Bold,
-} from '@expo-google-fonts/kanit';
+
 import { AnnouncementsService } from '../../services';
 
 const { width, height } = Dimensions.get('window');
 
 const NewsDetailScreen = ({ navigation, route }) => {
-    const [fontsLoaded] = useFonts({
-        Kanit_400Regular,
-        Kanit_700Bold,
-    });
+    
 
     const { announcementId, isGlobal = false } = route.params;
     const [announcement, setAnnouncement] = useState(null);
@@ -120,9 +113,7 @@ const NewsDetailScreen = ({ navigation, route }) => {
         navigation.goBack();
     };
 
-    if (!fontsLoaded) {
-        return null;
-    }
+    
 
     return (
         <View style={styles.container}>
@@ -240,7 +231,7 @@ const styles = StyleSheet.create({
     },
     headerTitle: {
         fontSize: 24,
-        fontFamily: 'Kanit_600SemiBold',
+        fontFamily: 'NotoSansThai_600SemiBold',
         color: '#000',
         fontWeight: 'bold',
         textAlign: 'left',
@@ -253,7 +244,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: 'black',
         marginLeft: 4,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     content: {
         flex: 1,
@@ -265,7 +256,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 22,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
         marginBottom: 16,
         color: '#333',
     },
@@ -274,7 +265,7 @@ const styles = StyleSheet.create({
         lineHeight: 24,
         color: '#333',
         marginBottom: 24,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     imageContainer: {
         width: '100%',
@@ -320,7 +311,7 @@ const styles = StyleSheet.create({
     },
     globalAnnouncementText: {
         fontSize: 14,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
         color: '#fff',
     },
     sourceInfo: {
@@ -328,14 +319,14 @@ const styles = StyleSheet.create({
     },
     sourceName: {
         fontSize: 16,
-        fontFamily: 'Kanit_600SemiBold',
+        fontFamily: 'NotoSansThai_600SemiBold',
         color: '#333',
     },
     sourceDate: {
         fontSize: 12,
         color: '#666',
         marginTop: 2,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     separator: {
         height: 1,
@@ -351,7 +342,7 @@ const styles = StyleSheet.create({
         marginTop: 12,
         fontSize: 16,
         color: '#666',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     errorContainer: {
         flex: 1,
@@ -364,7 +355,7 @@ const styles = StyleSheet.create({
         color: '#e74c3c',
         marginBottom: 16,
         textAlign: 'center',
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     retryButton: {
         backgroundColor: '#2A405E',
@@ -375,7 +366,7 @@ const styles = StyleSheet.create({
     retryText: {
         color: '#fff',
         fontSize: 16,
-        fontFamily: 'Kanit_500Medium',
+        fontFamily: 'NotoSansThai_500Medium',
     },
     // Background Content Styles (NewsScreen)
     backgroundContent: {
@@ -396,12 +387,12 @@ const styles = StyleSheet.create({
     },
     backgroundBackText: {
         fontSize: 16,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         marginLeft: 4,
     },
     backgroundTitle: {
         fontSize: 20,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
         flex: 1,
         textAlign: 'center',
     },
@@ -428,7 +419,7 @@ const styles = StyleSheet.create({
     },
     backgroundFilterText: {
         fontSize: 14,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#333',
     },
     backgroundContentPlaceholder: {
@@ -439,7 +430,7 @@ const styles = StyleSheet.create({
     },
     backgroundPlaceholderText: {
         fontSize: 16,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#666',
     },
     // Modal Styles
@@ -470,7 +461,7 @@ const styles = StyleSheet.create({
     },
     backText: {
         fontSize: 16,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         marginLeft: 4,
         color: '#000',
     },
@@ -497,13 +488,13 @@ const styles = StyleSheet.create({
     },
     sourceName: {
         fontSize: 16,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
         color: '#333',
         marginBottom: 2,
     },
     sourceDate: {
         fontSize: 14,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#666',
     },
     separator: {
@@ -513,14 +504,14 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 20,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
         color: '#333',
         marginBottom: 16,
         lineHeight: 28,
     },
     modalContentText: {
         fontSize: 16,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#333',
         lineHeight: 24,
         marginBottom: 20,
@@ -545,7 +536,7 @@ const styles = StyleSheet.create({
     },
     acknowledgeButtonText: {
         fontSize: 16,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
         color: '#fff',
     },
     loadingContainer: {
@@ -557,7 +548,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 12,
         fontSize: 14,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#666',
     },
     errorContainer: {
@@ -568,7 +559,7 @@ const styles = StyleSheet.create({
     },
     errorText: {
         fontSize: 14,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#ff6b6b',
         marginBottom: 16,
         textAlign: 'center',
@@ -581,7 +572,7 @@ const styles = StyleSheet.create({
     },
     retryText: {
         fontSize: 14,
-        fontFamily: 'Kanit_400Regular',
+        fontFamily: 'NotoSansThai_400Regular',
         color: '#333',
     },
 });

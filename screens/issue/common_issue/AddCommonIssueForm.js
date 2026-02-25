@@ -468,14 +468,14 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: "black",
         marginLeft: 4,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     headerTitle: {
         fontSize: 24,
         fontWeight: "bold",
         color: "#000",
         textAlign: "left",
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     formContainer: {
         flex: 1,
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
         color: "#333",
         marginBottom: 8,
         fontWeight: "500",
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     inputContainer: {
         flexDirection: "row",
@@ -505,14 +505,14 @@ const styles = StyleSheet.create({
         height: 48,
         color: "#333",
         paddingVertical: 12,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     placeholderContainer: {
         backgroundColor: "#ffffffff",
     },
     placeholderText: {
         color: "#999",
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     textAreaContainer: {
         height: 120,
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
         color: "#205248",
         marginLeft: 8,
         fontWeight: "500",
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     imagePreviewScroll: {
         marginTop: 10,
@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 16,
         fontWeight: "bold",
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     modalOverlay: {
         flex: 1,
@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 18,
         fontWeight: "bold",
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     typeItem: {
         flexDirection: "row",
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     typeText: {
         fontSize: 16,
         color: "#333",
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     // New styles for read-only text fields
     inputGroup_normalText: {
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
         color: "#333",
         marginBottom: 8,
         fontWeight: "500",
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     valueText_normalText: {
         fontSize: 16,
@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
         backgroundColor: "#f8f9fa",
         borderRadius: 8,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     gap100px: {
         width: "100px",
@@ -671,14 +671,14 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         marginTop: 15,
         marginBottom: 10,
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     successMessage: {
         fontSize: 16,
         color: "#666",
         textAlign: "center",
         marginBottom: 20,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     successButton: {
         paddingHorizontal: 30,
@@ -691,6 +691,6 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 16,
         fontWeight: "bold",
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
     },
 });

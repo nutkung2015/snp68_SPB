@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     backButtonText: {
         fontSize: 16,
         marginLeft: 4,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     headerTitle: {
         flex: 1,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         textAlign: "start",
         marginRight: 24,
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     content: {
         flex: 1,
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#888',
         marginLeft: 8,
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     issueCard: {
         flexDirection: "row",
@@ -291,19 +291,19 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: "#333",
         marginBottom: 2,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     issueDescription: {
         fontSize: 16,
         color: "#666",
         marginBottom: 2,
         maxWidth: 200,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     issueDate: {
         fontSize: 14,
         color: "#888",
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     issueRight: {
         flexDirection: "row",
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     issueStatus: {
         fontSize: 14,
         marginRight: 8,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     fab: {
         position: 'absolute',
@@ -335,20 +335,20 @@ const styles = StyleSheet.create({
         marginTop: 20,
         fontSize: 16,
         color: '#666',
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     noIssuesText: {
         textAlign: 'center',
         marginTop: 20,
         fontSize: 16,
         color: '#666',
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     errorText: {
         textAlign: 'center',
         marginTop: 20,
         fontSize: 16,
         color: 'red',
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     }
 });

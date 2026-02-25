@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: '#333',
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     modalDescription: {
         fontSize: 14,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         textAlign: 'center',
         paddingBottom: 10,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     closeButton: {
         padding: 5,
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     typeItem: {
         width: '48%',
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         padding: 12,
         marginBottom: 12,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     typeIconContainer: {
         width: 36,
@@ -114,12 +114,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     typeName: {
         fontSize: 14,
         color: '#333',
         flex: 1,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
 });

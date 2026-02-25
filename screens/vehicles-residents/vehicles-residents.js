@@ -6,6 +6,7 @@ import {
     SafeAreaView,
     TouchableOpacity,
     ScrollView,
+    FlatList,
     ActivityIndicator,
     Alert,
     Platform,
@@ -16,21 +17,12 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-    useFonts,
-    Kanit_400Regular,
-    Kanit_500Medium,
-    Kanit_700Bold,
-} from "@expo-google-fonts/kanit";
+
 import VehicleService from "../../services/vehicleService";
 import ProjectCustomizationsService from "../../services/projectCustomizationsService";
 
 const VehiclesResidentsScreen = ({ navigation, route }) => {
-    const [fontsLoaded] = useFonts({
-        Kanit_400Regular,
-        Kanit_500Medium,
-        Kanit_700Bold,
-    });
+
 
     // States
     const [vehicles, setVehicles] = useState([]);
@@ -50,6 +42,11 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
         color: "",
         is_active: false,
     });
+
+    // History Modal States
+    const [historyModalVisible, setHistoryModalVisible] = useState(false);
+    const [historyData, setHistoryData] = useState([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
 
     // Fetch project customizations
     const fetchProjectCustomizations = async (projectId) => {
@@ -198,6 +195,31 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
         );
     };
 
+    // Fetch vehicle history
+    const fetchVehicleHistory = async () => {
+        if (!unitId) return;
+        try {
+            setHistoryLoading(true);
+            const response = await VehicleService.getVehicleHistory(unitId);
+            if (response && response.status === "success") {
+                setHistoryData(response.data || []);
+            } else {
+                setHistoryData([]);
+            }
+        } catch (err) {
+            console.error("Error fetching vehicle history:", err);
+            Alert.alert("ผิดพลาด", "ไม่สามารถโหลดประวัติรถได้");
+        } finally {
+            setHistoryLoading(false);
+        }
+    };
+
+    // Open history modal
+    const openHistoryModal = () => {
+        setHistoryModalVisible(true);
+        fetchVehicleHistory();
+    };
+
     // Render vehicle item
     const renderVehicleItem = (vehicle, index) => {
         return (
@@ -255,9 +277,7 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
         );
     };
 
-    if (!fontsLoaded) {
-        return null;
-    }
+
 
     return (
         <SafeAreaView style={styles.container}>
@@ -290,7 +310,7 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
 
                 <TouchableOpacity
                     style={[styles.actionButton, { backgroundColor: primaryColor }]}
-                    onPress={() => Alert.alert("แจ้งเตือน", "ฟีเจอร์นี้กำลังพัฒนา")}
+                    onPress={openHistoryModal}
                 >
                     <Ionicons name="time" size={24} color="#fff" />
                     <View style={styles.actionTextContainer}>
@@ -484,6 +504,87 @@ const VehiclesResidentsScreen = ({ navigation, route }) => {
                     </View>
                 </KeyboardAvoidingView>
             </Modal>
+
+            {/* History Modal */}
+            <Modal
+                visible={historyModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setHistoryModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContainer, { maxHeight: "85%" }]}>
+                        {/* Modal Header */}
+                        <View style={styles.modalHeader}>
+                            <TouchableOpacity onPress={() => setHistoryModalVisible(false)}>
+                                <Text style={[styles.modalCancelText, { color: primaryColor }]}>ปิด</Text>
+                            </TouchableOpacity>
+                            <Text style={styles.modalTitle}>ประวัติการเพิ่มรถ</Text>
+                            <View style={{ width: 50 }} />
+                        </View>
+
+                        {/* History Content */}
+                        {historyLoading ? (
+                            <View style={styles.historyLoadingContainer}>
+                                <ActivityIndicator size="large" color={primaryColor} />
+                                <Text style={styles.historyLoadingText}>กำลังโหลดประวัติ...</Text>
+                            </View>
+                        ) : historyData.length === 0 ? (
+                            <View style={styles.historyEmptyContainer}>
+                                <Ionicons name="car-outline" size={50} color="#ccc" />
+                                <Text style={styles.historyEmptyText}>ยังไม่มีประวัติรถ</Text>
+                            </View>
+                        ) : (
+                            <FlatList
+                                data={historyData}
+                                keyExtractor={(item) => item.id}
+                                contentContainerStyle={{ padding: 16 }}
+                                renderItem={({ item, index }) => (
+                                    <View style={styles.historyItem}>
+                                        {/* Timeline dot */}
+                                        <View style={styles.historyTimeline}>
+                                            <View style={[styles.historyDot, { backgroundColor: item.is_active ? primaryColor : "#ccc" }]} />
+                                            {index < historyData.length - 1 && <View style={styles.historyLine} />}
+                                        </View>
+                                        {/* Card */}
+                                        <View style={[styles.historyCard, item.is_active && { borderLeftColor: primaryColor, borderLeftWidth: 3 }]}>
+                                            <View style={styles.historyCardHeader}>
+                                                <Ionicons
+                                                    name={item.type === 'motorcycle' ? 'bicycle' : 'car'}
+                                                    size={20}
+                                                    color={primaryColor}
+                                                />
+                                                <Text style={styles.historyPlateText}>{item.plate_number}</Text>
+                                                <View style={[styles.historyTypeBadge, { backgroundColor: item.type === 'motorcycle' ? '#FF9800' : primaryColor }]}>
+                                                    <Text style={styles.historyTypeBadgeText}>
+                                                        {item.type === 'motorcycle' ? 'มอไซค์' : 'รถยนต์'}
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                            <View style={styles.historyCardBody}>
+                                                {item.brand && <Text style={styles.historyDetailText}>ยี่ห้อ: {item.brand}</Text>}
+                                                {item.color && <Text style={styles.historyDetailText}>สี: {item.color}</Text>}
+                                                {item.province && <Text style={styles.historyDetailText}>จังหวัด: {item.province}</Text>}
+                                            </View>
+                                            <View style={styles.historyCardFooter}>
+                                                <Ionicons name="calendar-outline" size={14} color="#999" />
+                                                <Text style={styles.historyDateText}>
+                                                    เพิ่มเมื่อ: {new Date(item.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                </Text>
+                                                {item.is_active && (
+                                                    <View style={[styles.historyActiveBadge, { backgroundColor: primaryColor + "20" }]}>
+                                                        <Text style={[styles.historyActiveText, { color: primaryColor }]}>ใช้งานอยู่</Text>
+                                                    </View>
+                                                )}
+                                            </View>
+                                        </View>
+                                    </View>
+                                )}
+                            />
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -508,12 +609,12 @@ const styles = StyleSheet.create({
     backText: {
         marginLeft: 4,
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#000",
     },
     pageTitle: {
         fontSize: 28,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         color: "#000",
         paddingHorizontal: 16,
         marginBottom: 16,
@@ -539,17 +640,17 @@ const styles = StyleSheet.create({
     },
     actionButtonText: {
         fontSize: 14,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
     actionButtonSubtext: {
         fontSize: 12,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "rgba(255, 255, 255, 0.8)",
     },
     sectionTitle: {
         fontSize: 16,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#666",
         paddingHorizontal: 16,
         marginBottom: 12,
@@ -599,7 +700,7 @@ const styles = StyleSheet.create({
     },
     vehiclePlate: {
         fontSize: 16,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#333",
     },
     vehiclePlateRow: {
@@ -614,24 +715,24 @@ const styles = StyleSheet.create({
     },
     vehicleTypeBadgeText: {
         fontSize: 10,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
     vehicleProvince: {
         fontSize: 13,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
         marginTop: 2,
     },
     vehicleBrand: {
         fontSize: 13,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
         marginTop: 2,
     },
     vehicleColor: {
         fontSize: 12,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#999",
         marginTop: 2,
     },
@@ -640,7 +741,7 @@ const styles = StyleSheet.create({
     },
     toggleLabel: {
         fontSize: 12,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
         marginBottom: 4,
     },
@@ -652,7 +753,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 12,
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
     },
     errorContainer: {
@@ -663,7 +764,7 @@ const styles = StyleSheet.create({
     },
     errorText: {
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#FF6B6B",
         marginBottom: 16,
         textAlign: "center",
@@ -675,7 +776,7 @@ const styles = StyleSheet.create({
     },
     retryText: {
         fontSize: 16,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
     emptyContainer: {
@@ -686,13 +787,13 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 18,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#999",
         marginTop: 16,
     },
     emptySubtext: {
         fontSize: 14,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#bbb",
         marginTop: 8,
         textAlign: "center",
@@ -720,12 +821,12 @@ const styles = StyleSheet.create({
     },
     modalCancelText: {
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
     },
     modalTitle: {
         fontSize: 18,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#333",
     },
     modalContent: {
@@ -733,7 +834,7 @@ const styles = StyleSheet.create({
     },
     inputLabel: {
         fontSize: 14,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#333",
         marginBottom: 8,
         marginTop: 16,
@@ -745,7 +846,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         backgroundColor: "#fafafa",
     },
     activeRow: {
@@ -773,7 +874,7 @@ const styles = StyleSheet.create({
     },
     typeOptionText: {
         fontSize: 14,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#666",
     },
     submitButton: {
@@ -784,8 +885,119 @@ const styles = StyleSheet.create({
     },
     submitButtonText: {
         fontSize: 16,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
+    },
+    // History Modal Styles
+    historyLoadingContainer: {
+        padding: 40,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    historyLoadingText: {
+        marginTop: 12,
+        fontSize: 14,
+        fontFamily: "NotoSansThai_400Regular",
+        color: "#666",
+    },
+    historyEmptyContainer: {
+        padding: 40,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    historyEmptyText: {
+        marginTop: 12,
+        fontSize: 16,
+        fontFamily: "NotoSansThai_400Regular",
+        color: "#999",
+    },
+    historyItem: {
+        flexDirection: "row",
+        marginBottom: 4,
+    },
+    historyTimeline: {
+        alignItems: "center",
+        width: 30,
+        paddingTop: 6,
+    },
+    historyDot: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+    },
+    historyLine: {
+        width: 2,
+        flex: 1,
+        backgroundColor: "#E0E0E0",
+        marginTop: 4,
+    },
+    historyCard: {
+        flex: 1,
+        backgroundColor: "#fff",
+        borderRadius: 12,
+        padding: 14,
+        marginBottom: 10,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 1,
+        borderWidth: 1,
+        borderColor: "#f0f0f0",
+    },
+    historyCardHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        marginBottom: 8,
+    },
+    historyPlateText: {
+        fontSize: 16,
+        fontFamily: "NotoSansThai_600SemiBold",
+        color: "#333",
+        flex: 1,
+    },
+    historyTypeBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 10,
+    },
+    historyTypeBadgeText: {
+        fontSize: 10,
+        fontFamily: "NotoSansThai_500Medium",
+        color: "#fff",
+    },
+    historyCardBody: {
+        marginBottom: 8,
+    },
+    historyDetailText: {
+        fontSize: 13,
+        fontFamily: "NotoSansThai_400Regular",
+        color: "#666",
+        marginTop: 2,
+    },
+    historyCardFooter: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        borderTopWidth: 1,
+        borderTopColor: "#f5f5f5",
+        paddingTop: 8,
+    },
+    historyDateText: {
+        fontSize: 12,
+        fontFamily: "NotoSansThai_400Regular",
+        color: "#999",
+        flex: 1,
+    },
+    historyActiveBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 8,
+    },
+    historyActiveText: {
+        fontSize: 11,
+        fontFamily: "NotoSansThai_500Medium",
     },
 });
 

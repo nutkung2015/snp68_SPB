@@ -14,22 +14,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { logout } from "../../services/authService";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  useFonts,
-  Kanit_400Regular,
-  Kanit_500Medium,
-  Kanit_700Bold,
-} from "@expo-google-fonts/kanit";
+
 
 const { width, height } = Dimensions.get("window");
 const PRIMARY_COLOR = "#2A405E";
 
 const JoinUnitScreen = () => {
-  const [fontsLoaded] = useFonts({
-    Kanit_400Regular,
-    Kanit_500Medium,
-    Kanit_700Bold,
-  });
+  
 
   const [userData, setUserData] = useState(null);
   const navigation = useNavigation();
@@ -65,9 +56,7 @@ const JoinUnitScreen = () => {
     navigation.navigate("JointByCode");
   };
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -188,7 +177,7 @@ const styles = StyleSheet.create({
   },
   profileText: {
     fontSize: 16,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
     color: PRIMARY_COLOR,
   },
   headerTextContainer: {
@@ -198,13 +187,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
     color: "#fff",
     textAlign: "center",
   },
   headerSubtitle: {
     fontSize: 16,
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
     color: "#fff",
     textAlign: "center",
     marginTop: 4,
@@ -217,14 +206,14 @@ const styles = StyleSheet.create({
   },
   instructionTitle: {
     fontSize: 20,
-    fontFamily: "Kanit_700Bold",
+    fontFamily: "NotoSansThai_700Bold",
     color: PRIMARY_COLOR,
     marginBottom: 8,
     textAlign: "center",
   },
   instructionSubtitle: {
     fontSize: 14,
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
     color: "#888",
     marginBottom: 32,
     textAlign: "center",
@@ -245,7 +234,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     fontSize: 18,
-    fontFamily: "Kanit_500Medium",
+    fontFamily: "NotoSansThai_500Medium",
     color: "#fff",
   },
   secondaryButton: {
@@ -260,7 +249,7 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     fontSize: 18,
-    fontFamily: "Kanit_500Medium",
+    fontFamily: "NotoSansThai_500Medium",
     color: PRIMARY_COLOR,
   },
   footerContainer: {
@@ -269,7 +258,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
     color: "#888",
     textAlign: "center",
     lineHeight: 22,
@@ -280,7 +269,7 @@ const styles = StyleSheet.create({
   },
   profileLinkText: {
     fontSize: 16,
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
     color: "#999",
     textDecorationLine: "underline",
   },

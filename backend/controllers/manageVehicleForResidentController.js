@@ -360,6 +360,51 @@ exports.getVehicleById = async (req, res) => {
     }
 };
 
+// @desc    Get vehicle history of a unit (all vehicles sorted by created_at DESC)
+// @route   GET /api/resident-vehicles/:unitId/history
+// @access  Private (Unit members or Project juristic)
+exports.getVehicleHistory = async (req, res) => {
+    try {
+        const { unitId } = req.params;
+        const user_id = req.user.id;
+
+        // Check if user has access to this unit
+        const hasAccess = await checkUnitAccess(user_id, unitId);
+        if (!hasAccess.allowed) {
+            return res.status(hasAccess.status).json({ message: hasAccess.message });
+        }
+
+        // Get all vehicles history of the unit, ordered by newest first
+        const [vehicles] = await db.promise().execute(
+            `SELECT 
+                v.id,
+                v.project_id,
+                v.unit_id,
+                v.plate_number,
+                v.type,
+                v.province,
+                v.brand,
+                v.color,
+                v.is_active,
+                v.created_at
+            FROM ${VEHICLES_TABLE} v
+            WHERE v.unit_id = ?
+            ORDER BY v.created_at DESC`,
+            [unitId]
+        );
+
+        res.status(200).json({
+            status: "success",
+            message: "Vehicle history fetched successfully",
+            data: vehicles,
+            count: vehicles.length,
+        });
+    } catch (error) {
+        console.error("Error in getVehicleHistory:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
 // Helper function to check unit access
 async function checkUnitAccess(user_id, unitId) {
     // Check if user is a member of the unit

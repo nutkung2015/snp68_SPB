@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#222",
     marginBottom: 16,
-    fontFamily: "Kanit_600SemiBold",
+    fontFamily: "NotoSansThai_600SemiBold",
     // fontWeight: "bold",
   },
   loginButton: {
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   loginButtonText: {
     color: "#fff",
     fontSize: 18,
-    fontFamily: "Kanit_600SemiBold",
+    fontFamily: "NotoSansThai_600SemiBold",
     // fontWeight: "bold",
   },
   emailContainer: {
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     color: "#205248",
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
   },
   passwordContainer: {
     width: "100%",
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     paddingRight: 50, // เพิ่มพื้นที่สำหรับไอคอน
     fontSize: 16,
     color: "#205248",
-    fontFamily: "Kanit_400Regular",
+    fontFamily: "NotoSansThai_400Regular",
   },
   eyeIcon: {
     position: "absolute",
@@ -304,10 +304,10 @@ const styles = StyleSheet.create({
   addressLabel: {
     fontSize: 14,
     color: "#666",
-    // fontFamily: "Kanit_400Regular", // ต้อง import font ก่อน
+    // fontFamily: "NotoSansThai_400Regular", // ต้อง import font ก่อน
   },
   addressText: {
     fontSize: 16,
-    // fontFamily: "Kanit_700Bold", // ต้อง import font ก่อน
+    // fontFamily: "NotoSansThai_700Bold", // ต้อง import font ก่อน
   },
 });

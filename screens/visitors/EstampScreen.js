@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 18,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
     },
     detailCard: {
         backgroundColor: '#fff',
@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
     },
     detailValue: {
         fontSize: 16,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
     },
     detailSubValue: {
         fontSize: 16,
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
     fullButtonText: {
         color: '#fff',
         fontSize: 18,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
     },
 
     // Main Screen Styles
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         marginBottom: 20,
     },
     addButton: {
@@ -543,11 +543,11 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#888',
         marginLeft: 8,
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     sectionTitle: {
         fontSize: 16,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         marginBottom: 10,
     },
     card: {
@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
     },
     plateText: {
         fontSize: 18,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
     },
     subText: {
         fontSize: 12,
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     },
     statusButtonText: {
         fontSize: 12,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
     },
     emptyText: {
         textAlign: "center",
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
     inputLabel: {
         fontSize: 14,
         marginBottom: 8,
-        fontFamily: 'Kanit_700Bold',
+        fontFamily: 'NotoSansThai_700Bold',
     },
     input: {
         backgroundColor: '#f9fafb',

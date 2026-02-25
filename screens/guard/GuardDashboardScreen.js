@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
     View,
     Text,
@@ -14,6 +14,7 @@ import Icon from "react-native-vector-icons/FontAwesome5";
 import moment from "moment";
 import SecurityService from "../../services/securityService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ProjectCustomizationsService from "../../services/projectCustomizationsService";
 
 const GuardDashboardScreen = ({ navigation }) => {
     const [activeTab, setActiveTab] = useState("scheduled"); // 'scheduled' (รถเข้า) | 'inside' (รถออก)
@@ -22,9 +23,34 @@ const GuardDashboardScreen = ({ navigation }) => {
     const [refreshing, setRefreshing] = useState(false);
     const [projectId, setProjectId] = useState(null);
 
+    // Project customization colors
+    const [primaryColor, setPrimaryColor] = useState("#2A405E");
+
     // Modal states
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
+
+    // Fetch project customizations on mount
+    useEffect(() => {
+        const loadCustomizations = async () => {
+            try {
+                const userStr = await AsyncStorage.getItem("userData");
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    const pid = user?.projectMemberships?.[0]?.project_id;
+                    if (pid) {
+                        const customizations = await ProjectCustomizationsService.getProjectCustomizations(pid);
+                        if (customizations?.primary_color) {
+                            setPrimaryColor(customizations.primary_color);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading project customizations:", error);
+            }
+        };
+        loadCustomizations();
+    }, []);
 
     const fetchData = async () => {
         try {
@@ -122,13 +148,16 @@ const GuardDashboardScreen = ({ navigation }) => {
 
     // Render item for Tab รถเข้า
     const renderScheduledItem = ({ item }) => (
-        <TouchableOpacity style={styles.card} onPress={() => openModal(item)}>
+        <TouchableOpacity
+            style={[styles.card, { backgroundColor: primaryColor + "18" }]}
+            onPress={() => openModal(item)}
+        >
             <View style={styles.cardLeft}>
                 <View style={styles.iconContainer}>
-                    <Icon name="car" size={24} color="#003049" />
+                    <Icon name="car" size={24} color={primaryColor} />
                 </View>
                 <View style={styles.textContainer}>
-                    <Text style={styles.plateText}>ทะเบียน: {item.plate_number}</Text>
+                    <Text style={[styles.plateText, { color: primaryColor }]}>ทะเบียน: {item.plate_number}</Text>
                     <Text style={styles.subText}>{item.visitor_name || "-"}</Text>
                     <Text style={styles.subText}>บ้านเลขที่: {item.unit_number || "-"}</Text>
                 </View>
@@ -144,7 +173,7 @@ const GuardDashboardScreen = ({ navigation }) => {
         </TouchableOpacity>
     );
 
-    // Render item for Tab รถออก (ไม่มีรถลูกบ้านแล้ว เพราะ backend filter ออก)
+    // Render item for Tab รถออก
     const renderInsideItem = ({ item }) => {
         let statusText = "";
         let statusColor = "#FCD34D";
@@ -161,13 +190,16 @@ const GuardDashboardScreen = ({ navigation }) => {
         }
 
         return (
-            <TouchableOpacity style={styles.card} onPress={() => openModal(item)}>
+            <TouchableOpacity
+                style={[styles.card, { backgroundColor: primaryColor + "18" }]}
+                onPress={() => openModal(item)}
+            >
                 <View style={styles.cardLeft}>
                     <View style={styles.iconContainer}>
-                        <Icon name="car" size={24} color="#003049" />
+                        <Icon name="car" size={24} color={primaryColor} />
                     </View>
                     <View style={styles.textContainer}>
-                        <Text style={styles.plateText}>ทะเบียน: {item.plate_number}</Text>
+                        <Text style={[styles.plateText, { color: primaryColor }]}>ทะเบียน: {item.plate_number}</Text>
                         <Text style={styles.subText}>{item.visitor_name || "ขอเข้ามาติดต่อธุระ"}</Text>
                     </View>
                 </View>
@@ -188,27 +220,30 @@ const GuardDashboardScreen = ({ navigation }) => {
         <Modal visible={modalVisible} transparent animationType="fade">
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
-                    <Icon name="car" size={50} color="#003049" style={{ marginBottom: 15 }} />
-                    <Text style={styles.modalTitle}>ยืนยันการเข้าหมู่บ้าน</Text>
+                    <Icon name="car" size={50} color={primaryColor} style={{ marginBottom: 15 }} />
+                    <Text style={[styles.modalTitle, { color: primaryColor }]}>ยืนยันการเข้าหมู่บ้าน</Text>
 
                     <View style={styles.modalInfo}>
                         <Text style={styles.modalLabel}>ทะเบียน:</Text>
-                        <Text style={styles.modalValue}>{selectedItem?.plate_number}</Text>
+                        <Text style={[styles.modalValue, { color: primaryColor }]}>{selectedItem?.plate_number}</Text>
                     </View>
                     <View style={styles.modalInfo}>
                         <Text style={styles.modalLabel}>ชื่อผู้มาเยี่ยม:</Text>
-                        <Text style={styles.modalValue}>{selectedItem?.visitor_name || "-"}</Text>
+                        <Text style={[styles.modalValue, { color: primaryColor }]}>{selectedItem?.visitor_name || "-"}</Text>
                     </View>
                     <View style={styles.modalInfo}>
                         <Text style={styles.modalLabel}>บ้านเลขที่:</Text>
-                        <Text style={styles.modalValue}>{selectedItem?.unit_number || "-"}</Text>
+                        <Text style={[styles.modalValue, { color: primaryColor }]}>{selectedItem?.unit_number || "-"}</Text>
                     </View>
 
                     <View style={styles.modalButtons}>
                         <TouchableOpacity style={styles.cancelBtn} onPress={closeModal}>
-                            <Text style={styles.cancelBtnText}>ยกเลิก</Text>
+                            <Text style={[styles.cancelBtnText, { color: primaryColor }]}>ยกเลิก</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirmEntry}>
+                        <TouchableOpacity
+                            style={[styles.confirmBtn, { backgroundColor: primaryColor }]}
+                            onPress={handleConfirmEntry}
+                        >
                             <Icon name="check" size={16} color="#fff" style={{ marginRight: 5 }} />
                             <Text style={styles.confirmBtnText}>ยืนยันเข้า</Text>
                         </TouchableOpacity>
@@ -233,27 +268,27 @@ const GuardDashboardScreen = ({ navigation }) => {
                             </View>
                         )}
 
-                        <Icon name="sign-out-alt" size={50} color="#003049" style={{ marginBottom: 15 }} />
-                        <Text style={styles.modalTitle}>บันทึกรถออก</Text>
+                        <Icon name="sign-out-alt" size={50} color={primaryColor} style={{ marginBottom: 15 }} />
+                        <Text style={[styles.modalTitle, { color: primaryColor }]}>บันทึกรถออก</Text>
 
                         <View style={styles.modalInfo}>
                             <Text style={styles.modalLabel}>ทะเบียน:</Text>
-                            <Text style={styles.modalValue}>{selectedItem?.plate_number}</Text>
+                            <Text style={[styles.modalValue, { color: primaryColor }]}>{selectedItem?.plate_number}</Text>
                         </View>
                         <View style={styles.modalInfo}>
                             <Text style={styles.modalLabel}>ชื่อผู้มาเยี่ยม:</Text>
-                            <Text style={styles.modalValue}>{selectedItem?.visitor_name || "-"}</Text>
+                            <Text style={[styles.modalValue, { color: primaryColor }]}>{selectedItem?.visitor_name || "-"}</Text>
                         </View>
                         <View style={styles.modalInfo}>
                             <Text style={styles.modalLabel}>เวลาเข้า:</Text>
-                            <Text style={styles.modalValue}>
+                            <Text style={[styles.modalValue, { color: primaryColor }]}>
                                 {selectedItem?.check_in_time ? moment(selectedItem.check_in_time).format("HH:mm") : "-"}
                             </Text>
                         </View>
 
                         <View style={styles.modalButtons}>
                             <TouchableOpacity style={styles.cancelBtn} onPress={closeModal}>
-                                <Text style={styles.cancelBtnText}>ยกเลิก</Text>
+                                <Text style={[styles.cancelBtnText, { color: primaryColor }]}>ยกเลิก</Text>
                             </TouchableOpacity>
 
                             {isPending && (
@@ -263,7 +298,10 @@ const GuardDashboardScreen = ({ navigation }) => {
                                 </TouchableOpacity>
                             )}
 
-                            <TouchableOpacity style={styles.confirmBtn} onPress={handleCheckOut}>
+                            <TouchableOpacity
+                                style={[styles.confirmBtn, { backgroundColor: primaryColor }]}
+                                onPress={handleCheckOut}
+                            >
                                 <Icon name="check" size={16} color="#fff" style={{ marginRight: 5 }} />
                                 <Text style={styles.confirmBtnText}>ยืนยันออก</Text>
                             </TouchableOpacity>
@@ -280,19 +318,25 @@ const GuardDashboardScreen = ({ navigation }) => {
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Icon name="chevron-left" size={20} color="#003049" />
-                    <Text style={styles.backText}>ย้อนกลับ</Text>
+                    <Icon name="chevron-left" size={20} color={primaryColor} />
+                    <Text style={[styles.backText, { color: primaryColor }]}>ย้อนกลับ</Text>
                 </TouchableOpacity>
             </View>
 
-            <Text style={styles.title}>รถเข้าโครงการ</Text>
+            <Text style={[styles.title, { color: primaryColor }]}>รถเข้าโครงการ</Text>
 
             <View style={styles.actionButtons}>
-                <TouchableOpacity style={styles.actionBtnPrimary} onPress={() => navigation.navigate("GuardCheckIn")}>
+                <TouchableOpacity
+                    style={[styles.actionBtnPrimary, { backgroundColor: primaryColor }]}
+                    onPress={() => navigation.navigate("GuardCheckIn")}
+                >
                     <Icon name="search" size={20} color="#fff" style={{ marginRight: 10 }} />
                     <Text style={styles.actionBtnTextPrimary}>ตรวจสอบทะเบียน</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtnPrimary} onPress={() => navigation.navigate("EntryHistory")}>
+                <TouchableOpacity
+                    style={[styles.actionBtnPrimary, { backgroundColor: primaryColor }]}
+                    onPress={() => navigation.navigate("EntryHistory")}
+                >
                     <Icon name="history" size={20} color="#fff" style={{ marginRight: 10 }} />
                     <Text style={styles.actionBtnTextPrimary}>ประวัติการเข้าเยี่ยม</Text>
                 </TouchableOpacity>
@@ -300,24 +344,36 @@ const GuardDashboardScreen = ({ navigation }) => {
 
             <View style={styles.tabsContainer}>
                 <TouchableOpacity
-                    style={[styles.tab, activeTab === 'scheduled' && styles.activeTab]}
-                    onPress={() => setActiveTab('scheduled')}>
-                    <Icon name="calendar-check" size={16} color={activeTab === 'scheduled' ? "#003049" : "#6B7280"} style={{ marginRight: 5 }} />
-                    <Text style={[styles.tabText, activeTab === 'scheduled' && styles.activeTabText]}>
+                    style={[styles.tab, activeTab === 'scheduled' && [styles.activeTab, { backgroundColor: primaryColor + "25" }]]}
+                    onPress={() => setActiveTab('scheduled')}
+                >
+                    <Icon
+                        name="calendar-check"
+                        size={16}
+                        color={activeTab === 'scheduled' ? primaryColor : "#6B7280"}
+                        style={{ marginRight: 5 }}
+                    />
+                    <Text style={[styles.tabText, activeTab === 'scheduled' && [styles.activeTabText, { color: primaryColor }]]}>
                         รถเข้า ({scheduledVisitors.length})
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.tab, activeTab === 'inside' && styles.activeTab]}
-                    onPress={() => setActiveTab('inside')}>
-                    <Icon name="sign-out-alt" size={16} color={activeTab === 'inside' ? "#003049" : "#6B7280"} style={{ marginRight: 5 }} />
-                    <Text style={[styles.tabText, activeTab === 'inside' && styles.activeTabText]}>
+                    style={[styles.tab, activeTab === 'inside' && [styles.activeTab, { backgroundColor: primaryColor + "25" }]]}
+                    onPress={() => setActiveTab('inside')}
+                >
+                    <Icon
+                        name="sign-out-alt"
+                        size={16}
+                        color={activeTab === 'inside' ? primaryColor : "#6B7280"}
+                        style={{ marginRight: 5 }}
+                    />
+                    <Text style={[styles.tabText, activeTab === 'inside' && [styles.activeTabText, { color: primaryColor }]]}>
                         รถออก ({logs.length})
                     </Text>
                 </TouchableOpacity>
             </View>
 
-            <Text style={styles.sectionTitle}>
+            <Text style={[styles.sectionTitle, { color: primaryColor }]}>
                 {activeTab === 'scheduled'
                     ? "รายการรถที่ลูกบ้านแจ้งล่วงหน้า"
                     : "รายการรถผู้มาติดต่อในโครงการ (แตะเพื่อบันทึกออก)"}
@@ -328,7 +384,7 @@ const GuardDashboardScreen = ({ navigation }) => {
                 renderItem={activeTab === 'scheduled' ? renderScheduledItem : renderInsideItem}
                 keyExtractor={(item) => item.id}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
                 }
                 contentContainerStyle={{ paddingBottom: 20 }}
                 ListEmptyComponent={<Text style={styles.emptyText}>ไม่มีรายการ</Text>}
@@ -359,13 +415,11 @@ const styles = StyleSheet.create({
     },
     backText: {
         fontSize: 16,
-        color: '#003049',
         marginLeft: 5,
     },
     title: {
         fontSize: 24,
         fontWeight: "bold",
-        color: "#003049",
         marginBottom: 20,
     },
     actionButtons: {
@@ -374,7 +428,6 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     actionBtnPrimary: {
-        backgroundColor: '#003049',
         flex: 0.48,
         padding: 15,
         borderRadius: 10,
@@ -385,7 +438,7 @@ const styles = StyleSheet.create({
     actionBtnTextPrimary: {
         color: '#fff',
         fontWeight: 'bold',
-        fontSize: 14
+        fontSize: 14,
     },
     tabsContainer: {
         flexDirection: 'row',
@@ -410,16 +463,14 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     activeTabText: {
-        color: '#003049',
+        fontWeight: 'bold',
     },
     sectionTitle: {
         fontSize: 16,
         fontWeight: "bold",
-        color: "#003049",
         marginBottom: 10,
     },
     card: {
-        backgroundColor: "#D1E6F0",
         borderRadius: 12,
         padding: 15,
         marginBottom: 10,
@@ -441,7 +492,6 @@ const styles = StyleSheet.create({
     plateText: {
         fontSize: 18,
         fontWeight: "bold",
-        color: "#003049",
     },
     subText: {
         fontSize: 12,
@@ -470,7 +520,7 @@ const styles = StyleSheet.create({
     emptyText: {
         textAlign: 'center',
         marginTop: 20,
-        color: '#9CA3AF'
+        color: '#9CA3AF',
     },
     // Modal styles
     modalOverlay: {
@@ -489,7 +539,6 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#003049',
         marginBottom: 20,
     },
     modalInfo: {
@@ -507,7 +556,6 @@ const styles = StyleSheet.create({
     modalValue: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: '#003049',
     },
     modalButtons: {
         flexDirection: 'row',
@@ -521,14 +569,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#E5E7EB',
     },
     cancelBtnText: {
-        color: '#374151',
         fontWeight: 'bold',
     },
     confirmBtn: {
         paddingVertical: 12,
         paddingHorizontal: 20,
         borderRadius: 10,
-        backgroundColor: '#10B981',
         flexDirection: 'row',
         alignItems: 'center',
     },

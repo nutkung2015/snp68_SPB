@@ -11,21 +11,12 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-    useFonts,
-    Kanit_400Regular,
-    Kanit_500Medium,
-    Kanit_700Bold,
-} from "@expo-google-fonts/kanit";
+
 import ProjectCustomizationsService from "../../services/projectCustomizationsService";
 import UnitsService from "../../services/unitsService";
 
 const UnitEntryHistoryScreen = ({ navigation, route }) => {
-    const [fontsLoaded] = useFonts({
-        Kanit_400Regular,
-        Kanit_500Medium,
-        Kanit_700Bold,
-    });
+    
 
     // States
     const [entries, setEntries] = useState([]);
@@ -235,9 +226,7 @@ const UnitEntryHistoryScreen = ({ navigation, route }) => {
         );
     };
 
-    if (!fontsLoaded) {
-        return null;
-    }
+    
 
     return (
         <SafeAreaView style={styles.container}>
@@ -322,12 +311,12 @@ const styles = StyleSheet.create({
     backText: {
         marginLeft: 4,
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#000",
     },
     pageTitle: {
         fontSize: 28,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         color: "#000",
         paddingHorizontal: 16,
         marginBottom: 16,
@@ -345,7 +334,7 @@ const styles = StyleSheet.create({
     infoText: {
         flex: 1,
         fontSize: 14,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#1976D2",
     },
     entryList: {
@@ -399,7 +388,7 @@ const styles = StyleSheet.create({
     },
     entryName: {
         fontSize: 16,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#333",
         flex: 1,
     },
@@ -410,12 +399,12 @@ const styles = StyleSheet.create({
     },
     entryTypeBadgeText: {
         fontSize: 12,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
     entryTime: {
         fontSize: 14,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
         marginBottom: 8,
     },
@@ -430,7 +419,7 @@ const styles = StyleSheet.create({
     },
     entryDetailText: {
         fontSize: 13,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#999",
     },
     loadingContainer: {
@@ -441,7 +430,7 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 12,
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
     },
     errorContainer: {
@@ -452,7 +441,7 @@ const styles = StyleSheet.create({
     },
     errorText: {
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#FF6B6B",
         marginTop: 16,
         marginBottom: 16,
@@ -465,7 +454,7 @@ const styles = StyleSheet.create({
     },
     retryText: {
         fontSize: 16,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#fff",
     },
     emptyContainer: {
@@ -476,13 +465,13 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 18,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#999",
         marginTop: 16,
     },
     emptySubtext: {
         fontSize: 14,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#bbb",
         marginTop: 8,
         textAlign: "center",

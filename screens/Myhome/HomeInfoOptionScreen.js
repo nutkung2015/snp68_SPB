@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
         marginTop: 16,
         fontSize: 16,
         color: "#666",
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     header: {
         flexDirection: "row",
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: "black",
         marginLeft: 4,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
     headerTitle: {
         flex: 1,
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         textAlign: "start",
         marginRight: 24,
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
         color: "#000",
     },
     content: {
@@ -185,13 +185,13 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: "bold",
         color: "#333",
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
         marginBottom: 8,
     },
     sectionSubtitle: {
         fontSize: 14,
         color: "#666",
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         marginBottom: 24,
     },
     cardsContainer: {
@@ -225,12 +225,12 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: "bold",
         color: "#333",
-        fontFamily: "Kanit_600SemiBold",
+        fontFamily: "NotoSansThai_600SemiBold",
         marginBottom: 4,
     },
     cardSubtitle: {
         fontSize: 13,
         color: "#888",
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
     },
 });

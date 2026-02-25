@@ -13,12 +13,7 @@ import {
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import {
-    useFonts,
-    Kanit_400Regular,
-    Kanit_500Medium,
-    Kanit_700Bold,
-} from "@expo-google-fonts/kanit";
+
 import { sendOTP, verifyOTP } from "../../services/firebaseService";
 import ApiService from "../../services/apiService";
 import SuccessDialog from "../../components/SuccessDialog";
@@ -40,11 +35,7 @@ const ChangePasswordScreen = () => {
     // Dialog State
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
-    const [fontsLoaded] = useFonts({
-        Kanit_400Regular,
-        Kanit_500Medium,
-        Kanit_700Bold,
-    });
+
 
     useEffect(() => {
         let timer;
@@ -134,7 +125,7 @@ const ChangePasswordScreen = () => {
         navigation.goBack();
     };
 
-    if (!fontsLoaded) {
+    if (loading) {
         return <View style={styles.loadingContainer}><ActivityIndicator /></View>;
     }
 
@@ -300,7 +291,7 @@ const styles = StyleSheet.create({
     },
     headerTitle: {
         fontSize: 20,
-        fontFamily: "Kanit_700Bold",
+        fontFamily: "NotoSansThai_700Bold",
         color: "#333",
     },
     container: {
@@ -312,7 +303,7 @@ const styles = StyleSheet.create({
     },
     description: {
         fontSize: 16,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
         marginBottom: 30,
         textAlign: "center",
@@ -333,7 +324,7 @@ const styles = StyleSheet.create({
     },
     input: {
         flex: 1,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         fontSize: 16,
         color: "#333",
     },
@@ -353,7 +344,7 @@ const styles = StyleSheet.create({
     buttonText: {
         color: "#fff",
         fontSize: 18,
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
     },
     resendContainer: {
         flexDirection: "row",
@@ -361,11 +352,11 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     resendText: {
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#666",
     },
     resendLink: {
-        fontFamily: "Kanit_500Medium",
+        fontFamily: "NotoSansThai_500Medium",
         color: "#1F7EFF",
     },
     disabledLink: {

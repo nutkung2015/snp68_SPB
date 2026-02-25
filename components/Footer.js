@@ -63,14 +63,14 @@ const styles = StyleSheet.create({
     },
     footerCopyright: {
         fontSize: 13,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#6B7280",
         textAlign: "center",
         marginBottom: 4,
     },
     footerSubtext: {
         fontSize: 12,
-        fontFamily: "Kanit_400Regular",
+        fontFamily: "NotoSansThai_400Regular",
         color: "#9CA3AF",
         textAlign: "center",
     },
