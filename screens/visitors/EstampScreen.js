@@ -392,7 +392,17 @@ const EstampScreen = ({ navigation }) => {
                 </TouchableOpacity>
             </View>
 
-            <Text style={[styles.title, { color: primaryColor }]}>ผู้มาเยี่ยม</Text>
+            <View style={styles.titleRow}>
+                <Text style={[styles.title, { color: primaryColor }]}>ผู้มาเยี่ยม</Text>
+                <TouchableOpacity
+                    style={[styles.entryHistoryPill, { backgroundColor: primaryColor }]}
+                    onPress={() => navigation.navigate("UnitEntryHistory")}
+                    activeOpacity={0.7}
+                >
+                    <Icon name="history" size={12} color="#fff" style={{ marginRight: 6 }} />
+                    <Text style={styles.entryHistoryPillText}>ประวัติเข้า-ออก</Text>
+                </TouchableOpacity>
+            </View>
 
             <TouchableOpacity style={styles.addButton} onPress={() => setInviteModalVisible(true)}>
                 <Icon name="plus" size={16} color="#6B7280" style={{ marginRight: 8 }} />
@@ -525,7 +535,6 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 24,
         fontFamily: "NotoSansThai_700Bold",
-        marginBottom: 20,
     },
     addButton: {
         height: 80,
@@ -607,6 +616,25 @@ const styles = StyleSheet.create({
         color: "#9ca3af",
         marginTop: 20,
         fontSize: 16,
+    },
+    // Entry History Pill Button Styles
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+    },
+    entryHistoryPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: 20,
+    },
+    entryHistoryPillText: {
+        fontSize: 12,
+        color: '#fff',
+        fontFamily: 'NotoSansThai_500Medium',
     },
     // Input Styles
     inputGroup: {

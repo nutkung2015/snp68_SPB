@@ -25,7 +25,7 @@ import ResidentService from "../../services/residentService";
 import ProjectCustomizationsService from "../../services/projectCustomizationsService";
 
 const ResidentManageScreen = ({ navigation }) => {
-    
+
 
     const [residents, setResidents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -312,7 +312,7 @@ const ResidentManageScreen = ({ navigation }) => {
         );
     };
 
-    
+
 
     return (
         <SafeAreaView style={styles.container}>
@@ -345,13 +345,15 @@ const ResidentManageScreen = ({ navigation }) => {
 
                 <TouchableOpacity
                     style={[styles.actionButton, { backgroundColor: primaryColor }]}
-                    onPress={() => navigation.navigate("UnitEntryHistory")}
+                    onPress={() => navigation.navigate("InvitationHistory")}
                 >
                     <Ionicons name="time" size={24} color="#fff" />
                     <View style={styles.actionTextContainer}>
-                        <Text style={styles.actionButtonText}>ประวัติการเข้า Unit</Text>
+                        <Text style={styles.actionButtonText}>ประวัติการเชิญ</Text>
+                        <Text style={styles.actionButtonSubtext}>ดูประวัติการเชิญ</Text>
                     </View>
                 </TouchableOpacity>
+
             </View>
 
             {/* Residents Section */}

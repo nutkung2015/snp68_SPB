@@ -17,6 +17,7 @@ router.post("/invitations/join", protect, unitController.joinUnit);
 
 // GET routes - IMPORTANT: Specific paths BEFORE parameterized paths
 router.get("/unit-invitations", protect, unitController.getUnitInvitations);
+router.get("/my-unit-invitations", protect, unitController.getUnitInvitationsByUnit);
 router.get("/invitations/:id", protect, unitController.getUnitInvitationById);
 router.get("/residents", protect, unitController.getProjectResidents);
 router.get("/project-residents", protect, unitController.getProjectResidents);

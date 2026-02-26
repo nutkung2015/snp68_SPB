@@ -351,6 +351,75 @@ exports.getUnitInvitations = async (req, res) => {
   }
 };
 
+// @desc    Get invitation history by unit (for residents)
+// @route   GET /api/units/my-unit-invitations?unit_id=xxx
+// @access  Private (Unit members only)
+exports.getUnitInvitationsByUnit = async (req, res) => {
+  try {
+    const { unit_id } = req.query;
+    const user_id = req.user.id;
+
+    if (!unit_id) {
+      return res.status(400).json({ message: "unit_id is required." });
+    }
+
+    // ตรวจว่า user เป็นสมาชิกของ unit นี้หรือไม่
+    const [unitMembership] = await db
+      .promise()
+      .execute(
+        "SELECT id FROM unit_members WHERE user_id = ? AND unit_id = ? AND left_at IS NULL",
+        [user_id, unit_id]
+      );
+
+    if (unitMembership.length === 0) {
+      return res.status(403).json({
+        message: "You are not a member of this unit",
+      });
+    }
+
+    // ดึงประวัติคำเชิญของ unit นี้
+    const query = `
+      SELECT
+        ui.id,
+        ui.unit_id,
+        u.unit_number,
+        ui.invited_by,
+        inviter.full_name AS invited_by_name,
+        ui.code,
+        ui.status,
+        ui.role,
+        ui.invited_email,
+        ui.invited_phone,
+        ui.expires_at,
+        ui.created_at,
+        ui.updated_at,
+        accepted_user.full_name AS accepted_by_name
+      FROM unit_invitations ui
+      JOIN units u ON ui.unit_id = u.id
+      LEFT JOIN users inviter ON ui.invited_by = inviter.id
+      LEFT JOIN unit_members um_accepted ON um_accepted.unit_id = ui.unit_id
+        AND um_accepted.joined_at >= ui.created_at
+        AND ui.status = 'accepted'
+      LEFT JOIN users accepted_user ON um_accepted.user_id = accepted_user.id
+        AND accepted_user.id != ui.invited_by
+      WHERE ui.unit_id = ?
+      ORDER BY ui.created_at DESC
+    `;
+
+    const [invitations] = await db.promise().execute(query, [unit_id]);
+
+    res.status(200).json({
+      status: "success",
+      message: "Unit invitation history fetched successfully",
+      data: invitations,
+      count: invitations.length,
+    });
+  } catch (error) {
+    console.error("Error in getUnitInvitationsByUnit:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // @desc    Get unit invitation details by ID
 // @route   GET /api/units/invitations/:id
 // @access  Private (Project members / unit owners / inviter)

@@ -51,6 +51,33 @@ const GuardCheckInScreen = ({ navigation }) => {
     const [carImage, setCarImage] = useState(null);
     const [uploading, setUploading] = useState(false);
 
+    // Province Picker Modal State
+    const [provinceModalVisible, setProvinceModalVisible] = useState(false);
+    const [provinceSearchText, setProvinceSearchText] = useState("");
+
+    const THAI_PROVINCES = [
+        "กรุงเทพมหานคร", "กระบี่", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร",
+        "ขอนแก่น", "จันทบุรี", "ฉะเชิงเทรา", "ชลบุรี", "ชัยนาท",
+        "ชัยภูมิ", "ชุมพร", "เชียงราย", "เชียงใหม่", "ตรัง",
+        "ตราด", "ตาก", "นครนายก", "นครปฐม", "นครพนม",
+        "นครราชสีมา", "นครศรีธรรมราช", "นครสวรรค์", "นนทบุรี", "นราธิวาส",
+        "น่าน", "บึงกาฬ", "บุรีรัมย์", "ปทุมธานี", "ประจวบคีรีขันธ์",
+        "ปราจีนบุรี", "ปัตตานี", "พระนครศรีอยุธยา", "พะเยา", "พังงา",
+        "พัทลุง", "พิจิตร", "พิษณุโลก", "เพชรบุรี", "เพชรบูรณ์",
+        "แพร่", "ภูเก็ต", "มหาสารคาม", "มุกดาหาร", "แม่ฮ่องสอน",
+        "ยโสธร", "ยะลา", "ร้อยเอ็ด", "ระนอง", "ระยอง",
+        "ราชบุรี", "ลพบุรี", "ลำปาง", "ลำพูน", "เลย",
+        "ศรีสะเกษ", "สกลนคร", "สงขลา", "สตูล", "สมุทรปราการ",
+        "สมุทรสงคราม", "สมุทรสาคร", "สระแก้ว", "สระบุรี", "สิงห์บุรี",
+        "สุโขทัย", "สุพรรณบุรี", "สุราษฎร์ธานี", "สุรินทร์", "หนองคาย",
+        "หนองบัวลำภู", "อ่างทอง", "อำนาจเจริญ", "อุดรธานี", "อุตรดิตถ์",
+        "อุทัยธานี", "อุบลราชธานี"
+    ];
+
+    const filteredProvinces = THAI_PROVINCES.filter((p) =>
+        p.includes(provinceSearchText)
+    );
+
     const handleSearch = async () => {
         if (!query) return;
         setLoading(true);
@@ -573,13 +600,18 @@ const GuardCheckInScreen = ({ navigation }) => {
                 </View>
                 <View style={styles.col}>
                     <Text style={styles.label}>จังหวัด</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={formData.province}
-                        onChangeText={(text) =>
-                            setFormData({ ...formData, province: text })
-                        }
-                    />
+                    <TouchableOpacity
+                        style={styles.provinceButton}
+                        onPress={() => {
+                            setProvinceSearchText("");
+                            setProvinceModalVisible(true);
+                        }}
+                    >
+                        <Text style={styles.provinceButtonText} numberOfLines={1}>
+                            {formData.province || "เลือกจังหวัด"}
+                        </Text>
+                        <Icon name="chevron-down" size={12} color="#6B7280" />
+                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -697,6 +729,84 @@ const GuardCheckInScreen = ({ navigation }) => {
             {renderQuickCheckInModal()}
             {/* Re-confirm Modal */}
             {renderConfirmModal()}
+
+            {/* Province Picker Modal */}
+            <Modal
+                visible={provinceModalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setProvinceModalVisible(false)}
+            >
+                <View style={styles.provinceModalOverlay}>
+                    <View style={styles.provinceModalContainer}>
+                        {/* Modal Header */}
+                        <View style={styles.provinceModalHeader}>
+                            <Text style={styles.provinceModalTitle}>เลือกจังหวัด</Text>
+                            <TouchableOpacity
+                                onPress={() => setProvinceModalVisible(false)}
+                                style={styles.provinceModalCloseBtn}
+                            >
+                                <Icon name="times" size={18} color="#6B7280" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Search Input */}
+                        <View style={styles.provinceSearchContainer}>
+                            <Icon name="search" size={14} color="#9CA3AF" style={{ marginRight: 8 }} />
+                            <TextInput
+                                style={styles.provinceSearchInput}
+                                placeholder="ค้นหาจังหวัด..."
+                                placeholderTextColor="#9CA3AF"
+                                value={provinceSearchText}
+                                onChangeText={setProvinceSearchText}
+                                autoFocus={true}
+                            />
+                            {provinceSearchText.length > 0 && (
+                                <TouchableOpacity onPress={() => setProvinceSearchText("")}>
+                                    <Icon name="times-circle" size={16} color="#9CA3AF" />
+                                </TouchableOpacity>
+                            )}
+                        </View>
+
+                        {/* Province List */}
+                        <FlatList
+                            data={filteredProvinces}
+                            keyExtractor={(item) => item}
+                            keyboardShouldPersistTaps="handled"
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={[
+                                        styles.provinceItem,
+                                        formData.province === item && styles.provinceItemActive,
+                                    ]}
+                                    onPress={() => {
+                                        setFormData({ ...formData, province: item });
+                                        setProvinceModalVisible(false);
+                                    }}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.provinceItemText,
+                                            formData.province === item && styles.provinceItemTextActive,
+                                        ]}
+                                    >
+                                        {item}
+                                    </Text>
+                                    {formData.province === item && (
+                                        <Icon name="check" size={14} color="#10B981" />
+                                    )}
+                                </TouchableOpacity>
+                            )}
+                            ListEmptyComponent={
+                                <View style={styles.provinceEmptyContainer}>
+                                    <Icon name="search" size={24} color="#D1D5DB" />
+                                    <Text style={styles.provinceEmptyText}>ไม่พบจังหวัดที่ค้นหา</Text>
+                                </View>
+                            }
+                        />
+                    </View>
+                </View>
+            </Modal>
         </>
     );
 };
@@ -1164,6 +1274,98 @@ const styles = StyleSheet.create({
     quickCancelText: {
         color: '#9CA3AF',
         fontSize: 14,
+    },
+    // Province Picker Styles
+    provinceButton: {
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#fff',
+    },
+    provinceButtonText: {
+        fontSize: 14,
+        color: '#000',
+        flex: 1,
+    },
+    provinceModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    provinceModalContainer: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        maxHeight: '75%',
+        paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    },
+    provinceModalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingTop: 20,
+        paddingBottom: 12,
+    },
+    provinceModalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#003049',
+    },
+    provinceModalCloseBtn: {
+        padding: 6,
+    },
+    provinceSearchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        marginHorizontal: 20,
+        marginBottom: 10,
+        backgroundColor: '#F9FAFB',
+    },
+    provinceSearchInput: {
+        flex: 1,
+        fontSize: 15,
+        color: '#000',
+        padding: 0,
+    },
+    provinceItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    provinceItemActive: {
+        backgroundColor: '#ECFDF5',
+    },
+    provinceItemText: {
+        fontSize: 15,
+        color: '#374151',
+    },
+    provinceItemTextActive: {
+        color: '#10B981',
+        fontWeight: '600',
+    },
+    provinceEmptyContainer: {
+        alignItems: 'center',
+        paddingVertical: 40,
+    },
+    provinceEmptyText: {
+        fontSize: 14,
+        color: '#9CA3AF',
+        marginTop: 8,
     },
 });
 

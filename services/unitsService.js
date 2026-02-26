@@ -93,6 +93,16 @@ class UnitsService {
       throw error;
     }
   }
+  // Get unit invitation history (for residents)
+  static async getUnitInvitationHistory(unitId) {
+    try {
+      const token = await ApiService.getToken();
+      return await ApiService.get(`/api/units/my-unit-invitations?unit_id=${unitId}`, token);
+    } catch (error) {
+      console.error("Error fetching unit invitation history:", error);
+      throw error;
+    }
+  }
 }
 
 export default UnitsService;

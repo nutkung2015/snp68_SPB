@@ -65,6 +65,7 @@ import ResidentManageScreen from "./screens/residentManageUser/residentManageScr
 import ChangePasswordScreen from "./screens/้ChangePasswordScreen/ChangePasswordScreen";
 import VehiclesResidentsScreen from "./screens/vehicles-residents/vehicles-residents";
 import UnitEntryHistoryScreen from "./screens/unit-entry-history/unit-entry-history";
+import InvitationHistoryScreen from "./screens/invitation-history/InvitationHistoryScreen";
 
 // Security screens
 import SecurityServiceScreen from "./screens/security/SecurityServiceScreen";
@@ -500,6 +501,8 @@ export default function App() {
           <Stack.Screen name="VehiclesResidents" component={VehiclesResidentsScreen} />
 
           <Stack.Screen name="UnitEntryHistory" component={UnitEntryHistoryScreen} />
+
+          <Stack.Screen name="InvitationHistory" component={InvitationHistoryScreen} />
 
         </Stack.Navigator>
       );
