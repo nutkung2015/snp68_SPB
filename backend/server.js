@@ -199,7 +199,7 @@ app.use(morgan((tokens, req, res) => {
 
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? process.env.ALLOWED_ORIGINS?.split(',') || ['https://snp68-spb.onrender.com']
+    ? process.env.ALLOWED_ORIGINS?.split(',') || ['https://snp68-spb.onrender.com', 'https://api.livlink-solution.com']
     : [
       'http://localhost:8081',   // Expo Dev Server
       'http://localhost:4200',   // Angular Web Backoffice
