@@ -1301,7 +1301,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
-        maxHeight: '75%',
+        height: '75%',
         paddingBottom: Platform.OS === 'ios' ? 34 : 20,
     },
     provinceModalHeader: {

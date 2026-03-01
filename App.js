@@ -375,7 +375,6 @@ export default function App() {
           <Stack.Screen name="EntryHistory" component={EntryHistoryScreen} />
 
           {/* Issue Management for Guard */}
-          <Stack.Screen name="IssueMenu" component={IssueMenuScreen} />
           <Stack.Screen
             name="CommonIssue"
             component={CommonIssueScreen}

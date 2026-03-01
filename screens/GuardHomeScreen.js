@@ -18,7 +18,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import ProjectCustomizationsService from "../services/projectCustomizationsService";
 
 const GuardHomeScreen = ({ navigation }) => {
-  
+
 
   const [userData, setUserData] = useState(null);
   const [secondaryColor, setSecondaryColor] = useState("#155B5B");
@@ -67,7 +67,7 @@ const GuardHomeScreen = ({ navigation }) => {
     }, [])
   );
 
-  
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -142,7 +142,7 @@ const GuardHomeScreen = ({ navigation }) => {
             {/* แจ้งปัญหา */}
             <TouchableOpacity
               style={[styles.menuCard, { opacity: 0.75, borderColor: primaryColor || "#205248" }]}
-              onPress={() => navigation.navigate("IssueMenu")}
+              onPress={() => navigation.navigate("CommonIssue")}
             >
               <View style={[styles.menuGradient, { backgroundColor: primaryColor || "#4DB59F" }]}>
                 <View style={styles.menuIconWrapper}>
