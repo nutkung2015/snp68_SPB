@@ -20,6 +20,14 @@ const app = express();
 
 
 // ===========================================
+// Security Scanner Blocker (MUST be first middleware)
+// ===========================================
+// บล็อก bot ที่สแกนหาไฟล์ sensitive เช่น .env, .sql, config
+// ใส่ก่อน middleware อื่นทั้งหมดเพื่อบล็อกตั้งแต่ต้น
+const securityScannerBlocker = require('./middleware/securityScannerBlocker');
+app.use(securityScannerBlocker);
+
+// ===========================================
 // Security Middleware: Helmet Configuration
 // ===========================================
 // 
