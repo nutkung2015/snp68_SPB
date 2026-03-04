@@ -211,3 +211,86 @@ exports.joinProject = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// @desc    Get project invitation details by ID
+// @route   GET /api/project_invitations/:id
+// @access  Private (Sender / Project juristic members / Super-admin)
+exports.getProjectInvitationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user_id = req.user.id;
+    const user_role = req.user.role;
+
+    const query = `
+      SELECT
+        pi.id,
+        pi.project_id,
+        pi.sender_id,
+        pi.invitation_code,
+        pi.role,
+        pi.status,
+        pi.expires_at,
+        pi.created_at,
+        p.name AS project_name,
+        u.full_name AS sender_name,
+        u.email AS sender_email
+      FROM project_invitations pi
+      LEFT JOIN projects p ON pi.project_id = p.id
+      LEFT JOIN users u ON pi.sender_id = u.id
+      WHERE pi.id = ?
+    `;
+
+    const [rows] = await db.promise().execute(query, [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Invitation not found." });
+    }
+
+    const invitation = rows[0];
+    const project_id = invitation.project_id;
+
+    // ตรวจสิทธิ์
+    let hasPermission = false;
+
+    // 1. เป็น super-admin
+    if (user_role === "super-admin") {
+      hasPermission = true;
+    }
+
+    // 2. เป็นคนเชิญ (sender)
+    if (!hasPermission && invitation.sender_id === user_id) {
+      hasPermission = true;
+    }
+
+    // 3. เป็นสมาชิกโปรเจกต์ (juristic)
+    if (!hasPermission) {
+      const [projectMembership] = await db
+        .promise()
+        .execute(
+          "SELECT role FROM project_members WHERE user_id = ? AND project_id = ?",
+          [user_id, project_id]
+        );
+      if (
+        projectMembership.length > 0 &&
+        ["juristicLeader", "juristicMember"].includes(projectMembership[0].role)
+      ) {
+        hasPermission = true;
+      }
+    }
+
+    if (!hasPermission) {
+      return res.status(403).json({
+        message: "You don't have permission to view this invitation",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Project invitation details fetched successfully",
+      data: invitation,
+    });
+  } catch (error) {
+    console.error("Error in getProjectInvitationById:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

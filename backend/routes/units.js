@@ -21,6 +21,7 @@ router.get("/my-unit-invitations", protect, unitController.getUnitInvitationsByU
 router.get("/invitations/:id", protect, unitController.getUnitInvitationById);
 router.get("/residents", protect, unitController.getProjectResidents);
 router.get("/project-residents", protect, unitController.getProjectResidents);
+router.get("/all-invitations", protect, unitController.getAllInvitations);
 router.get("/", protect, unitController.getUnits);
 
 router.get("/:id", protect, unitController.getUnitById); // Must be LAST among GET routes

@@ -297,7 +297,7 @@ exports.updateGuardPost = async (req, res) => {
         const userId = req.user?.id;
 
         // Input Validation (Joi)
-        const { error, value } = updateGuardPostSchema.validate(req.body, { abortEarly: false });
+        const { error, value } = updateGuardPostSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
         if (error) {
             return res.status(400).json({
                 status: "error",

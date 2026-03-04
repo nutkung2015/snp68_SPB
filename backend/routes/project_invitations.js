@@ -15,4 +15,8 @@ router.get('/', authMiddleware, projectInvitationsController.getInvitations);
 // URL: POST /api/project_invitations/join
 router.post('/join', authMiddleware, projectInvitationsController.joinProject);
 
+// Route to get a specific project invitation by ID
+// URL: GET /api/project_invitations/:id
+router.get('/:id', authMiddleware, projectInvitationsController.getProjectInvitationById);
+
 module.exports = router;

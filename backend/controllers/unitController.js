@@ -957,3 +957,169 @@ exports.getUnitById = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// @desc    Get all invitations (unit + project) for a project with pagination
+// @route   GET /api/units/all-invitations?project_id=xxx&page=1&limit=20&status=pending&type=unit
+// @access  Private (Project members)
+exports.getAllInvitations = async (req, res) => {
+  try {
+    const { project_id, page = 1, limit = 20, status, type } = req.query;
+    const user_id = req.user.id;
+
+    // Validate project_id
+    if (!project_id) {
+      return res.status(400).json({ message: "project_id is required." });
+    }
+
+    // Validate pagination params
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+    const offset = (pageNum - 1) * limitNum;
+
+    // Check permission: user must be a project member
+    const [projectMembership] = await db
+      .promise()
+      .execute(
+        "SELECT role FROM project_members WHERE user_id = ? AND project_id = ?",
+        [user_id, project_id]
+      );
+
+    if (projectMembership.length === 0) {
+      return res.status(403).json({
+        message: "You don't have permission to view invitations for this project",
+      });
+    }
+
+    // Build WHERE conditions for optional filters
+    let unitWhereExtra = "";
+    let projectWhereExtra = "";
+    const unitParams = [project_id];
+    const projectParams = [project_id];
+
+    if (status) {
+      unitWhereExtra += " AND ui.status = ?";
+      unitParams.push(status);
+      projectWhereExtra += " AND pi.status = ?";
+      projectParams.push(status);
+    }
+
+    // --- Unit Invitations SQL ---
+    const unitSql = `
+      SELECT
+        ui.id,
+        'unit' AS type,
+        ui.unit_id,
+        u.unit_number,
+        u.project_id,
+        ui.invited_by AS sender_id,
+        inviter.full_name AS sender_name,
+        ui.code AS invitation_code,
+        ui.qr_code_url,
+        ui.status,
+        ui.role,
+        ui.invited_email,
+        ui.invited_phone,
+        NULL AS project_name,
+        ui.expires_at,
+        ui.created_at,
+        ui.updated_at
+      FROM unit_invitations ui
+      JOIN units u ON ui.unit_id = u.id
+      LEFT JOIN users inviter ON ui.invited_by = inviter.id
+      WHERE u.project_id = ?${unitWhereExtra}
+    `;
+
+    // --- Project Invitations SQL ---
+    const projectSql = `
+      SELECT
+        pi.id,
+        'project' AS type,
+        NULL AS unit_id,
+        NULL AS unit_number,
+        pi.project_id,
+        pi.sender_id,
+        sender.full_name AS sender_name,
+        pi.invitation_code,
+        NULL AS qr_code_url,
+        pi.status,
+        pi.role,
+        NULL AS invited_email,
+        NULL AS invited_phone,
+        p.name AS project_name,
+        pi.expires_at,
+        pi.created_at,
+        NULL AS updated_at
+      FROM project_invitations pi
+      LEFT JOIN projects p ON pi.project_id = p.id
+      LEFT JOIN users sender ON pi.sender_id = sender.id
+      WHERE pi.project_id = ?${projectWhereExtra}
+    `;
+
+    // Determine which queries to use based on type filter
+    let combinedSql = "";
+    let countSql = "";
+    let combinedParams = [];
+    let countParams = [];
+
+    if (type === "unit") {
+      combinedSql = `${unitSql} ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offset}`;
+      countSql = `SELECT COUNT(*) AS total FROM unit_invitations ui JOIN units u ON ui.unit_id = u.id WHERE u.project_id = ?${unitWhereExtra}`;
+      combinedParams = [...unitParams];
+      countParams = [...unitParams];
+    } else if (type === "project") {
+      combinedSql = `${projectSql} ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offset}`;
+      countSql = `SELECT COUNT(*) AS total FROM project_invitations pi WHERE pi.project_id = ?${projectWhereExtra}`;
+      combinedParams = [...projectParams];
+      countParams = [...projectParams];
+    } else {
+      // Both types (UNION ALL)
+      combinedSql = `
+        SELECT * FROM (
+          ${unitSql}
+          UNION ALL
+          ${projectSql}
+        ) AS combined
+        ORDER BY created_at DESC
+        LIMIT ${limitNum} OFFSET ${offset}
+      `;
+      countSql = `
+        SELECT
+          (SELECT COUNT(*) FROM unit_invitations ui JOIN units u ON ui.unit_id = u.id WHERE u.project_id = ?${unitWhereExtra}) +
+          (SELECT COUNT(*) FROM project_invitations pi WHERE pi.project_id = ?${projectWhereExtra})
+        AS total
+      `;
+      combinedParams = [...unitParams, ...projectParams];
+      countParams = [...unitParams, ...projectParams];
+    }
+
+    // Execute main query
+    const [invitations] = await db
+      .promise()
+      .execute(combinedSql, combinedParams);
+
+    // Execute count query
+    const [countResult] = await db
+      .promise()
+      .execute(countSql, countParams);
+
+    const total = countResult[0].total;
+    const totalPages = Math.ceil(total / limitNum);
+
+    res.status(200).json({
+      status: "success",
+      message: "All invitations fetched successfully",
+      data: invitations,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: total,
+        total_pages: totalPages,
+        has_next: pageNum < totalPages,
+        has_prev: pageNum > 1,
+      },
+    });
+  } catch (error) {
+    console.error("Error in getAllInvitations:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
