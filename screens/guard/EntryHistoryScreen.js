@@ -355,12 +355,14 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#003049',
         marginLeft: 5,
+        fontFamily: "NotoSansThai_400Regular",
     },
     title: {
         fontSize: 24,
         fontWeight: "bold",
         color: "#003049",
         marginBottom: 20,
+        fontFamily: "NotoSansThai_700Bold",
     },
     // Date Filter
     dateFilterContainer: {
@@ -391,6 +393,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         color: '#003049',
+        fontFamily: "NotoSansThai_700Bold",
     },
     todayBtn: {
         backgroundColor: '#003049',
@@ -402,6 +405,7 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
         fontSize: 12,
+        fontFamily: "NotoSansThai_700Bold",
     },
     // Summary
     summaryContainer: {
@@ -419,10 +423,12 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         color: '#003049',
+        fontFamily: "NotoSansThai_700Bold",
     },
     summaryLabel: {
         fontSize: 12,
         color: '#6B7280',
+        fontFamily: "NotoSansThai_400Regular",
     },
     // Card
     card: {
@@ -458,14 +464,17 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "bold",
         color: "#003049",
+        fontFamily: "NotoSansThai_700Bold",
     },
     subText: {
         fontSize: 12,
         color: "#4B5563",
+        fontFamily: "NotoSansThai_400Regular",
     },
     unitText: {
         fontSize: 11,
         color: "#6B7280",
+        fontFamily: "NotoSansThai_400Regular",
     },
     cardRight: {
         alignItems: 'flex-end',
@@ -477,11 +486,13 @@ const styles = StyleSheet.create({
     timeLabel: {
         fontSize: 11,
         color: '#6B7280',
+        fontFamily: "NotoSansThai_400Regular",
     },
     timeValue: {
         fontSize: 11,
         fontWeight: 'bold',
         color: '#003049',
+        fontFamily: "NotoSansThai_700Bold",
     },
     statusTag: {
         paddingVertical: 3,
@@ -493,6 +504,7 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontWeight: 'bold',
         color: '#fff',
+        fontFamily: "NotoSansThai_700Bold",
     },
     emptyContainer: {
         alignItems: 'center',
@@ -503,6 +515,7 @@ const styles = StyleSheet.create({
         marginTop: 15,
         color: '#9CA3AF',
         fontSize: 14,
+        fontFamily: "NotoSansThai_400Regular",
     },
     // Modal
     modalOverlay: {
@@ -528,6 +541,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#003049',
         marginBottom: 20,
+        fontFamily: "NotoSansThai_700Bold",
     },
     modalInfo: {
         flexDirection: 'row',
@@ -540,11 +554,13 @@ const styles = StyleSheet.create({
     modalLabel: {
         fontSize: 14,
         color: '#6B7280',
+        fontFamily: "NotoSansThai_400Regular",
     },
     modalValue: {
         fontSize: 14,
         fontWeight: 'bold',
         color: '#003049',
+        fontFamily: "NotoSansThai_700Bold",
     },
     closeModalBtn: {
         marginTop: 25,
@@ -557,6 +573,7 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
         fontSize: 16,
+        fontFamily: "NotoSansThai_700Bold",
     },
 });
 

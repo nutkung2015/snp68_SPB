@@ -844,17 +844,20 @@ const styles = StyleSheet.create({
         color: '#003049',
         textAlign: 'center',
         marginBottom: 20,
+        fontFamily: "NotoSansThai_700Bold",
     },
     label: {
         fontSize: 14,
         color: '#374151',
         marginBottom: 5,
-        fontWeight: '600'
+        fontWeight: '600',
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     subLabel: {
         fontSize: 12,
         color: '#6B7280',
         marginBottom: 5,
+        fontFamily: "NotoSansThai_400Regular",
     },
     searchInput: {
         borderWidth: 1,
@@ -864,11 +867,13 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: '#003049',
+        fontFamily: "NotoSansThai_700Bold",
     },
     hint: {
         fontSize: 12,
         color: '#EF4444',
         marginBottom: 20,
+        fontFamily: "NotoSansThai_400Regular",
     },
     buttonRow: {
         flexDirection: 'row',
@@ -893,10 +898,12 @@ const styles = StyleSheet.create({
     cancelButtonText: {
         color: '#003049',
         fontWeight: 'bold',
+        fontFamily: "NotoSansThai_700Bold",
     },
     searchButtonText: {
         color: '#fff',
         fontWeight: 'bold',
+        fontFamily: "NotoSansThai_700Bold",
     },
     // Result Styles
     header: {
@@ -911,13 +918,15 @@ const styles = StyleSheet.create({
     backText: {
         fontSize: 16,
         marginLeft: 5,
-        color: '#003049'
+        color: '#003049',
+        fontFamily: "NotoSansThai_400Regular",
     },
     title: {
         fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 15,
-        color: '#003049'
+        color: '#003049',
+        fontFamily: "NotoSansThai_700Bold",
     },
     resultItem: {
         flexDirection: 'row',
@@ -942,15 +951,18 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         color: '#003049',
+        fontFamily: "NotoSansThai_700Bold",
     },
     resultSub: {
         fontSize: 12,
         color: '#6B7280',
+        fontFamily: "NotoSansThai_400Regular",
     },
     resultUnit: {
         fontSize: 11,
         color: '#9CA3AF',
         marginTop: 2,
+        fontFamily: "NotoSansThai_400Regular",
     },
     resultBadge: {
         paddingHorizontal: 8,
@@ -961,6 +973,7 @@ const styles = StyleSheet.create({
         fontSize: 10,
         color: '#fff',
         fontWeight: 'bold',
+        fontFamily: "NotoSansThai_700Bold",
     },
     primaryButton: {
         backgroundColor: '#003049',
@@ -969,6 +982,7 @@ const styles = StyleSheet.create({
     },
     primaryButtonText: {
         color: '#fff',
+        fontFamily: "NotoSansThai_400Regular",
     },
     // Form Styles
     input: {
@@ -978,6 +992,7 @@ const styles = StyleSheet.create({
         padding: 12,
         marginBottom: 15,
         color: '#000',
+        fontFamily: "NotoSansThai_400Regular",
     },
     row: {
         flexDirection: 'row',
@@ -1001,13 +1016,15 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
         fontSize: 16,
+        fontFamily: "NotoSansThai_700Bold",
     },
     sectionHeader: {
         fontSize: 16,
         fontWeight: 'bold',
         marginBottom: 10,
         marginTop: 10,
-        color: '#003049'
+        color: '#003049',
+        fontFamily: "NotoSansThai_700Bold",
     },
     photoContainer: {
         flexDirection: 'row',
@@ -1021,7 +1038,8 @@ const styles = StyleSheet.create({
     photoLabel: {
         fontSize: 12,
         marginBottom: 5,
-        color: '#4B5563'
+        color: '#4B5563',
+        fontFamily: "NotoSansThai_400Regular",
     },
     photoButton: {
         width: '100%',
@@ -1041,6 +1059,7 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#6B7280',
         marginTop: 5,
+        fontFamily: "NotoSansThai_400Regular",
     },
     previewImage: {
         width: '100%',
@@ -1056,12 +1075,14 @@ const styles = StyleSheet.create({
     toggleLabel: {
         fontSize: 14,
         color: '#374151',
+        fontFamily: "NotoSansThai_400Regular",
     },
     statusText: {
         fontSize: 12,
         color: '#4B5563',
         textAlign: 'right',
         marginBottom: 15,
+        fontFamily: "NotoSansThai_400Regular",
     },
     divider: {
         height: 1,
@@ -1107,6 +1128,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#374151',
         marginBottom: 8,
+        fontFamily: "NotoSansThai_700Bold",
     },
     emptySubtitle: {
         fontSize: 14,
@@ -1114,6 +1136,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 22,
         marginBottom: 24,
+        fontFamily: "NotoSansThai_400Regular",
     },
     walkInButton: {
         flexDirection: 'row',
@@ -1132,6 +1155,7 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+        fontFamily: "NotoSansThai_700Bold",
     },
     retryButton: {
         marginTop: 16,
@@ -1142,6 +1166,7 @@ const styles = StyleSheet.create({
         color: '#6B7280',
         fontSize: 14,
         textDecorationLine: 'underline',
+        fontFamily: "NotoSansThai_400Regular",
     },
     // Quick Check-in Modal Styles
     quickModalOverlay: {
@@ -1179,11 +1204,13 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         color: '#1F2937',
+        fontFamily: "NotoSansThai_700Bold",
     },
     quickModalSubtitle: {
         fontSize: 14,
         color: '#6B7280',
         marginTop: 4,
+        fontFamily: "NotoSansThai_400Regular",
     },
     vehicleInfoCard: {
         backgroundColor: '#F9FAFB',
@@ -1211,10 +1238,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#003049',
         letterSpacing: 2,
+        fontFamily: "NotoSansThai_700Bold",
     },
     provinceText: {
         fontSize: 12,
         color: '#6B7280',
+        fontFamily: "NotoSansThai_400Regular",
     },
     typeBadge: {
         flexDirection: 'row',
@@ -1229,6 +1258,7 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
         marginLeft: 6,
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     infoRow: {
         flexDirection: 'row',
@@ -1239,6 +1269,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#374151',
         marginLeft: 8,
+        fontFamily: "NotoSansThai_400Regular",
     },
     quickModalButtons: {
         gap: 10,
@@ -1260,6 +1291,7 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+        fontFamily: "NotoSansThai_700Bold",
     },
     quickEditButton: {
         flexDirection: 'row',
@@ -1275,6 +1307,7 @@ const styles = StyleSheet.create({
         color: '#003049',
         fontSize: 14,
         fontWeight: '600',
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     quickCancelButton: {
         paddingVertical: 12,
@@ -1283,6 +1316,7 @@ const styles = StyleSheet.create({
     quickCancelText: {
         color: '#9CA3AF',
         fontSize: 14,
+        fontFamily: "NotoSansThai_400Regular",
     },
     // Province Picker Styles
     provinceButton: {
@@ -1300,6 +1334,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#000',
         flex: 1,
+        fontFamily: "NotoSansThai_400Regular",
     },
     provinceModalOverlay: {
         flex: 1,
@@ -1325,6 +1360,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: '#003049',
+        fontFamily: "NotoSansThai_700Bold",
     },
     provinceModalCloseBtn: {
         padding: 6,
@@ -1346,6 +1382,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: '#000',
         padding: 0,
+        fontFamily: "NotoSansThai_400Regular",
     },
     provinceItem: {
         flexDirection: 'row',
@@ -1362,10 +1399,12 @@ const styles = StyleSheet.create({
     provinceItemText: {
         fontSize: 15,
         color: '#374151',
+        fontFamily: "NotoSansThai_400Regular",
     },
     provinceItemTextActive: {
         color: '#10B981',
         fontWeight: '600',
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     provinceEmptyContainer: {
         alignItems: 'center',
@@ -1375,6 +1414,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#9CA3AF',
         marginTop: 8,
+        fontFamily: "NotoSansThai_400Regular",
     },
 });
 

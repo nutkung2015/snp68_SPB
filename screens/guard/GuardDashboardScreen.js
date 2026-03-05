@@ -416,11 +416,13 @@ const styles = StyleSheet.create({
     backText: {
         fontSize: 16,
         marginLeft: 5,
+        fontFamily: "NotoSansThai_400Regular",
     },
     title: {
         fontSize: 24,
         fontWeight: "bold",
         marginBottom: 20,
+        fontFamily: "NotoSansThai_700Bold",
     },
     actionButtons: {
         flexDirection: 'row',
@@ -439,6 +441,7 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
         fontSize: 14,
+        fontFamily: "NotoSansThai_700Bold",
     },
     tabsContainer: {
         flexDirection: 'row',
@@ -461,14 +464,17 @@ const styles = StyleSheet.create({
     tabText: {
         color: '#6B7280',
         fontWeight: 'bold',
+        fontFamily: "NotoSansThai_700Bold",
     },
     activeTabText: {
         fontWeight: 'bold',
+        fontFamily: "NotoSansThai_700Bold",
     },
     sectionTitle: {
         fontSize: 16,
         fontWeight: "bold",
         marginBottom: 10,
+        fontFamily: "NotoSansThai_700Bold",
     },
     card: {
         borderRadius: 12,
@@ -492,10 +498,12 @@ const styles = StyleSheet.create({
     plateText: {
         fontSize: 18,
         fontWeight: "bold",
+        fontFamily: "NotoSansThai_700Bold",
     },
     subText: {
         fontSize: 12,
         color: "#4B5563",
+        fontFamily: "NotoSansThai_400Regular",
     },
     cardRight: {
         alignItems: 'flex-end',
@@ -506,6 +514,7 @@ const styles = StyleSheet.create({
         fontSize: 10,
         color: "#6B7280",
         marginBottom: 5,
+        fontFamily: "NotoSansThai_400Regular",
     },
     statusTag: {
         paddingVertical: 4,
@@ -516,11 +525,13 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontWeight: 'bold',
         color: '#000',
+        fontFamily: "NotoSansThai_700Bold",
     },
     emptyText: {
         textAlign: 'center',
         marginTop: 20,
         color: '#9CA3AF',
+        fontFamily: "NotoSansThai_400Regular",
     },
     // Modal styles
     modalOverlay: {
@@ -540,6 +551,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 20,
+        fontFamily: "NotoSansThai_700Bold",
     },
     modalInfo: {
         flexDirection: 'row',
@@ -552,10 +564,12 @@ const styles = StyleSheet.create({
     modalLabel: {
         fontSize: 14,
         color: '#6B7280',
+        fontFamily: "NotoSansThai_400Regular",
     },
     modalValue: {
         fontSize: 14,
         fontWeight: 'bold',
+        fontFamily: "NotoSansThai_700Bold",
     },
     modalButtons: {
         flexDirection: 'row',
@@ -570,6 +584,7 @@ const styles = StyleSheet.create({
     },
     cancelBtnText: {
         fontWeight: 'bold',
+        fontFamily: "NotoSansThai_700Bold",
     },
     confirmBtn: {
         paddingVertical: 12,
@@ -581,6 +596,7 @@ const styles = StyleSheet.create({
     confirmBtnText: {
         color: '#fff',
         fontWeight: 'bold',
+        fontFamily: "NotoSansThai_700Bold",
     },
     callBtn: {
         paddingVertical: 12,
@@ -593,6 +609,7 @@ const styles = StyleSheet.create({
     callBtnText: {
         color: '#fff',
         fontWeight: 'bold',
+        fontFamily: "NotoSansThai_700Bold",
     },
     warningBadge: {
         flexDirection: 'row',
@@ -608,6 +625,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginLeft: 5,
         fontSize: 12,
+        fontFamily: "NotoSansThai_700Bold",
     },
 });
 
