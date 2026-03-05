@@ -245,12 +245,21 @@ const GuardCheckInScreen = ({ navigation }) => {
 
     const takePhoto = async (type) => {
         try {
-            const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+            // 1. Check existing permission first
+            let permissionResult = await ImagePicker.getCameraPermissionsAsync();
 
-            if (permissionResult.granted === false) {
-                Alert.alert("Required", "ต้องการสิทธิ์การใช้กล้องถ่ายรูป");
+            // 2. Request if not granted
+            if (permissionResult.status !== 'granted') {
+                permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+            }
+
+            if (permissionResult.status !== 'granted') {
+                Alert.alert("Required", "ต้องการสิทธิ์การใช้กล้องถ่ายรูป กรุณาเปิดสิทธิ์ในตั้งค่า (Settings)");
                 return;
             }
+
+            // Add a small delay for better stability on some Android devices after returning from background
+            await new Promise(resolve => setTimeout(resolve, 300));
 
             const result = await ImagePicker.launchCameraAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -260,7 +269,7 @@ const GuardCheckInScreen = ({ navigation }) => {
                 saveToPhotos: false,
             });
 
-            if (!result.canceled) {
+            if (!result.canceled && result.assets && result.assets.length > 0) {
                 if (type === 'driver') {
                     setDriverImage(result.assets[0].uri);
                 } else {
@@ -268,8 +277,8 @@ const GuardCheckInScreen = ({ navigation }) => {
                 }
             }
         } catch (error) {
-            console.error(error);
-            Alert.alert("Error", "ไม่สามารถเปิดกล้องได้");
+            console.error("Camera Error: ", error);
+            Alert.alert("Error", "ไม่สามารถเปิดกล้องได้ กรุณาลองใหม่อีกครั้ง");
         }
     };
 
