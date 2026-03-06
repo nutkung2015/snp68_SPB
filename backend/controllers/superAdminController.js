@@ -226,6 +226,146 @@ exports.updateSystemConfig = async (req, res) => {
 };
 
 // ==========================================
+// Create Juristic Account + Assign to Project
+// ==========================================
+exports.createJuristicAccount = async (req, res) => {
+    try {
+        const {
+            full_name,
+            email,
+            phone,
+            password,
+            role = 'juristic',      // 'juristic' หรือ 'juristicLeader'
+            project_id              // ID ของโครงการที่ต้องการเพิ่มเข้า
+        } = req.body;
+
+        // --- Validation ---
+        if (!full_name || !email || !password || !project_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'กรุณากรอก full_name, email, password และ project_id'
+            });
+        }
+
+        // จำกัดให้สร้างได้เฉพาะ role นิติบุคคลเท่านั้น
+        const allowedRoles = ['juristic', 'juristicLeader'];
+        if (!allowedRoles.includes(role)) {
+            return res.status(400).json({
+                status: 'error',
+                message: `role ต้องเป็น ${allowedRoles.join(' หรือ ')} เท่านั้น`
+            });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'
+            });
+        }
+
+        // --- เช็คอีเมลซ้ำ ---
+        const [existingEmail] = await db.promise().query(
+            'SELECT id FROM users WHERE email = ?', [email]
+        );
+        if (existingEmail.length > 0) {
+            return res.status(409).json({
+                status: 'error',
+                message: 'อีเมลนี้ถูกใช้งานแล้ว'
+            });
+        }
+
+        // --- เช็คเบอร์โทรซ้ำ (ถ้ามี) ---
+        if (phone) {
+            const [existingPhone] = await db.promise().query(
+                'SELECT id FROM users WHERE phone = ?', [phone]
+            );
+            if (existingPhone.length > 0) {
+                return res.status(409).json({
+                    status: 'error',
+                    message: 'เบอร์โทรศัพท์นี้ถูกใช้งานแล้ว'
+                });
+            }
+        }
+
+        // --- เช็คว่าโครงการมีอยู่จริง ---
+        const [projectExists] = await db.promise().query(
+            'SELECT id, name FROM projects WHERE id = ?', [project_id]
+        );
+        if (projectExists.length === 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'ไม่พบโครงการที่ระบุ'
+            });
+        }
+
+        // --- สร้าง User ---
+        const bcrypt = require('bcrypt');
+        const { v4: uuidv4 } = require('uuid');
+
+        const userId = uuidv4();
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await db.promise().execute(
+            `INSERT INTO users (id, full_name, phone, email, password, role, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+            [userId, full_name, phone || null, email, hashedPassword, role]
+        );
+
+        // --- เพิ่มเข้า project_members ---
+        const membershipId = uuidv4();
+        await db.promise().execute(
+            `INSERT INTO project_members (id, user_id, project_id, role, joined_at)
+             VALUES (?, ?, ?, ?, NOW())`,
+            [membershipId, userId, project_id, role]
+        );
+
+        // --- Log Action ---
+        await logAdminAction(
+            req.user.id,
+            'CREATE',
+            'juristic_account',
+            userId,
+            {
+                full_name,
+                email,
+                phone,
+                role,
+                project_id,
+                project_name: projectExists[0].name
+            },
+            req
+        );
+
+        res.status(201).json({
+            status: 'success',
+            message: `สร้างบัญชีนิติบุคคลสำเร็จ และเพิ่มเข้าโครงการ "${projectExists[0].name}" แล้ว`,
+            data: {
+                user: {
+                    id: userId,
+                    full_name,
+                    email,
+                    phone: phone || null,
+                    role
+                },
+                project_membership: {
+                    id: membershipId,
+                    project_id,
+                    project_name: projectExists[0].name,
+                    role
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error in createJuristicAccount:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'เกิดข้อผิดพลาดในการสร้างบัญชีนิติบุคคล'
+        });
+    }
+};
+
+// ==========================================
 // Internal Helper: Log Action
 // ==========================================
 const logAdminAction = async (adminId, actionType, targetType, targetId, details, req) => {

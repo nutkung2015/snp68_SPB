@@ -20,6 +20,9 @@ router.get('/logs', superAdminController.getActivityLogs);
 // Users Management
 router.get('/users', superAdminController.getAllUsers);
 
+// Create Juristic Account + Assign to Project
+router.post('/users/create-juristic', superAdminController.createJuristicAccount);
+
 // System Config
 router.get('/config', superAdminController.getSystemConfig);
 router.put('/config', superAdminController.updateSystemConfig);
