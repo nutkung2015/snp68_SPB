@@ -77,7 +77,7 @@ async function sendDailyReportSummary() {
     try {
         // Get all active projects
         const [projects] = await db.promise().query(
-            `SELECT id, name FROM projects WHERE status = 'active' OR status IS NULL`
+            `SELECT id, name FROM projects`
         );
 
         console.log(`[CronJob] Processing ${projects.length} projects`);
