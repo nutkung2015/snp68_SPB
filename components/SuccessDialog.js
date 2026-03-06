@@ -24,10 +24,11 @@ const SuccessDialog = ({
     loadingText = "กำลังโหลด...",
     icon = "checkmark-circle",
     iconColor = "#4CAF50",
+    buttonColor = PRIMARY_COLOR,
 }) => {
-    
 
-    
+
+
 
     return (
         <Modal
@@ -60,7 +61,7 @@ const SuccessDialog = ({
 
                             {/* Button */}
                             <TouchableOpacity
-                                style={styles.button}
+                                style={[styles.button, { backgroundColor: buttonColor, shadowColor: buttonColor }]}
                                 onPress={onButtonPress}
                                 activeOpacity={0.8}
                             >

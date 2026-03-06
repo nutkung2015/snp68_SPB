@@ -359,7 +359,6 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
-        fontWeight: "bold",
         color: "#003049",
         marginBottom: 20,
         fontFamily: "NotoSansThai_700Bold",
@@ -391,7 +390,6 @@ const styles = StyleSheet.create({
     },
     dateText: {
         fontSize: 16,
-        fontWeight: 'bold',
         color: '#003049',
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -403,7 +401,6 @@ const styles = StyleSheet.create({
     },
     todayBtnText: {
         color: '#fff',
-        fontWeight: 'bold',
         fontSize: 12,
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -421,7 +418,6 @@ const styles = StyleSheet.create({
     },
     summaryNumber: {
         fontSize: 24,
-        fontWeight: 'bold',
         color: '#003049',
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -462,7 +458,6 @@ const styles = StyleSheet.create({
     },
     plateText: {
         fontSize: 16,
-        fontWeight: "bold",
         color: "#003049",
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -490,7 +485,6 @@ const styles = StyleSheet.create({
     },
     timeValue: {
         fontSize: 11,
-        fontWeight: 'bold',
         color: '#003049',
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -502,7 +496,6 @@ const styles = StyleSheet.create({
     },
     statusText: {
         fontSize: 10,
-        fontWeight: 'bold',
         color: '#fff',
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -538,7 +531,6 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 20,
-        fontWeight: 'bold',
         color: '#003049',
         marginBottom: 20,
         fontFamily: "NotoSansThai_700Bold",
@@ -558,7 +550,6 @@ const styles = StyleSheet.create({
     },
     modalValue: {
         fontSize: 14,
-        fontWeight: 'bold',
         color: '#003049',
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -571,7 +562,6 @@ const styles = StyleSheet.create({
     },
     closeModalBtnText: {
         color: '#fff',
-        fontWeight: 'bold',
         fontSize: 16,
         fontFamily: "NotoSansThai_700Bold",
     },

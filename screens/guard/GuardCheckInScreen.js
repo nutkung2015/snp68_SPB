@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     View,
     Text,
@@ -20,6 +20,8 @@ import Icon from "react-native-vector-icons/FontAwesome5";
 import SecurityService from "../../services/securityService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from 'expo-image-picker';
+import SuccessDialog from "../../components/SuccessDialog";
+import ProjectCustomizationsService from "../../services/projectCustomizationsService";
 
 const GuardCheckInScreen = ({ navigation }) => {
     const [query, setQuery] = useState("");
@@ -35,6 +37,31 @@ const GuardCheckInScreen = ({ navigation }) => {
     // Re-confirmation Modal State
     const [confirmModalVisible, setConfirmModalVisible] = useState(false);
     const [confirmPlateInput, setConfirmPlateInput] = useState("");
+
+    // Success Dialog State
+    const [successDialog, setSuccessDialog] = useState({ visible: false, message: "" });
+
+    // Project Customization
+    const [primaryColor, setPrimaryColor] = useState("#2A405E");
+
+    useEffect(() => {
+        const fetchPrimaryColor = async () => {
+            try {
+                const userStr = await AsyncStorage.getItem("userData");
+                const user = JSON.parse(userStr);
+                const projectId = user?.projectMemberships?.[0]?.project_id;
+                if (projectId) {
+                    const customizations = await ProjectCustomizationsService.getProjectCustomizations(projectId);
+                    if (customizations?.primary_color) {
+                        setPrimaryColor(customizations.primary_color);
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching customizations:", err);
+            }
+        };
+        fetchPrimaryColor();
+    }, []);
 
     // Form Data
     const [formData, setFormData] = useState({
@@ -215,8 +242,7 @@ const GuardCheckInScreen = ({ navigation }) => {
             const response = await SecurityService.checkIn(checkInPayload);
             if (response.status === "success") {
                 setConfirmModalVisible(false);
-                Alert.alert("Success", response.message);
-                navigation.goBack();
+                setSuccessDialog({ visible: true, message: response.message });
             } else if (response.status === 'require_unit') {
                 setConfirmModalVisible(false);
                 Alert.alert("Required", "กรุณาระบุบ้านเลขที่ที่มาติดต่อ");
@@ -739,6 +765,19 @@ const GuardCheckInScreen = ({ navigation }) => {
             {/* Re-confirm Modal */}
             {renderConfirmModal()}
 
+            {/* Success Dialog */}
+            <SuccessDialog
+                visible={successDialog.visible}
+                title="บันทึกสำเร็จ!"
+                message={successDialog.message}
+                buttonText="ตกลง"
+                buttonColor={primaryColor}
+                onButtonPress={() => {
+                    setSuccessDialog({ visible: false, message: "" });
+                    navigation.goBack();
+                }}
+            />
+
             {/* Province Picker Modal */}
             <Modal
                 visible={provinceModalVisible}
@@ -840,7 +879,6 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
         color: '#003049',
         textAlign: 'center',
         marginBottom: 20,
@@ -850,7 +888,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#374151',
         marginBottom: 5,
-        fontWeight: '600',
         fontFamily: "NotoSansThai_600SemiBold",
     },
     subLabel: {
@@ -865,7 +902,6 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         padding: 10,
         fontSize: 18,
-        fontWeight: 'bold',
         color: '#003049',
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -897,12 +933,10 @@ const styles = StyleSheet.create({
     },
     cancelButtonText: {
         color: '#003049',
-        fontWeight: 'bold',
         fontFamily: "NotoSansThai_700Bold",
     },
     searchButtonText: {
         color: '#fff',
-        fontWeight: 'bold',
         fontFamily: "NotoSansThai_700Bold",
     },
     // Result Styles
@@ -923,7 +957,6 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 20,
-        fontWeight: 'bold',
         marginBottom: 15,
         color: '#003049',
         fontFamily: "NotoSansThai_700Bold",
@@ -949,7 +982,6 @@ const styles = StyleSheet.create({
     },
     resultTitle: {
         fontSize: 16,
-        fontWeight: 'bold',
         color: '#003049',
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -972,7 +1004,6 @@ const styles = StyleSheet.create({
     resultBadgeText: {
         fontSize: 10,
         color: '#fff',
-        fontWeight: 'bold',
         fontFamily: "NotoSansThai_700Bold",
     },
     primaryButton: {
@@ -1014,13 +1045,11 @@ const styles = StyleSheet.create({
     },
     submitButtonText: {
         color: '#fff',
-        fontWeight: 'bold',
         fontSize: 16,
         fontFamily: "NotoSansThai_700Bold",
     },
     sectionHeader: {
         fontSize: 16,
-        fontWeight: 'bold',
         marginBottom: 10,
         marginTop: 10,
         color: '#003049',
@@ -1125,7 +1154,6 @@ const styles = StyleSheet.create({
     },
     emptyTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
         color: '#374151',
         marginBottom: 8,
         fontFamily: "NotoSansThai_700Bold",
@@ -1154,7 +1182,6 @@ const styles = StyleSheet.create({
     walkInButtonText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: 'bold',
         fontFamily: "NotoSansThai_700Bold",
     },
     retryButton: {
@@ -1202,7 +1229,6 @@ const styles = StyleSheet.create({
     },
     quickModalTitle: {
         fontSize: 20,
-        fontWeight: 'bold',
         color: '#1F2937',
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -1235,7 +1261,6 @@ const styles = StyleSheet.create({
     },
     plateText: {
         fontSize: 24,
-        fontWeight: 'bold',
         color: '#003049',
         letterSpacing: 2,
         fontFamily: "NotoSansThai_700Bold",
@@ -1256,7 +1281,6 @@ const styles = StyleSheet.create({
     },
     typeBadgeText: {
         fontSize: 12,
-        fontWeight: '600',
         marginLeft: 6,
         fontFamily: "NotoSansThai_600SemiBold",
     },
@@ -1290,7 +1314,6 @@ const styles = StyleSheet.create({
     quickConfirmText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: 'bold',
         fontFamily: "NotoSansThai_700Bold",
     },
     quickEditButton: {
@@ -1306,7 +1329,6 @@ const styles = StyleSheet.create({
     quickEditText: {
         color: '#003049',
         fontSize: 14,
-        fontWeight: '600',
         fontFamily: "NotoSansThai_600SemiBold",
     },
     quickCancelButton: {
@@ -1358,7 +1380,6 @@ const styles = StyleSheet.create({
     },
     provinceModalTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
         color: '#003049',
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -1403,7 +1424,6 @@ const styles = StyleSheet.create({
     },
     provinceItemTextActive: {
         color: '#10B981',
-        fontWeight: '600',
         fontFamily: "NotoSansThai_600SemiBold",
     },
     provinceEmptyContainer: {

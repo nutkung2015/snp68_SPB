@@ -420,7 +420,6 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
-        fontWeight: "bold",
         marginBottom: 20,
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -439,7 +438,6 @@ const styles = StyleSheet.create({
     },
     actionBtnTextPrimary: {
         color: '#fff',
-        fontWeight: 'bold',
         fontSize: 14,
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -463,16 +461,13 @@ const styles = StyleSheet.create({
     },
     tabText: {
         color: '#6B7280',
-        fontWeight: 'bold',
         fontFamily: "NotoSansThai_700Bold",
     },
     activeTabText: {
-        fontWeight: 'bold',
         fontFamily: "NotoSansThai_700Bold",
     },
     sectionTitle: {
         fontSize: 16,
-        fontWeight: "bold",
         marginBottom: 10,
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -497,7 +492,6 @@ const styles = StyleSheet.create({
     },
     plateText: {
         fontSize: 18,
-        fontWeight: "bold",
         fontFamily: "NotoSansThai_700Bold",
     },
     subText: {
@@ -523,7 +517,6 @@ const styles = StyleSheet.create({
     },
     statusText: {
         fontSize: 10,
-        fontWeight: 'bold',
         color: '#000',
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -549,7 +542,6 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 20,
-        fontWeight: 'bold',
         marginBottom: 20,
         fontFamily: "NotoSansThai_700Bold",
     },
@@ -568,7 +560,6 @@ const styles = StyleSheet.create({
     },
     modalValue: {
         fontSize: 14,
-        fontWeight: 'bold',
         fontFamily: "NotoSansThai_700Bold",
     },
     modalButtons: {
@@ -583,7 +574,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#E5E7EB',
     },
     cancelBtnText: {
-        fontWeight: 'bold',
         fontFamily: "NotoSansThai_700Bold",
     },
     confirmBtn: {
@@ -595,7 +585,6 @@ const styles = StyleSheet.create({
     },
     confirmBtnText: {
         color: '#fff',
-        fontWeight: 'bold',
         fontFamily: "NotoSansThai_700Bold",
     },
     callBtn: {
@@ -608,7 +597,6 @@ const styles = StyleSheet.create({
     },
     callBtnText: {
         color: '#fff',
-        fontWeight: 'bold',
         fontFamily: "NotoSansThai_700Bold",
     },
     warningBadge: {
@@ -622,7 +610,6 @@ const styles = StyleSheet.create({
     },
     warningText: {
         color: '#fff',
-        fontWeight: 'bold',
         marginLeft: 5,
         fontSize: 12,
         fontFamily: "NotoSansThai_700Bold",
