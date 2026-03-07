@@ -183,6 +183,7 @@ export default function AddCommonIssueForm({ navigation }) {
                 description: formData.description,
                 image_urls: base64Images,
                 priority: "medium",
+                phone_number: userData?.phone || userData?.phone_number || "",
             };
 
             console.log("Payload:", payload);

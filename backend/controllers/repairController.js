@@ -619,6 +619,7 @@ exports.createCommonIssue = async (req, res) => {
       description,
       image_urls, // This will now be base64 images or temp URLs
       priority = "medium",
+      phone_number,
     } = req.body;
 
     const reporter_name = userFullName;
@@ -673,8 +674,8 @@ exports.createCommonIssue = async (req, res) => {
     const query = `
             INSERT INTO common_issues 
             (id, project_id, unit_id, zone, reporter_name, reporter_id, reported_date,
-             issue_type, location, description, image_urls, priority, status)
-            VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, 'pending')
+             issue_type, location, description, image_urls, priority, status, phone_number)
+            VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, 'pending', ?)
         `;
 
     const [result] = await db
@@ -691,6 +692,7 @@ exports.createCommonIssue = async (req, res) => {
         description,
         imageUrlsJson,
         priority,
+        phone_number,
       ]);
 
     // ✅ Send notification to juristic staff

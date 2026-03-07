@@ -29,6 +29,8 @@ const GuardDashboardScreen = ({ navigation }) => {
     // Modal states
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [successModalVisible, setSuccessModalVisible] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
 
     // Fetch project customizations on mount
     useEffect(() => {
@@ -119,6 +121,8 @@ const GuardDashboardScreen = ({ navigation }) => {
             });
             if (res.status === 'success') {
                 closeModal();
+                setSuccessMessage("ยืนยันรถเข้าเรียบร้อยแล้ว");
+                setSuccessModalVisible(true);
                 fetchData();
             }
         } catch (error) {
@@ -133,6 +137,8 @@ const GuardDashboardScreen = ({ navigation }) => {
             const res = await SecurityService.checkOut(selectedItem.project_id, selectedItem.plate_number);
             if (res.status === 'success' || res.status === 'warning') {
                 closeModal();
+                setSuccessMessage("บันทึกรถออกเรียบร้อยแล้ว");
+                setSuccessModalVisible(true);
                 fetchData();
             }
         } catch (error) {
@@ -217,11 +223,56 @@ const GuardDashboardScreen = ({ navigation }) => {
 
     // Modal for Tab รถเข้า
     const renderEntryModal = () => (
-        <Modal visible={modalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+                <Icon name="car" size={50} color={primaryColor} style={{ marginBottom: 15 }} />
+                <Text style={[styles.modalTitle, { color: primaryColor }]}>ยืนยันการเข้าหมู่บ้าน</Text>
+
+                <View style={styles.modalInfo}>
+                    <Text style={styles.modalLabel}>ทะเบียน:</Text>
+                    <Text style={[styles.modalValue, { color: primaryColor }]}>{selectedItem?.plate_number}</Text>
+                </View>
+                <View style={styles.modalInfo}>
+                    <Text style={styles.modalLabel}>ชื่อผู้มาเยี่ยม:</Text>
+                    <Text style={[styles.modalValue, { color: primaryColor }]}>{selectedItem?.visitor_name || "-"}</Text>
+                </View>
+                <View style={styles.modalInfo}>
+                    <Text style={styles.modalLabel}>บ้านเลขที่:</Text>
+                    <Text style={[styles.modalValue, { color: primaryColor }]}>{selectedItem?.unit_number || "-"}</Text>
+                </View>
+
+                <View style={styles.modalButtons}>
+                    <TouchableOpacity style={styles.cancelBtn} onPress={closeModal}>
+                        <Text style={[styles.cancelBtnText, { color: primaryColor }]}>ยกเลิก</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.confirmBtn, { backgroundColor: primaryColor }]}
+                        onPress={handleConfirmEntry}
+                    >
+                        <Icon name="check" size={16} color="#fff" style={{ marginRight: 5 }} />
+                        <Text style={styles.confirmBtnText}>ยืนยันเข้า</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </View>
+    );
+
+    // Modal for Tab รถออก
+    const renderExitModal = () => {
+        const isPending = selectedItem?.estamp_status === 'pending';
+
+        return (
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
-                    <Icon name="car" size={50} color={primaryColor} style={{ marginBottom: 15 }} />
-                    <Text style={[styles.modalTitle, { color: primaryColor }]}>ยืนยันการเข้าหมู่บ้าน</Text>
+                    {isPending && (
+                        <View style={styles.warningBadge}>
+                            <Icon name="exclamation-triangle" size={16} color="#fff" />
+                            <Text style={styles.warningText}>ยังไม่ได้ประทับตรา</Text>
+                        </View>
+                    )}
+
+                    <Icon name="sign-out-alt" size={50} color={primaryColor} style={{ marginBottom: 15 }} />
+                    <Text style={[styles.modalTitle, { color: primaryColor }]}>บันทึกรถออก</Text>
 
                     <View style={styles.modalInfo}>
                         <Text style={styles.modalLabel}>ทะเบียน:</Text>
@@ -232,83 +283,34 @@ const GuardDashboardScreen = ({ navigation }) => {
                         <Text style={[styles.modalValue, { color: primaryColor }]}>{selectedItem?.visitor_name || "-"}</Text>
                     </View>
                     <View style={styles.modalInfo}>
-                        <Text style={styles.modalLabel}>บ้านเลขที่:</Text>
-                        <Text style={[styles.modalValue, { color: primaryColor }]}>{selectedItem?.unit_number || "-"}</Text>
+                        <Text style={styles.modalLabel}>เวลาเข้า:</Text>
+                        <Text style={[styles.modalValue, { color: primaryColor }]}>
+                            {selectedItem?.check_in_time ? moment(selectedItem.check_in_time).format("HH:mm") : "-"}
+                        </Text>
                     </View>
 
                     <View style={styles.modalButtons}>
                         <TouchableOpacity style={styles.cancelBtn} onPress={closeModal}>
                             <Text style={[styles.cancelBtnText, { color: primaryColor }]}>ยกเลิก</Text>
                         </TouchableOpacity>
+
+                        {isPending && (
+                            <TouchableOpacity style={styles.callBtn} onPress={handleCallResident}>
+                                <Icon name="phone" size={16} color="#fff" style={{ marginRight: 5 }} />
+                                <Text style={styles.callBtnText}>โทร</Text>
+                            </TouchableOpacity>
+                        )}
+
                         <TouchableOpacity
                             style={[styles.confirmBtn, { backgroundColor: primaryColor }]}
-                            onPress={handleConfirmEntry}
+                            onPress={handleCheckOut}
                         >
                             <Icon name="check" size={16} color="#fff" style={{ marginRight: 5 }} />
-                            <Text style={styles.confirmBtnText}>ยืนยันเข้า</Text>
+                            <Text style={styles.confirmBtnText}>ยืนยันออก</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
             </View>
-        </Modal>
-    );
-
-    // Modal for Tab รถออก
-    const renderExitModal = () => {
-        const isPending = selectedItem?.estamp_status === 'pending';
-
-        return (
-            <Modal visible={modalVisible} transparent animationType="fade">
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        {isPending && (
-                            <View style={styles.warningBadge}>
-                                <Icon name="exclamation-triangle" size={16} color="#fff" />
-                                <Text style={styles.warningText}>ยังไม่ได้ประทับตรา</Text>
-                            </View>
-                        )}
-
-                        <Icon name="sign-out-alt" size={50} color={primaryColor} style={{ marginBottom: 15 }} />
-                        <Text style={[styles.modalTitle, { color: primaryColor }]}>บันทึกรถออก</Text>
-
-                        <View style={styles.modalInfo}>
-                            <Text style={styles.modalLabel}>ทะเบียน:</Text>
-                            <Text style={[styles.modalValue, { color: primaryColor }]}>{selectedItem?.plate_number}</Text>
-                        </View>
-                        <View style={styles.modalInfo}>
-                            <Text style={styles.modalLabel}>ชื่อผู้มาเยี่ยม:</Text>
-                            <Text style={[styles.modalValue, { color: primaryColor }]}>{selectedItem?.visitor_name || "-"}</Text>
-                        </View>
-                        <View style={styles.modalInfo}>
-                            <Text style={styles.modalLabel}>เวลาเข้า:</Text>
-                            <Text style={[styles.modalValue, { color: primaryColor }]}>
-                                {selectedItem?.check_in_time ? moment(selectedItem.check_in_time).format("HH:mm") : "-"}
-                            </Text>
-                        </View>
-
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity style={styles.cancelBtn} onPress={closeModal}>
-                                <Text style={[styles.cancelBtnText, { color: primaryColor }]}>ยกเลิก</Text>
-                            </TouchableOpacity>
-
-                            {isPending && (
-                                <TouchableOpacity style={styles.callBtn} onPress={handleCallResident}>
-                                    <Icon name="phone" size={16} color="#fff" style={{ marginRight: 5 }} />
-                                    <Text style={styles.callBtnText}>โทร</Text>
-                                </TouchableOpacity>
-                            )}
-
-                            <TouchableOpacity
-                                style={[styles.confirmBtn, { backgroundColor: primaryColor }]}
-                                onPress={handleCheckOut}
-                            >
-                                <Icon name="check" size={16} color="#fff" style={{ marginRight: 5 }} />
-                                <Text style={styles.confirmBtnText}>ยืนยันออก</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
         );
     };
 
@@ -391,8 +393,34 @@ const GuardDashboardScreen = ({ navigation }) => {
             />
 
             {/* Modals */}
-            {activeTab === 'scheduled' && selectedItem && renderEntryModal()}
-            {activeTab === 'inside' && selectedItem && renderExitModal()}
+            <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={closeModal}>
+                {activeTab === 'scheduled' && selectedItem && renderEntryModal()}
+                {activeTab === 'inside' && selectedItem && renderExitModal()}
+            </Modal>
+
+            {/* Success Modal */}
+            <Modal
+                visible={successModalVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setSuccessModalVisible(false)}
+            >
+                <View style={styles.successModalOverlay}>
+                    <View style={styles.successModalContent}>
+                        <Icon name="check-circle" size={60} color={primaryColor} solid style={{ marginBottom: 15 }} />
+                        <Text style={styles.successTitle}>สำเร็จ</Text>
+                        <Text style={styles.successMessage}>
+                            {successMessage}
+                        </Text>
+                        <TouchableOpacity
+                            style={[styles.successButton, { backgroundColor: primaryColor }]}
+                            onPress={() => setSuccessModalVisible(false)}
+                        >
+                            <Text style={styles.successButtonText}>ตกลง</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
@@ -612,6 +640,50 @@ const styles = StyleSheet.create({
         color: '#fff',
         marginLeft: 5,
         fontSize: 12,
+        fontFamily: "NotoSansThai_700Bold",
+    },
+    successModalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    successModalContent: {
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        padding: 30,
+        width: "80%",
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    successTitle: {
+        fontSize: 20,
+        fontWeight: "bold",
+        fontFamily: "NotoSansThai_700Bold",
+        marginBottom: 10,
+    },
+    successMessage: {
+        fontSize: 16,
+        color: "#6B7280",
+        textAlign: "center",
+        fontFamily: "NotoSansThai_400Regular",
+        marginBottom: 20,
+    },
+    successButton: {
+        paddingHorizontal: 30,
+        paddingVertical: 12,
+        borderRadius: 25,
+        width: "100%",
+        alignItems: "center",
+    },
+    successButtonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "bold",
         fontFamily: "NotoSansThai_700Bold",
     },
 });
