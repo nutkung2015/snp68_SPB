@@ -230,7 +230,7 @@ app.use(cookieParser()); // Use cookie-parser middleware
 // Rate Limiting
 const apiLimiter = rateLimit({
   windowMs: 3 * 60 * 1000, // 3 minutes
-  max: 100, // Limit each IP to 50 requests per 3 minutes
+  max: 1000, // Limit each IP to 50 requests per 3 minutes
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
