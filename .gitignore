@@ -65,3 +65,6 @@ coverage/
 backend/uploads/
 uploads/*
 *.md
+*.csv
+*.tsv
+*.sql

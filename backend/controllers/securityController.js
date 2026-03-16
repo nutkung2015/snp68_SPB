@@ -178,34 +178,10 @@ exports.checkOut = async (req, res) => {
 
         const log = rows[0];
 
-        // Check Estamp Logic
-        let allowExit = false;
-        let warning = null;
-
-        if (log.visitor_type === 'resident') {
-            allowExit = true;
-        } else {
-            if (log.estamp_status === 'approved') {
-                allowExit = true;
-            } else {
-                allowExit = false; // Strictly speaking
-                warning = "ผู้มาติดต่อยังไม่ได้รับ E-stamp";
-                // Note: In real world, Guard might override this. 
-                // We will send 'status: warning' to UI and let UI send a confirmation 'force_exit' flag if needed.
-            }
-        }
-
-        if (!allowExit && !req.body.force_exit) {
-            return res.status(200).json({
-                status: "warning",
-                message: warning,
-                data: log
-            });
-        }
-
-        // Process Exit
+        // Process Exit (Allowed regardless of estamp status)
+        // Set id_card_consent to 0 (คืนบัตร/ทำบัตรหาย/อื่นๆ) when exiting
         await db.promise().execute(
-            "UPDATE entry_logs SET status = 'exited', check_out_time = NOW(), handled_by_out = ? WHERE id = ?",
+            "UPDATE entry_logs SET status = 'exited', check_out_time = NOW(), handled_by_out = ?, id_card_consent = 0 WHERE id = ?",
             [guard_id, log.id]
         );
 

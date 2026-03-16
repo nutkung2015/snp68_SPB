@@ -8,6 +8,8 @@ import {
     RefreshControl,
     Modal,
     Linking,
+    Alert,
+    TextInput,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/FontAwesome5";
@@ -15,6 +17,7 @@ import moment from "moment";
 import SecurityService from "../../services/securityService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ProjectCustomizationsService from "../../services/projectCustomizationsService";
+import SuccessDialog from "../../components/SuccessDialog";
 
 const GuardDashboardScreen = ({ navigation }) => {
     const [activeTab, setActiveTab] = useState("scheduled"); // 'scheduled' (รถเข้า) | 'inside' (รถออก)
@@ -22,6 +25,7 @@ const GuardDashboardScreen = ({ navigation }) => {
     const [scheduledVisitors, setScheduledVisitors] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
     const [projectId, setProjectId] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     // Project customization colors
     const [primaryColor, setPrimaryColor] = useState("#2A405E");
@@ -123,7 +127,6 @@ const GuardDashboardScreen = ({ navigation }) => {
                 closeModal();
                 setSuccessMessage("ยืนยันรถเข้าเรียบร้อยแล้ว");
                 setSuccessModalVisible(true);
-                fetchData();
             }
         } catch (error) {
             console.error("Confirm entry error:", error);
@@ -135,14 +138,16 @@ const GuardDashboardScreen = ({ navigation }) => {
         if (!selectedItem) return;
         try {
             const res = await SecurityService.checkOut(selectedItem.project_id, selectedItem.plate_number);
-            if (res.status === 'success' || res.status === 'warning') {
+            if (res.status === 'success') {
                 closeModal();
                 setSuccessMessage("บันทึกรถออกเรียบร้อยแล้ว");
                 setSuccessModalVisible(true);
-                fetchData();
+            } else {
+                Alert.alert("ข้อผิดพลาด", res.message || "เกิดข้อผิดพลาดในการบันทึกรถออก");
             }
         } catch (error) {
             console.error("Check out error:", error);
+            Alert.alert("ข้อผิดพลาด", "ไม่สามารถบันทึกรถออกได้ กรุณาลองใหม่อีกครั้ง");
         }
     };
 
@@ -314,7 +319,17 @@ const GuardDashboardScreen = ({ navigation }) => {
         );
     };
 
-    const currentData = activeTab === 'scheduled' ? scheduledVisitors : logs;
+    const filteredScheduledVisitors = scheduledVisitors.filter((item) =>
+        (item.plate_number && item.plate_number.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.visitor_name && item.visitor_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+
+    const filteredLogs = logs.filter((item) =>
+        (item.plate_number && item.plate_number.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.visitor_name && item.visitor_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+
+    const currentData = activeTab === 'scheduled' ? filteredScheduledVisitors : filteredLogs;
 
     return (
         <View style={styles.container}>
@@ -375,6 +390,24 @@ const GuardDashboardScreen = ({ navigation }) => {
                 </TouchableOpacity>
             </View>
 
+            {/* ช่องค้นหา (Search Bar) */}
+            <View style={styles.searchContainer}>
+                <Icon name="search" size={16} color="#6B7280" style={styles.searchIcon} />
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="พิมพ์เลขทะเบียน หรือชื่อเพื่อค้นหา..."
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    placeholderTextColor="#9CA3AF"
+                    autoCapitalize="none"
+                />
+                {searchQuery.length > 0 && (
+                    <TouchableOpacity onPress={() => setSearchQuery("")} style={styles.clearSearchBtn}>
+                        <Icon name="times-circle" size={16} color="#9CA3AF" />
+                    </TouchableOpacity>
+                )}
+            </View>
+
             <Text style={[styles.sectionTitle, { color: primaryColor }]}>
                 {activeTab === 'scheduled'
                     ? "รายการรถที่ลูกบ้านแจ้งล่วงหน้า"
@@ -398,29 +431,18 @@ const GuardDashboardScreen = ({ navigation }) => {
                 {activeTab === 'inside' && selectedItem && renderExitModal()}
             </Modal>
 
-            {/* Success Modal */}
-            <Modal
+            {/* Success Modal using SuccessDialog */}
+            <SuccessDialog
                 visible={successModalVisible}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={() => setSuccessModalVisible(false)}
-            >
-                <View style={styles.successModalOverlay}>
-                    <View style={styles.successModalContent}>
-                        <Icon name="check-circle" size={60} color={primaryColor} solid style={{ marginBottom: 15 }} />
-                        <Text style={styles.successTitle}>สำเร็จ</Text>
-                        <Text style={styles.successMessage}>
-                            {successMessage}
-                        </Text>
-                        <TouchableOpacity
-                            style={[styles.successButton, { backgroundColor: primaryColor }]}
-                            onPress={() => setSuccessModalVisible(false)}
-                        >
-                            <Text style={styles.successButtonText}>ตกลง</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
+                title="สำเร็จ!"
+                message={successMessage}
+                buttonText="ตกลง"
+                buttonColor={primaryColor}
+                onButtonPress={() => {
+                    setSuccessModalVisible(false);
+                    fetchData();
+                }}
+            />
         </View>
     );
 };
@@ -493,6 +515,28 @@ const styles = StyleSheet.create({
     },
     activeTabText: {
         fontFamily: "NotoSansThai_700Bold",
+    },
+    // Search Bar Styles
+    searchContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#F3F4F6",
+        borderRadius: 10,
+        paddingHorizontal: 15,
+        marginBottom: 15,
+        height: 45,
+    },
+    searchIcon: {
+        marginRight: 10,
+    },
+    searchInput: {
+        flex: 1,
+        fontFamily: "NotoSansThai_400Regular",
+        fontSize: 14,
+        color: "#111827",
+    },
+    clearSearchBtn: {
+        padding: 5,
     },
     sectionTitle: {
         fontSize: 16,

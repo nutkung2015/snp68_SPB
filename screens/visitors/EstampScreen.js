@@ -453,6 +453,7 @@ const styles = StyleSheet.create({
     },
     cancelText: {
         fontSize: 16,
+        fontFamily: 'NotoSansThai_400Regular',
     },
     modalTitle: {
         fontSize: 18,
@@ -476,6 +477,7 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#6B7280',
         marginBottom: 4,
+        fontFamily: 'NotoSansThai_400Regular',
     },
     detailValue: {
         fontSize: 16,
@@ -483,6 +485,7 @@ const styles = StyleSheet.create({
     },
     detailSubValue: {
         fontSize: 16,
+        fontFamily: 'NotoSansThai_400Regular',
     },
     verticalDivider: {
         width: 1,
@@ -531,6 +534,7 @@ const styles = StyleSheet.create({
     backText: {
         fontSize: 16,
         marginLeft: 5,
+        fontFamily: "NotoSansThai_600SemiBold",
     },
     title: {
         fontSize: 24,
@@ -591,6 +595,7 @@ const styles = StyleSheet.create({
     subText: {
         fontSize: 12,
         color: "#4B5563",
+        fontFamily: 'NotoSansThai_400Regular',
     },
     cardRight: {
         alignItems: 'flex-end',
@@ -601,6 +606,7 @@ const styles = StyleSheet.create({
         fontSize: 10,
         color: "#6B7280",
         marginBottom: 5,
+        fontFamily: 'NotoSansThai_400Regular',
     },
     statusButton: {
         paddingVertical: 6,
@@ -616,6 +622,7 @@ const styles = StyleSheet.create({
         color: "#9ca3af",
         marginTop: 20,
         fontSize: 16,
+        fontFamily: 'NotoSansThai_400Regular',
     },
     // Entry History Pill Button Styles
     titleRow: {
@@ -653,6 +660,7 @@ const styles = StyleSheet.create({
         padding: 12,
         fontSize: 16,
         color: '#000',
+        fontFamily: 'NotoSansThai_400Regular',
     },
     dateDisplay: {
         backgroundColor: '#f9fafb',
@@ -667,6 +675,7 @@ const styles = StyleSheet.create({
     dateText: {
         fontSize: 16,
         color: '#000',
+        fontFamily: 'NotoSansThai_400Regular',
     },
 });
 

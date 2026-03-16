@@ -269,6 +269,7 @@ const styles = StyleSheet.create({
   registerText: {
     color: "#222",
     fontSize: 14,
+    fontFamily: "NotoSansThai_400Regular",
   },
   homeAddressCard: {
     margin: 16,

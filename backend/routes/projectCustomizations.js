@@ -17,8 +17,8 @@ const router = express.Router();
 router.get("/", getProjectCustomizations);
 
 // Route to get a specific project customization by project ID
-// Protected: requires authentication and juristic role in the project
-router.get("/:projectId", authMiddleware, getProjectCustomizationById);
+// Public route: client app usually needs this before login to load project theme/logo
+router.get("/:projectId", getProjectCustomizationById);
 
 // Route to create a new project customization (with logo upload support)
 // Protected: requires authentication and juristic role in the project

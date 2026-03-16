@@ -157,6 +157,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 16,
     marginLeft: 4,
+    fontFamily: "NotoSansThai_400Regular",
   },
   headerTitle: {
     flex: 1,

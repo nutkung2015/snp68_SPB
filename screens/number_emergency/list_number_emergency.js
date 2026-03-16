@@ -207,6 +207,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 16,
     marginLeft: 4,
+    fontFamily: "NotoSansThai_400Regular",
   },
   headerTitle: {
     flex: 1,
@@ -214,6 +215,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "start",
     marginRight: 24, // Offset for back button
+    fontFamily: "NotoSansThai_600SemiBold",
   },
   content: {
     flex: 1,
@@ -288,6 +290,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#205248",
     marginTop: 10,
+    fontFamily: "NotoSansThai_600SemiBold",
   },
   phoneSection: {
     alignItems: "center",
@@ -297,6 +300,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     marginBottom: 10,
+    fontFamily: "NotoSansThai_400Regular",
   },
   phoneButton: {
     flexDirection: "row",
@@ -311,6 +315,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginRight: 10,
+    fontFamily: "NotoSansThai_600SemiBold",
   },
   description: {
     fontSize: 16,
@@ -318,6 +323,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
     lineHeight: 24,
+    fontFamily: "NotoSansThai_400Regular",
   },
   closeButton: {
     backgroundColor: "#205248",
@@ -329,6 +335,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
+    fontFamily: "NotoSansThai_600SemiBold",
   },
   bottomNavigation: {
     flexDirection: "row",
@@ -346,5 +353,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 10,
     marginTop: 4,
+    fontFamily: "NotoSansThai_400Regular",
   },
 });
