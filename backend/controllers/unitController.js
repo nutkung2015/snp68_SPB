@@ -86,7 +86,7 @@ exports.createUnitInvitations = async (req, res) => {
     expiresAt.setDate(expiresAt.getDate() + 7); // Invitation valid for 7 days
 
     await db.promise().execute(
-      "INSERT INTO unit_invitations (id, unit_id, invited_by, code, status, role, invited_email, invited_phone, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO unit_invitations (id, unit_id, invited_by, code, status, role, invited_email, invited_phone, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
       [uuidv4(), unit_id, invited_by, invitationCode, 'pending', role, invited_email || null, invited_phone || null, expiresAt]
     );
 

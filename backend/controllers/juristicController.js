@@ -29,7 +29,7 @@ exports.getJuristicMembers = async (req, res) => {
         pm.project_id
       FROM project_members pm
       INNER JOIN users u ON u.id = pm.user_id
-      WHERE pm.role IN ('juristicMember', 'juristicLeader')
+      WHERE pm.role IN ('juristicMember', 'juristicLeader', 'security')
     `;
 
         const params = [];
