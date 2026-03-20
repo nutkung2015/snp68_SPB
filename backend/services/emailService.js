@@ -1,15 +1,23 @@
 const nodemailer = require('nodemailer');
 
+const dns = require('dns');
+
 // สร้าง transporter (Gmail SMTP)
 const createTransporter = () => {
+    // บังคับให้ใช้ IPv4 เท่านั้น (แก้ปัญหาเชื่อมต่อ IPv6 ENETUNREACH ล้มเหลว)
+    dns.setDefaultResultOrder('ipv4first');
+
     return nodemailer.createTransport({
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
         port: parseInt(process.env.SMTP_PORT) || 587,
-        secure: false, // true for 465, false for 587
+        secure: process.env.SMTP_PORT == 465, // ใช้ SSL ถ้าเป็นพอร์ต 465 (ถ้า 587 จะเป็น STARTTLS และ secure: false)
         auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
         },
+        tls: {
+            rejectUnauthorized: false
+        }
     });
 };
 
