@@ -23,6 +23,7 @@ const COUNTER_RESET_MS = 10 * 60 * 1000; // Reset counter ทุก 10 นาท
 const WHITELISTED_PATHS = [
     /^\/$/,                       // Root path
     /^\/api\//i,                  // All API routes
+    /^\/reset-password/i          // Reset Password page
 ];
 
 // =============================================
@@ -419,7 +420,7 @@ const BLOCKED_PATTERNS = [
     /\/altair/i,
     /\/_debug/i,
     /\/metrics$/i,
-    /\/\.well-known\//i,
+    // /\/\.well-known\//i, // ปิดไว้เพราะ Chrome DevTools ชอบแอบเรียกใช้ ทำให้ Dev โดนแบน
 
     // ─────────────────────────────────────────
     // 20. Admin Panels & Login Pages

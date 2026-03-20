@@ -370,6 +370,326 @@ exports.createJuristicAccount = async (req, res) => {
 };
 
 // ==========================================
+// Get Single User
+// ==========================================
+exports.getUserById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [users] = await db.promise().query(
+            `SELECT 
+                u.id, u.email, u.full_name, u.phone, u.role,
+                u.profile_image_url, u.is_verified,
+                u.created_at, u.updated_at
+             FROM users u
+             WHERE u.id = ?`,
+            [id]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'ไม่พบผู้ใช้ที่ระบุ'
+            });
+        }
+
+        // ดึง project memberships ของ user
+        const [memberships] = await db.promise().query(
+            `SELECT pm.id, pm.project_id, pm.role, pm.joined_at, p.name as project_name
+             FROM project_members pm
+             LEFT JOIN projects p ON pm.project_id = p.id
+             WHERE pm.user_id = ?`,
+            [id]
+        );
+
+        res.json({
+            status: 'success',
+            data: {
+                ...users[0],
+                project_memberships: memberships
+            }
+        });
+
+    } catch (error) {
+        console.error('Get User By ID Error:', error);
+        res.status(500).json({ status: 'error', message: 'Server error' });
+    }
+};
+
+// ==========================================
+// Update User
+// ==========================================
+exports.updateUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const adminId = req.user.id;
+
+        // --- ตรวจสอบว่า user มีอยู่จริง ---
+        const [existingUser] = await db.promise().query(
+            'SELECT id, email, phone, full_name, role FROM users WHERE id = ?', [id]
+        );
+        if (existingUser.length === 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'ไม่พบผู้ใช้ที่ระบุ'
+            });
+        }
+
+        const currentUser = existingUser[0];
+
+        // --- Whitelist เฉพาะ fields ที่อนุญาตให้แก้ ---
+        const allowedFields = ['full_name', 'phone', 'email', 'role'];
+        const updates = {};
+        const changedFields = {};
+
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined && req.body[field] !== currentUser[field]) {
+                updates[field] = req.body[field];
+                changedFields[field] = { from: currentUser[field], to: req.body[field] };
+            }
+        }
+
+        // ถ้าไม่มีอะไรเปลี่ยน
+        if (Object.keys(updates).length === 0) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'ไม่มีข้อมูลที่เปลี่ยนแปลง'
+            });
+        }
+
+        // --- Validate role (ถ้ามีการเปลี่ยน) ---
+        if (updates.role) {
+            const allowedRoles = ['resident', 'juristic', 'super-admin', 'security'];
+            if (!allowedRoles.includes(updates.role)) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: `role ต้องเป็น ${allowedRoles.join(', ')} เท่านั้น`
+                });
+            }
+        }
+
+        // --- เช็คอีเมลซ้ำ (ถ้ามีการเปลี่ยน) ---
+        if (updates.email) {
+            const [emailExists] = await db.promise().query(
+                'SELECT id FROM users WHERE email = ? AND id != ?',
+                [updates.email, id]
+            );
+            if (emailExists.length > 0) {
+                return res.status(409).json({
+                    status: 'error',
+                    message: 'อีเมลนี้ถูกใช้งานแล้ว'
+                });
+            }
+        }
+
+        // --- เช็คเบอร์โทรซ้ำ (ถ้ามีการเปลี่ยน) ---
+        if (updates.phone) {
+            const [phoneExists] = await db.promise().query(
+                'SELECT id FROM users WHERE phone = ? AND id != ?',
+                [updates.phone, id]
+            );
+            if (phoneExists.length > 0) {
+                return res.status(409).json({
+                    status: 'error',
+                    message: 'เบอร์โทรศัพท์นี้ถูกใช้งานแล้ว'
+                });
+            }
+        }
+
+        // --- Build dynamic UPDATE query ---
+        const setClauses = Object.keys(updates).map(key => `${key} = ?`);
+        setClauses.push('updated_at = NOW()');
+        const values = Object.values(updates);
+        values.push(id);
+
+        await db.promise().execute(
+            `UPDATE users SET ${setClauses.join(', ')} WHERE id = ?`,
+            values
+        );
+
+        // --- Log Action ---
+        await logAdminAction(adminId, 'UPDATE', 'user', id, changedFields, req);
+
+        // --- ดึงข้อมูลใหม่ ---
+        const [updatedUser] = await db.promise().query(
+            'SELECT id, email, full_name, phone, role, created_at, updated_at FROM users WHERE id = ?',
+            [id]
+        );
+
+        res.json({
+            status: 'success',
+            message: 'อัปเดตข้อมูลผู้ใช้สำเร็จ',
+            data: updatedUser[0]
+        });
+
+    } catch (error) {
+        console.error('Update User Error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูลผู้ใช้'
+        });
+    }
+};
+
+// ==========================================
+// Send Reset Password Link (via Email)
+// ==========================================
+exports.sendResetLink = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const adminId = req.user.id;
+        const crypto = require('crypto');
+        const { v4: uuidv4 } = require('uuid');
+        const { sendResetPasswordEmail } = require('../services/emailService');
+
+        // --- ตรวจสอบว่า user มีอยู่จริง + มี email ---
+        const [existingUser] = await db.promise().query(
+            'SELECT id, email, full_name FROM users WHERE id = ?', [id]
+        );
+        if (existingUser.length === 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'ไม่พบผู้ใช้ที่ระบุ'
+            });
+        }
+
+        const targetUser = existingUser[0];
+
+        if (!targetUser.email) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'ผู้ใช้ไม่มีอีเมล ไม่สามารถส่งลิงก์รีเซ็ตได้'
+            });
+        }
+
+        // --- ยกเลิก token เก่าที่ยังไม่ได้ใช้ ---
+        await db.promise().execute(
+            'UPDATE password_reset_tokens SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL',
+            [id]
+        );
+
+        // --- สร้าง token ใหม่ ---
+        const tokenId = uuidv4();
+        const token = crypto.randomBytes(32).toString('hex'); // 64 chars
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 นาที
+
+        await db.promise().execute(
+            `INSERT INTO password_reset_tokens (id, user_id, token, expires_at, created_by)
+             VALUES (?, ?, ?, ?, ?)`,
+            [tokenId, id, token, expiresAt, adminId]
+        );
+
+        // --- สร้าง reset link ---
+        const baseUrl = process.env.RESET_PASSWORD_BASE_URL || `http://localhost:${process.env.PORT || 5000}/reset-password`;
+        const resetLink = `${baseUrl}?token=${token}`;
+
+        // --- ส่ง email ---
+        await sendResetPasswordEmail(targetUser.email, targetUser.full_name, resetLink);
+
+        // --- Log Action (ไม่เก็บ token ใน log) ---
+        await logAdminAction(
+            adminId, 'SEND_RESET_LINK', 'user', id,
+            { target_email: targetUser.email, target_name: targetUser.full_name },
+            req
+        );
+
+        res.json({
+            status: 'success',
+            message: `ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง "${targetUser.email}" สำเร็จ`,
+            data: {
+                email_sent_to: targetUser.email,
+                expires_in_minutes: 15
+            }
+        });
+
+    } catch (error) {
+        console.error('Send Reset Link Error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'เกิดข้อผิดพลาดในการส่งลิงก์รีเซ็ตรหัสผ่าน'
+        });
+    }
+};
+
+// ==========================================
+// Delete User
+// ==========================================
+exports.deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const adminId = req.user.id;
+
+        // --- ป้องกันลบตัวเอง ---
+        if (id === adminId) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'ไม่สามารถลบบัญชีของตัวเองได้'
+            });
+        }
+
+        // --- ตรวจสอบว่า user มีอยู่จริง ---
+        const [existingUser] = await db.promise().query(
+            'SELECT id, email, full_name, role FROM users WHERE id = ?', [id]
+        );
+        if (existingUser.length === 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'ไม่พบผู้ใช้ที่ระบุ'
+            });
+        }
+
+        const targetUser = existingUser[0];
+
+        // --- ป้องกันลบ super-admin คนอื่น (optional safety) ---
+        if (targetUser.role === 'super-admin') {
+            return res.status(403).json({
+                status: 'error',
+                message: 'ไม่สามารถลบบัญชี Super Admin ได้'
+            });
+        }
+
+        // --- ลบข้อมูลที่เกี่ยวข้อง (cascade) ---
+        // 1. ลบ project_members
+        await db.promise().execute(
+            'DELETE FROM project_members WHERE user_id = ?', [id]
+        );
+
+        // 2. ลบ unit_members
+        await db.promise().execute(
+            'DELETE FROM unit_members WHERE user_id = ?', [id]
+        );
+
+        // 3. ลบ user
+        await db.promise().execute(
+            'DELETE FROM users WHERE id = ?', [id]
+        );
+
+        // --- Log Action ---
+        await logAdminAction(
+            adminId, 'DELETE', 'user', id,
+            {
+                deleted_email: targetUser.email,
+                deleted_name: targetUser.full_name,
+                deleted_role: targetUser.role
+            },
+            req
+        );
+
+        res.json({
+            status: 'success',
+            message: `ลบผู้ใช้ "${targetUser.full_name}" (${targetUser.email}) สำเร็จ`
+        });
+
+    } catch (error) {
+        console.error('Delete User Error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'เกิดข้อผิดพลาดในการลบผู้ใช้'
+        });
+    }
+};
+
+// ==========================================
 // Internal Helper: Log Action
 // ==========================================
 const logAdminAction = async (adminId, actionType, targetType, targetId, details, req) => {

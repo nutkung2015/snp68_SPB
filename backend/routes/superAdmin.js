@@ -19,9 +19,11 @@ router.get('/logs', superAdminController.getActivityLogs);
 
 // Users Management
 router.get('/users', superAdminController.getAllUsers);
-
-// Create Juristic Account + Assign to Project
-router.post('/users/create-juristic', superAdminController.createJuristicAccount);
+router.post('/users/create-juristic', superAdminController.createJuristicAccount);  // static route ต้องอยู่ก่อน :id
+router.get('/users/:id', superAdminController.getUserById);
+router.put('/users/:id', superAdminController.updateUser);
+router.post('/users/:id/send-reset-link', superAdminController.sendResetLink);
+router.delete('/users/:id', superAdminController.deleteUser);
 
 // System Config
 router.get('/config', superAdminController.getSystemConfig);

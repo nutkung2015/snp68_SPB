@@ -29,6 +29,9 @@ router.post("/verify-phone-ownership", authMiddleware, authController.verifyUser
 // Route สำหรับ reset password ด้วย Firebase OTP
 router.post("/reset-password-firebase", validateResetPassword, authController.resetPasswordWithFirebase);
 
+// Route สำหรับ reset password ด้วย Token (จากลิงก์ที่ส่งทาง email)
+router.post("/reset-password-token", authController.resetPasswordWithToken);
+
 // Route สำหรับ login ด้วย Firebase Phone OTP (ไม่ต้องใช้ password)
 router.post("/login-firebase-phone", validateFirebaseToken, authController.loginWithFirebasePhone);
 

@@ -687,3 +687,100 @@ exports.verifyUserPhone = async (req, res) => {
     });
   }
 };
+
+// @desc    Reset password with token (from email link)
+// @route   POST /api/auth/reset-password-token
+// @access  Public
+exports.resetPasswordWithToken = async (req, res) => {
+  try {
+    const { token, new_password } = req.body;
+
+    // --- Validation ---
+    if (!token || !new_password) {
+      return res.status(400).json({
+        status: "error",
+        message: "กรุณาระบุ token และรหัสผ่านใหม่",
+      });
+    }
+
+    if (new_password.length < 6) {
+      return res.status(400).json({
+        status: "error",
+        message: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
+      });
+    }
+
+    // --- ตรวจสอบ token ---
+    const [tokens] = await db
+      .promise()
+      .query(
+        "SELECT * FROM password_reset_tokens WHERE token = ?",
+        [token]
+      );
+
+    if (tokens.length === 0) {
+      return res.status(400).json({
+        status: "error",
+        message: "ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้อง",
+      });
+    }
+
+    const resetToken = tokens[0];
+
+    // เช็คว่าถูกใช้แล้วหรือยัง
+    if (resetToken.used_at) {
+      return res.status(400).json({
+        status: "error",
+        message: "ลิงก์นี้ถูกใช้งานแล้ว กรุณาขอลิงก์ใหม่จากผู้ดูแลระบบ",
+      });
+    }
+
+    // เช็คว่าหมดอายุหรือยัง
+    if (new Date(resetToken.expires_at) < new Date()) {
+      return res.status(400).json({
+        status: "error",
+        message: "ลิงก์รีเซ็ตรหัสผ่านหมดอายุแล้ว กรุณาขอลิงก์ใหม่จากผู้ดูแลระบบ",
+      });
+    }
+
+    // --- ตรวจสอบว่า user ยังมีอยู่ ---
+    const [users] = await db
+      .promise()
+      .query("SELECT id FROM users WHERE id = ?", [resetToken.user_id]);
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        status: "error",
+        message: "ไม่พบบัญชีผู้ใช้",
+      });
+    }
+
+    // --- Hash & Update Password ---
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+
+    await db
+      .promise()
+      .execute("UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?", [
+        hashedPassword,
+        resetToken.user_id,
+      ]);
+
+    // --- Mark token as used ---
+    await db
+      .promise()
+      .execute("UPDATE password_reset_tokens SET used_at = NOW() WHERE id = ?", [
+        resetToken.id,
+      ]);
+
+    res.status(200).json({
+      status: "success",
+      message: "เปลี่ยนรหัสผ่านสำเร็จ คุณสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้แล้ว",
+    });
+  } catch (error) {
+    console.error("Error in resetPasswordWithToken:", error);
+    res.status(500).json({
+      status: "error",
+      message: "เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน",
+    });
+  }
+};

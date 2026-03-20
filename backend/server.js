@@ -256,6 +256,12 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to Test Native Backend API" });
 });
 
+// Static: Reset Password Page
+const path = require('path');
+app.get('/reset-password', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'reset-password.html'));
+});
+
 // Posts routes
 app.use("/api/posts", require("./routes/posts"));
 
