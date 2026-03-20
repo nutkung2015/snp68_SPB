@@ -11,6 +11,7 @@ const createTransporter = () => {
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
         port: parseInt(process.env.SMTP_PORT) || 587,
         secure: process.env.SMTP_PORT == 465, // ใช้ SSL ถ้าเป็นพอร์ต 465 (ถ้า 587 จะเป็น STARTTLS และ secure: false)
+        family: 4,
         auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
