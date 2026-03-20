@@ -305,10 +305,14 @@ exports.createJuristicAccount = async (req, res) => {
         const userId = uuidv4();
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // ตาราง users ใช้ ENUM('resident','juristic','super-admin','security')
+        // ดังนั้นต้องใส่เป็น 'juristic' เสมอ ส่วน role ย่อย (juristicLeader/juristicMember) ใช้ใน project_members
+        const userRole = 'juristic';
+
         await db.promise().execute(
             `INSERT INTO users (id, full_name, phone, email, password, role, created_at)
              VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-            [userId, full_name, phone || null, email, hashedPassword, role]
+            [userId, full_name, phone || null, email, hashedPassword, userRole]
         );
 
         // --- เพิ่มเข้า project_members ---
@@ -345,7 +349,7 @@ exports.createJuristicAccount = async (req, res) => {
                     full_name,
                     email,
                     phone: phone || null,
-                    role
+                    role: userRole
                 },
                 project_membership: {
                     id: membershipId,
