@@ -1,23 +1,42 @@
 const nodemailer = require('nodemailer');
-
 const dns = require('dns');
+const { promisify } = require('util');
+const dnsResolve4 = promisify(dns.resolve4);
 
-// สร้าง transporter (Gmail SMTP)
-const createTransporter = () => {
-    // บังคับให้ใช้ IPv4 เท่านั้น (แก้ปัญหาเชื่อมต่อ IPv6 ENETUNREACH ล้มเหลว)
-    dns.setDefaultResultOrder('ipv4first');
+// บังคับ DNS ทั้งโมดูลให้ใช้ IPv4 ก่อน (ระดับ Global)
+dns.setDefaultResultOrder('ipv4first');
+
+/**
+ * สร้าง Transporter แบบ Async 
+ * ทำการ Resolve hostname → IPv4 ด้วยตัวเองก่อน 
+ * เพื่อป้องกัน Render/Cloud ที่ชอบวิ่ง IPv6 จนเชื่อมต่อ Gmail ไม่ได้
+ */
+const createTransporter = async () => {
+    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+    let connectHost = smtpHost;
+
+    // ถอดรหัส IPv4 ด้วยตัวเอง
+    try {
+        const ipv4Addresses = await dnsResolve4(smtpHost);
+        if (ipv4Addresses && ipv4Addresses.length > 0) {
+            connectHost = ipv4Addresses[0];
+            console.log(`📧 Resolved ${smtpHost} → IPv4: ${connectHost}`);
+        }
+    } catch (err) {
+        console.warn(`📧 DNS resolve4 failed for ${smtpHost}, using hostname directly`);
+    }
 
     return nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        host: connectHost,        // ใช้ IP ตรงๆ แทน hostname → ไม่มีทาง resolve เป็น IPv6 ได้
         port: parseInt(process.env.SMTP_PORT) || 587,
-        secure: process.env.SMTP_PORT == 465, // ใช้ SSL ถ้าเป็นพอร์ต 465 (ถ้า 587 จะเป็น STARTTLS และ secure: false)
-        family: 4,
+        secure: process.env.SMTP_PORT == 465,
         auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
         },
         tls: {
-            rejectUnauthorized: false
+            rejectUnauthorized: false,
+            servername: smtpHost   // ใช้ hostname เดิมสำหรับ TLS certificate verification
         }
     });
 };
@@ -40,7 +59,7 @@ exports.sendResetPasswordEmail = async (toEmail, userName, resetLink) => {
         return { success: true, mode: 'dev', messageId: 'dev-mode' };
     }
 
-    const transporter = createTransporter();
+    const transporter = await createTransporter();
 
     const mailOptions = {
         from: `"LivLink Support" <${process.env.SMTP_USER}>`,
