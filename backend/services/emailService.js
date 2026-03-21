@@ -1,45 +1,15 @@
-const nodemailer = require('nodemailer');
-const dns = require('dns');
-const { promisify } = require('util');
-const dnsResolve4 = promisify(dns.resolve4);
-
-// บังคับ DNS ทั้งโมดูลให้ใช้ IPv4 ก่อน (ระดับ Global)
-dns.setDefaultResultOrder('ipv4first');
-
 /**
- * สร้าง Transporter แบบ Async 
- * ทำการ Resolve hostname → IPv4 ด้วยตัวเองก่อน 
- * เพื่อป้องกัน Render/Cloud ที่ชอบวิ่ง IPv6 จนเชื่อมต่อ Gmail ไม่ได้
+ * Email Service — ใช้ Resend HTTP API
+ * 
+ * ทำไมไม่ใช้ Nodemailer + Gmail SMTP?
+ * → Render (และ Cloud Provider ฟรีส่วนใหญ่) บล็อกพอร์ต SMTP (25, 465, 587) ทั้งหมด
+ * → Resend ส่งผ่าน HTTPS (พอร์ต 443) ซึ่งไม่โดนบล็อก
+ * 
+ * ENV ที่ต้องตั้ง:
+ * - RESEND_API_KEY  (ได้จาก https://resend.com → API Keys)
+ * - RESEND_FROM     (optional, default: "LivLink <onboarding@resend.dev>")
+ *                    ถ้ามี Domain เอง สามารถตั้งเป็น "LivLink <noreply@livlink-solution.com>"
  */
-const createTransporter = async () => {
-    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-    let connectHost = smtpHost;
-
-    // ถอดรหัส IPv4 ด้วยตัวเอง
-    try {
-        const ipv4Addresses = await dnsResolve4(smtpHost);
-        if (ipv4Addresses && ipv4Addresses.length > 0) {
-            connectHost = ipv4Addresses[0];
-            console.log(`📧 Resolved ${smtpHost} → IPv4: ${connectHost}`);
-        }
-    } catch (err) {
-        console.warn(`📧 DNS resolve4 failed for ${smtpHost}, using hostname directly`);
-    }
-
-    return nodemailer.createTransport({
-        host: connectHost,        // ใช้ IP ตรงๆ แทน hostname → ไม่มีทาง resolve เป็น IPv6 ได้
-        port: parseInt(process.env.SMTP_PORT) || 587,
-        secure: process.env.SMTP_PORT == 465,
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-        },
-        tls: {
-            rejectUnauthorized: false,
-            servername: smtpHost   // ใช้ hostname เดิมสำหรับ TLS certificate verification
-        }
-    });
-};
 
 /**
  * ส่ง Email สำหรับรีเซ็ตรหัสผ่าน
@@ -48,8 +18,9 @@ const createTransporter = async () => {
  * @param {string} resetLink - ลิงก์สำหรับรีเซ็ตรหัสผ่าน
  */
 exports.sendResetPasswordEmail = async (toEmail, userName, resetLink) => {
-    // Dev mode: log แทนส่งจริง ถ้ายังไม่ได้ตั้งค่า SMTP
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+
+    // Dev mode: log แทนส่งจริง ถ้ายังไม่ได้ตั้งค่า API Key
+    if (!process.env.RESEND_API_KEY) {
         console.log('========================================');
         console.log('📧 [DEV MODE] Reset Password Email');
         console.log(`   To: ${toEmail}`);
@@ -59,13 +30,48 @@ exports.sendResetPasswordEmail = async (toEmail, userName, resetLink) => {
         return { success: true, mode: 'dev', messageId: 'dev-mode' };
     }
 
-    const transporter = await createTransporter();
+    // สร้าง HTML Email Template
+    const htmlContent = buildResetEmailHtml(userName, resetLink);
 
-    const mailOptions = {
-        from: `"LivLink Support" <${process.env.SMTP_USER}>`,
-        to: toEmail,
-        subject: '🔐 รีเซ็ตรหัสผ่าน - LivLink',
-        html: `
+    // ส่งผ่าน Resend HTTP API (HTTPS พอร์ต 443 → ไม่โดนบล็อก)
+    const fromAddress = process.env.RESEND_FROM || 'LivLink <onboarding@resend.dev>';
+
+    try {
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                from: fromAddress,
+                to: [toEmail],
+                subject: '🔐 รีเซ็ตรหัสผ่าน - LivLink',
+                html: htmlContent,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error('📧 Resend API Error:', data);
+            throw new Error(data.message || `Resend API Error: ${response.status}`);
+        }
+
+        console.log(`📧 Reset password email sent to ${toEmail} (Resend ID: ${data.id})`);
+        return { success: true, messageId: data.id };
+
+    } catch (error) {
+        console.error('📧 Failed to send reset password email:', error);
+        throw error;
+    }
+};
+
+/**
+ * สร้าง HTML Template สำหรับอีเมลรีเซ็ตรหัสผ่าน
+ */
+function buildResetEmailHtml(userName, resetLink) {
+    return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -79,9 +85,11 @@ exports.sendResetPasswordEmail = async (toEmail, userName, resetLink) => {
                 <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.08);">
                     <!-- Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding:40px 40px 30px; text-align:center;">
-                            <h1 style="color:#ffffff; margin:0; font-size:28px; font-weight:700;">🔐 LivLink</h1>
-                            <p style="color:rgba(255,255,255,0.85); margin:8px 0 0; font-size:14px;">ระบบจัดการหมู่บ้าน</p>
+                        <td style="background: linear-gradient(135deg, #1a233a 0%, #111827 100%); padding:40px 40px 30px; text-align:center;">
+                            <h1 style="color:#ffffff; margin:0; font-size:28px; font-weight:800; letter-spacing:3px;">
+                                LIV<span style="color:#5a8cef;">LINK</span>
+                            </h1>
+                            <p style="color:rgba(255,255,255,0.7); margin:8px 0 0; font-size:13px;">ระบบบริหารจัดการหมู่บ้านจัดสรรครบวงจร</p>
                         </td>
                     </tr>
                     <!-- Body -->
@@ -100,7 +108,7 @@ exports.sendResetPasswordEmail = async (toEmail, userName, resetLink) => {
                                 <tr>
                                     <td align="center" style="padding:8px 0 32px;">
                                         <a href="${resetLink}" 
-                                           style="display:inline-block; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#ffffff; text-decoration:none; padding:14px 40px; border-radius:8px; font-size:16px; font-weight:600; letter-spacing:0.5px;">
+                                           style="display:inline-block; background:linear-gradient(135deg, #4a6694 0%, #354b72 100%); color:#ffffff; text-decoration:none; padding:14px 40px; border-radius:10px; font-size:16px; font-weight:600; letter-spacing:0.5px;">
                                             ตั้งรหัสผ่านใหม่
                                         </a>
                                     </td>
@@ -118,7 +126,7 @@ exports.sendResetPasswordEmail = async (toEmail, userName, resetLink) => {
                             <!-- Fallback Link -->
                             <p style="color:#999; font-size:12px; line-height:1.5; margin:0;">
                                 หากปุ่มไม่ทำงาน ให้คัดลอกลิงก์ด้านล่างไปวางในเบราว์เซอร์:<br>
-                                <a href="${resetLink}" style="color:#667eea; word-break:break-all;">${resetLink}</a>
+                                <a href="${resetLink}" style="color:#5a8cef; word-break:break-all;">${resetLink}</a>
                             </p>
                         </td>
                     </tr>
@@ -136,15 +144,5 @@ exports.sendResetPasswordEmail = async (toEmail, userName, resetLink) => {
     </table>
 </body>
 </html>
-        `,
-    };
-
-    try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`📧 Reset password email sent to ${toEmail} (messageId: ${info.messageId})`);
-        return { success: true, messageId: info.messageId };
-    } catch (error) {
-        console.error('📧 Failed to send reset password email:', error);
-        throw error;
-    }
-};
+    `;
+}
