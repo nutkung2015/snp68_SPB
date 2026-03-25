@@ -536,13 +536,7 @@ const securityScannerBlocker = (req, res, next) => {
     const clientIP = getClientIp(req);
     const requestPath = req.path || req.url;
 
-    // 0. Check whitelist first — ถ้าเป็น API route ให้ผ่านทันที
-    const isWhitelisted = WHITELISTED_PATHS.some(pattern => pattern.test(requestPath));
-    if (isWhitelisted) {
-        return next();
-    }
-
-    // 1. Check if IP is already banned
+    // 1. Check if IP is already banned (บล็อกทันทีถ้าอยู่ในสถานะแบน)
     const ipData = suspiciousIPs.get(clientIP);
     if (ipData && ipData.banned) {
         const remainingMs = BAN_DURATION_MS - (Date.now() - ipData.bannedAt);
@@ -553,7 +547,8 @@ const securityScannerBlocker = (req, res, next) => {
         }
     }
 
-    // 2. Check if request matches suspicious patterns
+    // 2. Check if request matches suspicious patterns (ย้ายมาเช็คจับการสแกนก่อน)
+    // การทำแบบนี้จะบล็อก /api/.env หรือ /api/config.yml ได้ทันทีโดยไม่ถูก Whitelist ปล่อยผ่าน
     const isSuspicious = BLOCKED_PATTERNS.some(pattern => pattern.test(requestPath));
 
     if (isSuspicious) {
@@ -584,7 +579,14 @@ const securityScannerBlocker = (req, res, next) => {
         });
     }
 
-    // 3. Not suspicious - continue
+    // 3. Check whitelist
+    // (เก็บไว้เผื่อขยายสเกลในอนาคต ตอนนี้ถ้ามาถึงตรงนี้ก็คือ Request ปกติที่ปลอดภัย)
+    const isWhitelisted = WHITELISTED_PATHS.some(pattern => pattern.test(requestPath));
+    if (isWhitelisted) {
+        return next();
+    }
+
+    // 4. Not suspicious - continue
     next();
 };
 
