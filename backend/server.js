@@ -234,7 +234,8 @@ const apiLimiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => getClientIp(req) // Use correct IP for rate limiting
+  keyGenerator: (req) => getClientIp(req), // Use correct IP for rate limiting
+  skip: (req, res) => process.env.NODE_ENV === 'test' // ปิด Rate Limit ตลอดช่วงรัน Stress Test
 });
 
 const authLimiter = rateLimit({
@@ -243,7 +244,8 @@ const authLimiter = rateLimit({
   message: 'Too many login attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => getClientIp(req) // Use correct IP for rate limiting
+  keyGenerator: (req) => getClientIp(req), // Use correct IP for rate limiting
+  skip: (req, res) => process.env.NODE_ENV === 'test' // ปิด Rate Limit ตลอดช่วงรัน Stress Test
 });
 
 // Apply rate limiters

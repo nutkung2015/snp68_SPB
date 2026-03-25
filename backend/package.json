@@ -6,6 +6,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "local": "nodemon --exec \"node -r dotenv/config server.js dotenv_config_path=.env.local\"",
+    "test:stress": "nodemon --exec \"node -r dotenv/config server.js dotenv_config_path=.env.test\"",
     "prod": "node -r dotenv/config server.js dotenv_config_path=.env.production",
     "production": "node server.js",
     "audit": "npm audit --audit-level=moderate",
