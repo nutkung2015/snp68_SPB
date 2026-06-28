@@ -13,6 +13,8 @@ node_modules/
 # Firebase
 serviceAccountKey.json
 backend/config/serviceAccountKey.json
+GoogleService-Info.plist
+ios/**/GoogleService-Info.plist
 
 # Backend environment files
 backend/.env

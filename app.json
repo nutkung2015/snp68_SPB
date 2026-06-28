@@ -4,11 +4,7 @@
     "slug": "my-app",
     "version": "1.0.0",
     "sdkVersion": "54.0.0",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "platforms": ["ios", "android", "web"],
     "extra": {
       "eas": {
         "projectId": "7c6d8598-fa21-4f26-ab88-eb019a0d52b7"
@@ -29,6 +25,8 @@
     },
     "ios": {
       "bundleIdentifier": "com.nutkung2015.myapp",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "useFrameworks": "static",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -46,9 +44,7 @@
       "@react-native-firebase/app",
       "@react-native-firebase/auth"
     ],
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "orientation": "portrait",
     "icon": "./assets/livlink_logo.png",
     "userInterfaceStyle": "light",

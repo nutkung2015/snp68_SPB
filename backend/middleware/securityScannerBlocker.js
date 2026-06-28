@@ -18,12 +18,23 @@ const BAN_DURATION_MS = 60 * 60 * 1000; // Ban 1 ชั่วโมง
 const COUNTER_RESET_MS = 10 * 60 * 1000; // Reset counter ทุก 10 นาที
 
 // =============================================
-// Whitelist — paths ที่ API ของเราใช้จริง (ข้ามการตรวจ)
-// =============================================
 const WHITELISTED_PATHS = [
     /^\/$/,                       // Root path
     /^\/api\//i,                  // All API routes
     /^\/reset-password/i          // Reset Password page
+];
+
+// Critical Blocked Patterns - ใช้ตรวจจับไฟล์อันตราย แม้จะเป็น whitelist path เช่น /api/.env เพื่อป้องกันการบายพาส
+const CRITICAL_BLOCKED_PATTERNS = [
+    /\/\.env/i,
+    /\/\.git\b/i,
+    /\.sql$/i,
+    /\.bak$/i,
+    /\.sqlite$/i,
+    /\.pem$/i,
+    /\.key$/i,
+    /\.\.\//,                    // ../
+    /\.\.\\/                     // ..\
 ];
 
 // =============================================
@@ -547,9 +558,17 @@ const securityScannerBlocker = (req, res, next) => {
         }
     }
 
-    // 2. Check if request matches suspicious patterns (ย้ายมาเช็คจับการสแกนก่อน)
-    // การทำแบบนี้จะบล็อก /api/.env หรือ /api/config.yml ได้ทันทีโดยไม่ถูก Whitelist ปล่อยผ่าน
-    const isSuspicious = BLOCKED_PATTERNS.some(pattern => pattern.test(requestPath));
+    // 2. Check if request matches suspicious patterns
+    const isWhitelisted = WHITELISTED_PATHS.some(pattern => pattern.test(requestPath));
+    let isSuspicious = false;
+
+    if (isWhitelisted) {
+        // สำหรับ Whitelist (เช่น /api/) จะตรวจเฉพาะไฟล์สำคัญและ Path Traversal เท่านั้น เพื่อป้องกัน False Positive กับ API จริง
+        isSuspicious = CRITICAL_BLOCKED_PATTERNS.some(pattern => pattern.test(requestPath));
+    } else {
+        // สำหรับ path ทั่วไป จะเช็คตามลิสต์ทั้งหมดเพื่อดักจับ bot
+        isSuspicious = BLOCKED_PATTERNS.some(pattern => pattern.test(requestPath));
+    }
 
     if (isSuspicious) {
         const now = Date.now();
@@ -579,9 +598,7 @@ const securityScannerBlocker = (req, res, next) => {
         });
     }
 
-    // 3. Check whitelist
-    // (เก็บไว้เผื่อขยายสเกลในอนาคต ตอนนี้ถ้ามาถึงตรงนี้ก็คือ Request ปกติที่ปลอดภัย)
-    const isWhitelisted = WHITELISTED_PATHS.some(pattern => pattern.test(requestPath));
+    // 3. Since it passed suspicious checks and it is whitelisted, continue
     if (isWhitelisted) {
         return next();
     }

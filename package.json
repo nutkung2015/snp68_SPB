@@ -50,5 +50,11 @@
   },
   "devDependencies": {
     "eslint-plugin-react-hooks": "^6.1.1"
+  },
+  "name": "snp68_SPB",
+  "version": "1.0.0",
+  "scripts": {
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   }
 }
