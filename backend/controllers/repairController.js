@@ -609,6 +609,7 @@ exports.createCommonIssue = async (req, res) => {
   try {
     const userId = req.user.id;
     const userFullName = req.user.full_name;
+    const userPhone = req.user.phone;
 
     const {
       project_id,
@@ -624,8 +625,8 @@ exports.createCommonIssue = async (req, res) => {
 
     const reporter_name = userFullName;
     const reporter_id = userId;
+    const reporter_phone = phone_number || userPhone || "";
 
-    // Upload images to Cloudinary
     // Upload images to Cloudinary
     let cloudinaryUrls = [];
     if (image_urls && image_urls.length > 0) {
@@ -692,7 +693,7 @@ exports.createCommonIssue = async (req, res) => {
         description,
         imageUrlsJson,
         priority,
-        phone_number,
+        reporter_phone,
       ]);
 
     // ✅ Send notification to juristic staff

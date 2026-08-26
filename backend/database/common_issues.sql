@@ -3,26 +3,13 @@
 
 CREATE TABLE IF NOT EXISTS common_issues (
     id VARCHAR(255) PRIMARY KEY,
+    project_id VARCHAR(255) NOT NULL,
     unit_id VARCHAR(255) NOT NULL,
     zone VARCHAR(100) NOT NULL,
     reporter_name VARCHAR(255) NOT NULL,
     reporter_id VARCHAR(255),
     reported_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    issue_type ENUM(
-        'lighting',          
-        'road',            
-        'garden',         
-        'parking',      
-        'elevator',  
-        'pool',           
-        'fitness',    
-        'security',        
-        'cleanliness',   
-        'noise',          
-        'water_supply',       
-        'garbage', 
-        'other'      
-    ) NOT NULL,
+    issue_type VARCHAR(100) NOT NULL,
     location VARCHAR(255),
     description TEXT NOT NULL,
     image_urls TEXT,
@@ -32,6 +19,7 @@ CREATE TABLE IF NOT EXISTS common_issues (
         'resolved',           
         'rejected'            
     ) DEFAULT 'pending',
+    phone_number VARCHAR(50),
     assigned_to VARCHAR(255),
     priority ENUM('low', 'medium', 'high', 'urgent') DEFAULT 'medium',
     notes TEXT,

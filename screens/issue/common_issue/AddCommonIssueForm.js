@@ -94,6 +94,12 @@ export default function AddCommonIssueForm({ navigation }) {
         });
     };
 
+    // Helper to get display name for issue type
+    const getIssueTypeName = (value) => {
+        const type = ISSUE_TYPES.find((t) => t.value === value);
+        return type ? type.name : (value || "เลือกประเภทปัญหา");
+    };
+
     // ฟังก์ชันจัดการการเลือกประเภทปัญหา
     const handleSelectType = (type) => {
         handleInputChange("issueType", type.value);
@@ -304,7 +310,9 @@ export default function AddCommonIssueForm({ navigation }) {
                                 !formData.issueType && styles.placeholderText,
                             ]}
                         >
-                            {formData.issueType || "เลือกประเภทปัญหา"}
+                            {formData.issueType
+                                ? getIssueTypeName(formData.issueType)
+                                : "เลือกประเภทปัญหา"}
                         </Text>
                         <MaterialIcons
                             name="keyboard-arrow-down"
