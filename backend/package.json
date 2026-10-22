@@ -15,6 +15,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=24.22.1 <25"
+  },
   "description": "",
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
